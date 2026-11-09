@@ -1,11 +1,15 @@
-//import { PrismaClient } from "../app/generated/prisma"
-//const { PrismaClient } = require("@prisma/client");
-
-import { PrismaClient } from "@prisma/client"
+import { db } from "../app/_lib/prisma"
 
 async function seedDatabase() {
-  const prisma = new PrismaClient()
+  const prisma = db
   try {
+    const existingCount = await prisma.barbershop.count()
+    if (existingCount > 0) {
+      console.log(
+        `Banco já possui ${existingCount} barbearias cadastradas. Pulando seed.`,
+      )
+      return
+    }
     const images = [
       "https://utfs.io/f/c97a2dc9-cf62-468b-a851-bfd2bdde775f-16p.png",
       "https://utfs.io/f/45331760-899c-4b4b-910e-e00babb6ed81-16q.png",

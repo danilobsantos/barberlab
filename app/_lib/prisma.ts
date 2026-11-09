@@ -20,12 +20,20 @@ function createPrismaClient(): PrismaClient {
 
   if (!globalThis.cachedPool) {
     const url = new URL(connectionString)
+    const sslDisabled =
+      url.searchParams.get("sslmode") === "disable" ||
+      process.env.DATABASE_SSL === "false" ||
+      url.hostname === "localhost" ||
+      url.hostname === "127.0.0.1" ||
+      url.hostname === "postgres" ||
+      url.hostname === "db"
+
     url.searchParams.delete("sslmode")
     url.searchParams.delete("channel_binding")
 
     globalThis.cachedPool = new Pool({
       connectionString: url.toString(),
-      ssl: true,
+      ssl: sslDisabled ? false : true,
     })
   }
 
