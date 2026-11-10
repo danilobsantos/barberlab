@@ -14,6 +14,7 @@ export const RATE_LIMITS = {
   adminWrite: { points: 20, duration: 60 },
   deleteBooking: { points: 10, duration: 60 },
   updateOwnPhone: { points: 5, duration: 60 },
+  saveTenantCustomer: { points: 5, duration: 60 },
   registerBarbershop: { points: 3, duration: 3600 },
 } as const
 

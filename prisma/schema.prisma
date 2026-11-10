@@ -252,6 +252,7 @@ model Customer {
   bookings     Booking[]
 
   @@unique([barbershopId, id])
+  @@unique([barbershopId, userId])
   @@index([barbershopId])
   @@index([barbershopId, phone])
   @@index([barbershopId, email])

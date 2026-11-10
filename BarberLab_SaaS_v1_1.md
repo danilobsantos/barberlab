@@ -1044,76 +1044,76 @@ As fases abaixo estão em ordem de dependência técnica. As tasks são numerada
 | Ordem | ID | Prioridade | Task | Critério de aceite | Status |
 |---:|---|---|---|---|---|
 | 1 | BL-050 | P0 | Criar CRUD de profissionais | OWNER/MANAGER gerenciam profissionais do próprio tenant | ✅ Concluído |
-| 2 | BL-051 | P0 | Criar associação de profissionais a serviços | Serviço só aparece para profissionais habilitados | 🟡 Parcialmente implementado |
+| 2 | BL-051 | P0 | Criar associação de profissionais a serviços | Serviço só aparece para profissionais habilitados | ✅ Concluído |
 | 3 | BL-052 | P0 | Implementar jornada semanal individual | Profissional pode ter um ou mais intervalos por dia | ✅ Concluído |
 | 4 | BL-053 | P1 | Implementar folgas, férias e exceções | Exceções prevalecem conforme regra documentada | ✅ Concluído |
-| 5 | BL-054 | P1 | Implementar bloqueios gerais e individuais | Bloqueio individual não afeta outros profissionais; geral afeta todos | 🟡 Parcialmente implementado |
+| 5 | BL-054 | P1 | Implementar bloqueios gerais e individuais | Bloqueio individual não afeta outros profissionais; geral afeta todos | ✅ Concluído |
 | 6 | BL-055 | P1 | Implementar convite de profissional para criar/acessar conta | Profissional vincula conta sem ganhar acesso a outro tenant | ⏳ Pendente |
 | 7 | BL-056 | P1 | Implementar limite de profissionais por plano no backend | Não é possível exceder limite por requisição concorrente | ⏳ Pendente |
 | 8 | BL-057 | P1 | Criar tela de equipe no painel | Cadastro, edição, ativação, desativação e associação a serviços funcionam | ✅ Concluído |
 
 **Saída da fase:** barbearia gerencia sua equipe e cada profissional possui calendário próprio.
 
-**BL-050 concluído:** OWNER/MANAGER podem cadastrar, editar, ativar e desativar profissionais no tenant autorizado; registros não são excluídos e preservam o histórico. **BL-057 concluído:** a tela `/painel/[slug]/team` lista status e serviços associados e permite gerenciar a equipe. A edição valida que os serviços pertencem ao tenant; associações já usadas por agendamentos não podem ser removidas para preservar o histórico. **BL-051 parcialmente implementado:** a associação de serviços é gerenciável no painel, mas os fluxos de agendamento ainda não filtram os serviços pelos profissionais habilitados. **BL-052 concluído:** OWNER/MANAGER podem configurar múltiplos intervalos semanais por profissional, com validação de horário e sobreposição e isolamento por tenant. A jornada ainda não participa do cálculo da disponibilidade nem do fluxo de reservas; essa integração permanece pendente para BL-061. **BL-053 concluído:** OWNER/MANAGER podem cadastrar e remover exceções de indisponibilidade ou horário especial por data, inclusive correções históricas; gravações da mesma data/tipo substituem as anteriores, com limite de 100 exceções por profissional e isolamento por tenant. Essas exceções ainda não são consumidas pelo cálculo de disponibilidade nem pelo fluxo de reservas; integração pendente em BL-061. **BL-054 parcialmente implementado:** o painel cria bloqueios gerais ou vinculados a um profissional, mostra o escopo e valida o profissional dentro do tenant autorizado. A exclusão permanece tenant-scoped. O cálculo da disponibilidade ainda não aplica a distinção entre bloqueios gerais e individuais; integração pendente na fase 5 (BL-061). Convites e limites por plano (BL-055–056) permanecem pendentes.
+**BL-050 concluído:** OWNER/MANAGER podem cadastrar, editar, ativar e desativar profissionais no tenant autorizado; registros não são excluídos e preservam o histórico. **BL-057 concluído:** a tela `/painel/[slug]/team` lista status e serviços associados e permite gerenciar a equipe. A edição valida que os serviços pertencem ao tenant; associações já usadas por agendamentos não podem ser removidas para preservar o histórico. **BL-051 concluído:** a associação de serviços é gerenciável no painel e os fluxos de consulta e criação de agendamentos filtram profissionais pelos serviços habilitados. **BL-052 concluído:** OWNER/MANAGER podem configurar múltiplos intervalos semanais por profissional, com validação de horário e sobreposição e isolamento por tenant; a jornada individual já é aplicada ao cálculo de disponibilidade e à criação de reservas. **BL-053 concluído:** OWNER/MANAGER podem cadastrar e remover exceções de indisponibilidade ou horário especial por data, inclusive correções históricas; gravações da mesma data/tipo substituem as anteriores, com limite de 100 exceções por profissional e isolamento por tenant. As exceções já são consideradas na disponibilidade e na validação da reserva. **BL-054 concluído:** o painel cria bloqueios gerais ou vinculados a um profissional, mostra o escopo e valida o profissional dentro do tenant autorizado; a exclusão é tenant-scoped e a disponibilidade considera bloqueios gerais e individuais. A conversão de horários locais respeita o timezone IANA: horários inexistentes no avanço do horário de verão são descartados e, em horários repetidos no retorno, é escolhida a primeira ocorrência. Convites e limites por plano (BL-055–056) permanecem pendentes.
 
 ### Fase 5 — Motor de agendamento multi-profissional
 
 **Objetivo:** corrigir o mecanismo atual e garantir reservas simultâneas sem conflitos indevidos.
 
-| Ordem | ID | Prioridade | Task | Critério de aceite |
-|---:|---|---|---|---|
-| 1 | BL-060 | P0 | Definir regra de disponibilidade e status ocupantes | Regras documentadas e cobertas por testes — ✅ Concluído |
-| 2 | BL-061 | P0 | Criar serviço de cálculo de disponibilidade por profissional | Considera jornada, horário do tenant, serviço, bloqueios, reservas e timezone — ✅ Concluído |
-| 3 | BL-062 | P0 | Adaptar consulta `getUnavailableIntervals` | Consulta a agenda do profissional escolhido — ✅ Concluído |
-| 4 | BL-063 | P0 | Refatorar `createBooking` para validar tenant, cliente, serviço e profissional | Relações tenant-scoped validadas — ✅ Concluído* |
-| 5 | BL-064 | P0 | Implementar `startsAt` e `endsAt` e snapshots de preço/duração | Histórico preservado — ✅ Concluído |
-| 6 | BL-065 | P0 | Criar constraint PostgreSQL de não sobreposição | Migration criada; aplicação/teste concorrente em PostgreSQL — 🟡 Parcial |
-| 7 | BL-066 | P0 | Tratar erro de conflito de banco | Retorno amigável implementado; integração concorrente — 🟡 Parcial |
-| 8 | BL-067 | P1 | Implementar opção “qualquer profissional disponível” | Sistema seleciona apenas profissional apto e com intervalo livre |
-| 9 | BL-068 | P1 | Adaptar cancelamento e alteração de agendamento | 🟡 Parcial — cancelamento do cliente concluído; alterações mais amplas pendentes |
-| 10 | BL-069 | P1 | Revisar calendário do painel para múltiplos profissionais | Agenda permite filtrar/visualizar por profissional e por dia |
-| 11 | BL-070 | P0 | Criar testes de concorrência, duração e timezone | Testes provam ausência de sobreposição e conversão correta de horário |
+| Ordem | ID | Prioridade | Task | Critério de aceite | Status |
+|---:|---|---|---|---|---|
+| 1 | BL-060 | P0 | Definir regra de disponibilidade e status ocupantes | Regras documentadas e cobertas por testes | ✅ Concluído |
+| 2 | BL-061 | P0 | Criar serviço de cálculo de disponibilidade por profissional | Considera jornada, horário do tenant, serviço, bloqueios, reservas e timezone | ✅ Concluído |
+| 3 | BL-062 | P0 | Adaptar consulta `getUnavailableIntervals` | Consulta a agenda do profissional escolhido | ✅ Concluído |
+| 4 | BL-063 | P0 | Refatorar `createBooking` para validar tenant, cliente, serviço e profissional | Relações tenant-scoped validadas | 🟡 Parcial — customerId fica nullable quando ainda não existe ficha local |
+| 5 | BL-064 | P0 | Implementar `startsAt` e `endsAt` e snapshots de preço/duração | Histórico preservado | ✅ Concluído |
+| 6 | BL-065 | P0 | Criar constraint PostgreSQL de não sobreposição | Migration criada e aplicada; teste concorrente em PostgreSQL | 🟡 Parcial — migration criada, não aplicada; sem teste concorrente PostgreSQL |
+| 7 | BL-066 | P0 | Tratar erro de conflito de banco | Retorno amigável implementado e integração concorrente | 🟡 Parcial — tratamento implementado; integração concorrente pendente |
+| 8 | BL-067 | P1 | Implementar opção “qualquer profissional disponível” | Sistema seleciona apenas profissional apto e com intervalo livre | ⏳ Pendente |
+| 9 | BL-068 | P1 | Adaptar cancelamento e alteração de agendamento | Cancelamento do cliente preserva o registro; alterações mais amplas | 🟡 Parcial — cancelamento preserva histórico; transições e alterações mais amplas pendentes |
+| 10 | BL-069 | P1 | Revisar calendário do painel para múltiplos profissionais | Agenda permite filtrar/visualizar por profissional e por dia | ⏳ Pendente |
+| 11 | BL-070 | P0 | Criar testes de concorrência, duração e timezone | Testes provam ausência de sobreposição e conversão correta de horário | 🟡 Parcial — testes unitários de timezone/sobreposição; concorrência no banco não executada |
 
 **Saída da fase (após aplicar a migration BL-065):** profissionais podem atender simultaneamente e o banco impede conflito de agenda.
 
-**BL-060–066 (implementação):** somente `PENDING` e `CONFIRMED` ocupam agenda; `CANCELED`, `COMPLETED` e `NO_SHOW` não. A disponibilidade intersecta jornada do tenant e do profissional, aplica exceções (indisponibilidade prevalece; horário customizado substitui a jornada semanal), bloqueios gerais/individuais e reservas. Datas/horários são interpretados no timezone IANA do tenant; em uma hora local repetida no fim do horário de verão escolhe-se a primeira ocorrência, e horários locais inexistentes são descartados. A criação revalida serviço/profissional/tenant e horário e grava snapshots. `customerId` é preenchido apenas se já existir um Customer ligado ao usuário naquele tenant; caso contrário permanece nullable porque o fluxo ainda não coleta telefone/dados necessários para criar ficha com segurança (cadastro de Customer permanece fora do escopo desta fase). `*` O teste concorrente da constraint e a aplicação da migration precisam ser verificados em um PostgreSQL descartável; não foram executados nesta implementação.
+**BL-060–066 (implementação):** somente `PENDING` e `CONFIRMED` ocupam agenda; `CANCELED`, `COMPLETED` e `NO_SHOW` não. A disponibilidade intersecta jornada do tenant e do profissional, aplica exceções (indisponibilidade prevalece; horário customizado substitui a jornada semanal), bloqueios gerais/individuais e reservas. Datas/horários são interpretados no timezone IANA do tenant; em uma hora local repetida no fim do horário de verão escolhe-se a primeira ocorrência, e horários locais inexistentes são descartados. A consulta e a criação filtram serviços/profissionais habilitados; a criação revalida serviço/profissional/tenant e horário e grava snapshots. `customerId` só é preenchido se já existir um Customer ligado ao usuário naquele tenant; caso contrário permanece nullable. A criação automática da ficha e o vínculo de reservas sem `customerId` continuam pendentes (BL-082). A migration da constraint e o teste concorrente ainda precisam ser verificados em um PostgreSQL descartável; não foram executados nesta implementação.
 
-**BL-068 (implementação):** o cliente pode cancelar apenas bookings próprios `PENDING`/`CONFIRMED`; a operação preserva o registro e snapshots e marca `CANCELED`. A listagem futura omite cancelados e a interface não os oferece como confirmados/canceláveis. O caminho de equipe continua tenant-scoped, mas validação de transições de status e alterações mais amplas do cliente/equipe permanecem pendentes.
+**BL-068 (implementação):** o cliente pode cancelar apenas bookings próprios `PENDING`/`CONFIRMED`; a operação preserva o registro e snapshots e marca `CANCELED`, mantendo o histórico de cancelamento. A listagem futura omite cancelados e a interface não os oferece como confirmados/canceláveis. O caminho de equipe continua tenant-scoped, mas validação de transições de status e alterações mais amplas do cliente/equipe permanecem pendentes.
 
 ### Fase 6 — Perfil público, clientes e remoção do marketplace
 
 **Objetivo:** entregar a experiência individual de cada estabelecimento.
 
-| Ordem | ID | Prioridade | Task | Critério de aceite |
-|---:|---|---|---|---|
-| 1 | BL-080 | P0 | Implementar página pública `/{slug}` | Exibe somente dados públicos do tenant resolvido — ✅ Concluído |
-| 2 | BL-081 | P0 | Implementar fluxo de agendamento sob `/{slug}/agendar` | Todo o fluxo preserva o tenant resolvido — ✅ Concluído |
-| 3 | BL-082 | P0 | Criar/consultar Customer por tenant | Cliente possui ficha local independente |
-| 4 | BL-083 | P0 | Implementar área `/{slug}/minha-conta` | Cliente vê somente seus dados e bookings daquele tenant |
-| 5 | BL-084 | P0 | Remover busca/listagem pública de barbearias | Não há rota ou componente público para descobrir outros estabelecimentos — ⏳ Pendente |
-| 6 | BL-085 | P1 | Remover links, cards, filtros e conteúdo de marketplace | Navegação não sugere concorrentes nem redireciona para catálogo — ⏳ Pendente |
-| 7 | BL-086 | P1 | Implementar gestão de perfil público no painel | Proprietário altera dados, fotos, horários e slug conforme regras |
-| 8 | BL-087 | P1 | Implementar metadados/SEO por barbearia | Cada slug tem title, description e canonical adequados — ✅ Concluído |
-| 9 | BL-088 | P1 | Revisar responsividade e acessibilidade do fluxo | Agendamento funciona em dispositivos móveis e desktop |
+| Ordem | ID | Prioridade | Task | Critério de aceite | Status |
+|---:|---|---|---|---|---|
+| 1 | BL-080 | P0 | Implementar página pública `/{slug}` | Exibe somente dados públicos do tenant resolvido | ✅ Concluído |
+| 2 | BL-081 | P0 | Implementar fluxo de agendamento sob `/{slug}/agendar` | Todo o fluxo preserva o tenant resolvido | ✅ Concluído |
+| 3 | BL-082 | P0 | Criar/consultar Customer por tenant | Cliente possui ficha local independente; vinculada por `barbershopId + userId`, sem associação por e-mail | ✅ Concluído |
+| 4 | BL-083 | P0 | Implementar área `/{slug}/minha-conta` | Cliente vê somente seus dados e bookings daquele tenant | ✅ Concluído |
+| 5 | BL-084 | P0 | Remover busca/listagem pública de barbearias | Não há rota ou componente público para descobrir outros estabelecimentos | ⏳ Pendente |
+| 6 | BL-085 | P1 | Remover links, cards, filtros e conteúdo de marketplace | Navegação não sugere concorrentes nem redireciona para catálogo | ⏳ Pendente |
+| 7 | BL-086 | P1 | Implementar gestão de perfil público no painel | Proprietário altera dados, fotos, horários e slug conforme regras | ⏳ Pendente |
+| 8 | BL-087 | P1 | Implementar metadados/SEO por barbearia | Cada slug tem title, description e canonical adequados | ✅ Concluído |
+| 9 | BL-088 | P1 | Revisar responsividade e acessibilidade do fluxo | Agendamento funciona em dispositivos móveis e desktop | ⏳ Pendente |
 
-**Andamento:** BL-080, BL-081 e BL-087 concluídos. BL-082/083 e a remoção do marketplace (BL-084/085) continuam pendentes; portanto, a saída da fase ainda não foi atingida.
+**Andamento:** BL-080, BL-081, BL-082, BL-083 e BL-087 concluídos. A página Customer por tenant e a área `/{slug}/minha-conta` estão implementadas. A remoção do marketplace (BL-084/085) continua pendente; portanto, a saída da fase ainda não foi atingida. O agendamento associa `customerId` somente quando já existe ficha local; criar/associar a ficha automaticamente durante o booking e vincular agendamentos antigos sem `customerId` continuam pendentes.
 
 ### Fase 7 — Planos, assinaturas e administração da plataforma
 
 **Objetivo:** tornar a operação comercial administrável.
 
-| Ordem | ID | Prioridade | Task | Critério de aceite |
-|---:|---|---|---|---|
-| 1 | BL-090 | P0 | Criar cadastro e edição de planos | Superadmin define preço, limites e funcionalidades |
-| 2 | BL-091 | P0 | Criar assinatura vinculada ao tenant | Barbearia possui plano e status verificáveis |
-| 3 | BL-092 | P0 | Criar serviço central de entitlements/limites | Backend valida limites e features sem depender da UI |
-| 4 | BL-093 | P0 | Criar painel de superadmin | Acesso restrito a usuários com `SUPER_ADMIN` |
-| 5 | BL-094 | P1 | Criar gestão de barbearias | Superadmin ativa, suspende e consulta tenants |
-| 6 | BL-095 | P1 | Criar gestão de assinaturas | Superadmin altera plano/status com auditoria |
-| 7 | BL-096 | P1 | Implementar período de teste e período de tolerância | Transições são automáticas/configuráveis e testadas |
-| 8 | BL-097 | P1 | Criar interface/adaptador do gateway de pagamento | Domínio não depende diretamente do SDK do provedor |
-| 9 | BL-098 | P1 | Implementar webhooks idempotentes quando o gateway for escolhido | Evento duplicado não duplica cobrança ou mudança de status |
-| 10 | BL-099 | P1 | Implementar tela de assinatura para proprietário | Proprietário visualiza plano, status, datas e instruções de pagamento |
+| Ordem | ID | Prioridade | Task | Critério de aceite | Status |
+|---:|---|---|---|---|---|
+| 1 | BL-090 | P0 | Criar cadastro e edição de planos | Superadmin define preço, limites e funcionalidades | ⏳ Pendente |
+| 2 | BL-091 | P0 | Criar assinatura vinculada ao tenant | Barbearia possui plano e status verificáveis | ⏳ Pendente |
+| 3 | BL-092 | P0 | Criar serviço central de entitlements/limites | Backend valida limites e features sem depender da UI | ⏳ Pendente |
+| 4 | BL-093 | P0 | Criar painel de superadmin | Acesso restrito a usuários com `SUPER_ADMIN` | ⏳ Pendente |
+| 5 | BL-094 | P1 | Criar gestão de barbearias | Superadmin ativa, suspende e consulta tenants | ⏳ Pendente |
+| 6 | BL-095 | P1 | Criar gestão de assinaturas | Superadmin altera plano/status com auditoria | ⏳ Pendente |
+| 7 | BL-096 | P1 | Implementar período de teste e período de tolerância | Transições são automáticas/configuráveis e testadas | ⏳ Pendente |
+| 8 | BL-097 | P1 | Criar interface/adaptador do gateway de pagamento | Domínio não depende diretamente do SDK do provedor | ⏳ Pendente |
+| 9 | BL-098 | P1 | Implementar webhooks idempotentes quando o gateway for escolhido | Evento duplicado não duplica cobrança ou mudança de status | ⏳ Pendente |
+| 10 | BL-099 | P1 | Implementar tela de assinatura para proprietário | Proprietário visualiza plano, status, datas e instruções de pagamento | ⏳ Pendente |
 
 **Saída da fase:** plataforma consegue administrar planos, limites e status de seus clientes SaaS.
 
@@ -1121,19 +1121,21 @@ As fases abaixo estão em ordem de dependência técnica. As tasks são numerada
 
 **Objetivo:** homologar segurança, integridade e estabilidade antes de vender.
 
-| Ordem | ID | Prioridade | Task | Critério de aceite |
-|---:|---|---|---|---|
-| 1 | BL-100 | P0 | Executar suíte de testes unitários e integração | Testes essenciais passam em CI |
-| 2 | BL-101 | P0 | Executar matriz de testes de isolamento A/B | Nenhum acesso cruzado em leitura, escrita, update, delete e arquivos |
-| 3 | BL-102 | P0 | Executar testes de concorrência de agendamento | Banco rejeita reservas conflitantes |
-| 4 | BL-103 | P0 | Testar migração de banco em cópia atualizada | Sem perda ou associação indevida de dados |
-| 5 | BL-104 | P0 | Testar fluxo de cadastro, convite, agendamento, cancelamento e suspensão | Fluxos completos aprovados |
-| 6 | BL-105 | P1 | Configurar CI para lint, typecheck, testes e build | Pull requests bloqueados em falhas críticas |
-| 7 | BL-106 | P1 | Configurar deploy Docker e Traefik | HTTPS, health check e rollback documentados |
-| 8 | BL-107 | P1 | Configurar backup automatizado e política de retenção | Restauração testada e procedimento registrado |
-| 9 | BL-108 | P1 | Configurar monitoramento e logs | Erros de aplicação, banco e processos assíncronos existentes observáveis; preparar métricas para avaliar necessidade futura de Redis |
-| 10 | BL-109 | P1 | Revisar LGPD, termos, privacidade e retenção | Documentos e processos revisados antes do lançamento |
-| 11 | BL-110 | P1 | Executar piloto com duas ou mais barbearias independentes | Teste real comprova isolamento, agenda e operação comercial |
+| Ordem | ID | Prioridade | Task | Critério de aceite | Status |
+|---:|---|---|---|---|---|
+| 1 | BL-100 | P0 | Executar suíte de testes unitários e integração | Testes essenciais passam em CI | 🟡 Parcial — testes unitários e build disponíveis; integração completa/CI não verificados |
+| 2 | BL-101 | P0 | Executar matriz de testes de isolamento A/B | Nenhum acesso cruzado em leitura, escrita, update, delete e arquivos | ⏳ Pendente |
+| 3 | BL-102 | P0 | Executar testes de concorrência de agendamento | Banco rejeita reservas conflitantes | 🟡 Parcial — testes unitários de timezone/sobreposição; teste concorrente PostgreSQL não executado |
+| 4 | BL-103 | P0 | Testar migração de banco em cópia atualizada | Sem perda ou associação indevida de dados | ⏳ Pendente |
+| 5 | BL-104 | P0 | Testar fluxo de cadastro, convite, agendamento, cancelamento e suspensão | Fluxos completos aprovados | ⏳ Pendente |
+| 6 | BL-105 | P1 | Configurar CI para lint, typecheck, testes e build | Pull requests bloqueados em falhas críticas | ⏳ Pendente |
+| 7 | BL-106 | P1 | Configurar deploy Docker e Traefik | HTTPS, health check e rollback documentados | ⏳ Pendente |
+| 8 | BL-107 | P1 | Configurar backup automatizado e política de retenção | Restauração testada e procedimento registrado | ⏳ Pendente |
+| 9 | BL-108 | P1 | Configurar monitoramento e logs | Erros de aplicação, banco e processos assíncronos existentes observáveis; preparar métricas para avaliar necessidade futura de Redis | ⏳ Pendente |
+| 10 | BL-109 | P1 | Revisar LGPD, termos, privacidade e retenção | Documentos e processos revisados antes do lançamento | ⏳ Pendente |
+| 11 | BL-110 | P1 | Executar piloto com duas ou mais barbearias independentes | Teste real comprova isolamento, agenda e operação comercial | ⏳ Pendente |
+
+**Nota:** critérios dependentes de produção, homologação ou banco PostgreSQL não foram verificados.
 
 **Saída da fase:** primeira versão comercial homologada e operacional.
 
