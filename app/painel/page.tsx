@@ -25,6 +25,9 @@ export default async function PlatformPanelPage() {
           Acesso global autorizado para {admin.name ?? "Superadministrador"}.
         </p>
       </div>
+      <Button asChild className="w-fit">
+        <Link href="/painel/planos">Gerenciar planos</Link>
+      </Button>
       <Button asChild variant="outline" className="w-fit">
         <Link href="/minhas-barbearias">
           <ArrowLeftIcon />

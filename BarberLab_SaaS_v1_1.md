@@ -1104,10 +1104,10 @@ As fases abaixo estão em ordem de dependência técnica. As tasks são numerada
 
 | Ordem | ID | Prioridade | Task | Critério de aceite | Status |
 |---:|---|---|---|---|---|
-| 1 | BL-090 | P0 | Criar cadastro e edição de planos | Superadmin define preço, limites e funcionalidades | ⏳ Pendente |
+| 1 | BL-090 | P0 | Criar cadastro e edição de planos | Superadmin define preço, limites e funcionalidades | ✅ Concluído; CRUD protegido, validação server-side e auditoria |
 | 2 | BL-091 | P0 | Criar assinatura vinculada ao tenant | Barbearia possui plano e status verificáveis | ⏳ Pendente |
 | 3 | BL-092 | P0 | Criar serviço central de entitlements/limites | Backend valida limites e features sem depender da UI | ⏳ Pendente |
-| 4 | BL-093 | P0 | Criar painel de superadmin | Acesso restrito a usuários com `SUPER_ADMIN` | ⏳ Pendente |
+| 4 | BL-093 | P0 | Criar painel de superadmin | Acesso restrito a usuários com `SUPER_ADMIN` | 🟡 Parcial — painel protegido e acesso à gestão de planos; visão global e gestão de tenants/assinaturas pendentes |
 | 5 | BL-094 | P1 | Criar gestão de barbearias | Superadmin ativa, suspende e consulta tenants | ⏳ Pendente |
 | 6 | BL-095 | P1 | Criar gestão de assinaturas | Superadmin altera plano/status com auditoria | ⏳ Pendente |
 | 7 | BL-096 | P1 | Implementar período de teste e período de tolerância | Transições são automáticas/configuráveis e testadas | ⏳ Pendente |
@@ -1116,6 +1116,8 @@ As fases abaixo estão em ordem de dependência técnica. As tasks são numerada
 | 10 | BL-099 | P1 | Implementar tela de assinatura para proprietário | Proprietário visualiza plano, status, datas e instruções de pagamento | ⏳ Pendente |
 
 **Saída da fase:** plataforma consegue administrar planos, limites e status de seus clientes SaaS.
+
+**Andamento:** BL-090 concluído com gestão manual de planos em `/painel/planos`; alterações e ativações são registradas em `AuditLog`. BL-093 parcialmente implementado: `/painel` continua restrito a `SUPER_ADMIN` e agora dá acesso ao CRUD de planos. Gestão de assinaturas/tenants, serviço de entitlements e tela do proprietário permanecem pendentes; gateway e webhooks continuam fora até escolha do provedor.
 
 ### Fase 8 — Testes finais, deploy e operação
 
