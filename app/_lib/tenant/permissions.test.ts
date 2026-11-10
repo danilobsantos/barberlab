@@ -8,6 +8,7 @@ test("owners have all tenant permissions", () => {
     "manageBookings",
     "manageSchedule",
     "manageServices",
+    "manageTeam",
     "manageSettings",
   ] as const) {
     assert.equal(hasTenantPermission("OWNER", permission), true)
@@ -16,6 +17,7 @@ test("owners have all tenant permissions", () => {
 
 test("managers can operate but cannot change tenant settings", () => {
   assert.equal(hasTenantPermission("MANAGER", "manageServices"), true)
+  assert.equal(hasTenantPermission("MANAGER", "manageTeam"), true)
   assert.equal(hasTenantPermission("MANAGER", "manageBookings"), true)
   assert.equal(hasTenantPermission("MANAGER", "manageSettings"), false)
 })

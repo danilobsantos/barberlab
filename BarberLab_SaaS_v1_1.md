@@ -1039,18 +1039,20 @@ As fases abaixo estão em ordem de dependência técnica. As tasks são numerada
 
 **Objetivo:** disponibilizar equipe com cadastro independente e permissões opcionais.
 
-| Ordem | ID | Prioridade | Task | Critério de aceite |
-|---:|---|---|---|---|
-| 1 | BL-050 | P0 | Criar CRUD de profissionais | OWNER/MANAGER gerenciam profissionais do próprio tenant |
-| 2 | BL-051 | P0 | Criar associação de profissionais a serviços | Serviço só aparece para profissionais habilitados |
-| 3 | BL-052 | P0 | Implementar jornada semanal individual | Profissional pode ter um ou mais intervalos por dia |
-| 4 | BL-053 | P1 | Implementar folgas, férias e exceções | Exceções prevalecem conforme regra documentada |
-| 5 | BL-054 | P1 | Implementar bloqueios gerais e individuais | Bloqueio individual não afeta outros profissionais; geral afeta todos |
-| 6 | BL-055 | P1 | Implementar convite de profissional para criar/acessar conta | Profissional vincula conta sem ganhar acesso a outro tenant |
-| 7 | BL-056 | P1 | Implementar limite de profissionais por plano no backend | Não é possível exceder limite por requisição concorrente |
-| 8 | BL-057 | P1 | Criar tela de equipe no painel | Cadastro, edição, ativação, desativação e associação a serviços funcionam |
+| Ordem | ID | Prioridade | Task | Critério de aceite | Status |
+|---:|---|---|---|---|---|
+| 1 | BL-050 | P0 | Criar CRUD de profissionais | OWNER/MANAGER gerenciam profissionais do próprio tenant | ✅ Concluído |
+| 2 | BL-051 | P0 | Criar associação de profissionais a serviços | Serviço só aparece para profissionais habilitados | 🟡 Parcialmente implementado |
+| 3 | BL-052 | P0 | Implementar jornada semanal individual | Profissional pode ter um ou mais intervalos por dia | ⏳ Pendente |
+| 4 | BL-053 | P1 | Implementar folgas, férias e exceções | Exceções prevalecem conforme regra documentada | ⏳ Pendente |
+| 5 | BL-054 | P1 | Implementar bloqueios gerais e individuais | Bloqueio individual não afeta outros profissionais; geral afeta todos | ⏳ Pendente |
+| 6 | BL-055 | P1 | Implementar convite de profissional para criar/acessar conta | Profissional vincula conta sem ganhar acesso a outro tenant | ⏳ Pendente |
+| 7 | BL-056 | P1 | Implementar limite de profissionais por plano no backend | Não é possível exceder limite por requisição concorrente | ⏳ Pendente |
+| 8 | BL-057 | P1 | Criar tela de equipe no painel | Cadastro, edição, ativação, desativação e associação a serviços funcionam | ✅ Concluído |
 
 **Saída da fase:** barbearia gerencia sua equipe e cada profissional possui calendário próprio.
+
+**BL-050 concluído:** OWNER/MANAGER podem cadastrar, editar, ativar e desativar profissionais no tenant autorizado; registros não são excluídos e preservam o histórico. **BL-057 concluído:** a tela `/painel/[slug]/team` lista status e serviços associados e permite gerenciar a equipe. A edição valida que os serviços pertencem ao tenant; associações já usadas por agendamentos não podem ser removidas para preservar o histórico. **BL-051 parcialmente implementado:** a associação de serviços é gerenciável no painel, mas os fluxos de agendamento ainda não filtram os serviços pelos profissionais habilitados. Jornadas individuais, folgas/exceções, bloqueios, convites e limites por plano (BL-052–056) permanecem pendentes.
 
 ### Fase 5 — Motor de agendamento multi-profissional
 

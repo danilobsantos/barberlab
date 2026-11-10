@@ -5,6 +5,7 @@ export type TenantPermission =
   | "manageBookings"
   | "manageSchedule"
   | "manageServices"
+  | "manageTeam"
   | "manageSettings"
 
 const ROLE_PERMISSIONS: Record<MembershipRole, readonly TenantPermission[]> = {
@@ -13,6 +14,7 @@ const ROLE_PERMISSIONS: Record<MembershipRole, readonly TenantPermission[]> = {
     "manageBookings",
     "manageSchedule",
     "manageServices",
+    "manageTeam",
     "manageSettings",
   ],
   MANAGER: [
@@ -20,6 +22,7 @@ const ROLE_PERMISSIONS: Record<MembershipRole, readonly TenantPermission[]> = {
     "manageBookings",
     "manageSchedule",
     "manageServices",
+    "manageTeam",
   ],
   // shortcut: professionals have no panel access until agenda queries are scoped to their professionalId.
   PROFESSIONAL: [],

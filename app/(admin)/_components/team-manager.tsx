@@ -1,0 +1,306 @@
+"use client"
+
+import { Badge } from "@/app/_components/ui/badge"
+import { Button } from "@/app/_components/ui/button"
+import { Card, CardContent } from "@/app/_components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/app/_components/ui/dialog"
+import { Input } from "@/app/_components/ui/input"
+import { Switch } from "@/app/_components/ui/switch"
+import { Textarea } from "@/app/_components/ui/textarea"
+import { PencilIcon, PlusIcon, UsersRoundIcon } from "lucide-react"
+import { useState, useTransition } from "react"
+import { toast } from "sonner"
+import {
+  setProfessionalActive,
+  upsertProfessional,
+} from "../_actions/professionals"
+import { useAdminSlug } from "./use-admin-slug"
+
+interface TeamService {
+  id: string
+  name: string
+  isActive: boolean
+}
+
+export interface TeamProfessional {
+  id: string
+  name: string
+  displayName: string | null
+  email: string | null
+  phone: string | null
+  bio: string | null
+  isActive: boolean
+  services: { id: string; name: string }[]
+}
+
+const TeamManager = ({
+  professionals,
+  services,
+}: {
+  professionals: TeamProfessional[]
+  services: TeamService[]
+}) => {
+  const slug = useAdminSlug()
+  const [editing, setEditing] = useState<TeamProfessional | null | undefined>()
+  const [isPending, startTransition] = useTransition()
+
+  const save = (formData: FormData) => {
+    const input = {
+      id: editing?.id,
+      name: formData.get("name"),
+      displayName: formData.get("displayName"),
+      email: formData.get("email"),
+      phone: formData.get("phone"),
+      bio: formData.get("bio"),
+      serviceIds: formData.getAll("serviceIds"),
+    }
+    startTransition(async () => {
+      const result = await upsertProfessional(input, slug)
+      if (result.ok) {
+        toast.success(
+          editing ? "Profissional atualizado." : "Profissional criado.",
+        )
+        setEditing(undefined)
+      } else {
+        toast.error(result.error)
+      }
+    })
+  }
+
+  const toggle = (professional: TeamProfessional, isActive: boolean) => {
+    startTransition(async () => {
+      const result = await setProfessionalActive(
+        professional.id,
+        isActive,
+        slug,
+      )
+      if (result.ok) {
+        toast.success(
+          isActive ? "Profissional ativado." : "Profissional desativado.",
+        )
+      } else {
+        toast.error(result.error)
+      }
+    })
+  }
+
+  return (
+    <>
+      <div className="flex items-center justify-between">
+        <h2 className="text-muted-foreground text-[11px] font-bold tracking-wider uppercase">
+          {professionals.length}{" "}
+          {professionals.length === 1 ? "profissional" : "profissionais"}
+        </h2>
+        <Button onClick={() => setEditing(null)}>
+          <PlusIcon /> Novo profissional
+        </Button>
+      </div>
+
+      {professionals.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center gap-3 p-8 text-center">
+            <UsersRoundIcon className="text-muted-foreground h-8 w-8" />
+            <div>
+              <h3 className="font-semibold">Sua equipe começa aqui</h3>
+              <p className="text-muted-foreground text-sm">
+                Cadastre profissionais e associe os serviços que oferecem.
+              </p>
+            </div>
+            <Button onClick={() => setEditing(null)}>
+              <PlusIcon /> Cadastrar profissional
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {professionals.map((professional) => (
+            <Card
+              key={professional.id}
+              className={!professional.isActive ? "opacity-60" : undefined}
+            >
+              <CardContent className="space-y-3 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="truncate font-semibold">
+                      {professional.displayName || professional.name}
+                    </h3>
+                    {professional.displayName && (
+                      <p className="text-muted-foreground text-xs">
+                        {professional.name}
+                      </p>
+                    )}
+                    <Badge
+                      variant={professional.isActive ? "default" : "secondary"}
+                      className="mt-1 font-normal"
+                    >
+                      {professional.isActive ? "Ativo" : "Inativo"}
+                    </Badge>
+                  </div>
+                  <Switch
+                    checked={professional.isActive}
+                    onCheckedChange={(checked) => toggle(professional, checked)}
+                    disabled={isPending}
+                    aria-label={
+                      professional.isActive
+                        ? `Desativar ${professional.name}`
+                        : `Ativar ${professional.name}`
+                    }
+                  />
+                </div>
+                <div className="space-y-1 text-sm">
+                  {professional.email && (
+                    <p className="truncate">{professional.email}</p>
+                  )}
+                  {professional.phone && <p>{professional.phone}</p>}
+                  {professional.bio && (
+                    <p className="text-muted-foreground line-clamp-2">
+                      {professional.bio}
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {professional.services.length ? (
+                    professional.services.map((service) => (
+                      <Badge
+                        key={service.id}
+                        variant="secondary"
+                        className="font-normal"
+                      >
+                        {service.name}
+                      </Badge>
+                    ))
+                  ) : (
+                    <span className="text-muted-foreground text-xs">
+                      Nenhum serviço associado
+                    </span>
+                  )}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditing(professional)}
+                >
+                  <PencilIcon /> Editar
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <Dialog
+        open={editing !== undefined}
+        onOpenChange={(open) => !open && setEditing(undefined)}
+      >
+        <DialogContent className="max-h-[90vh] w-[92%] max-w-lg overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editing ? "Editar profissional" : "Novo profissional"}
+            </DialogTitle>
+            <DialogDescription>
+              Cadastre os dados e escolha os serviços oferecidos.
+            </DialogDescription>
+          </DialogHeader>
+          <form key={editing?.id ?? "new"} action={save} className="space-y-4">
+            <label className="block space-y-1.5 text-sm font-medium">
+              Nome *
+              <Input
+                name="name"
+                required
+                minLength={2}
+                maxLength={100}
+                defaultValue={editing?.name ?? ""}
+              />
+            </label>
+            <label className="block space-y-1.5 text-sm font-medium">
+              Nome de exibição
+              <Input
+                name="displayName"
+                maxLength={60}
+                defaultValue={editing?.displayName ?? ""}
+              />
+            </label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="block space-y-1.5 text-sm font-medium">
+                E-mail
+                <Input
+                  name="email"
+                  type="email"
+                  maxLength={254}
+                  defaultValue={editing?.email ?? ""}
+                />
+              </label>
+              <label className="block space-y-1.5 text-sm font-medium">
+                Telefone
+                <Input
+                  name="phone"
+                  type="tel"
+                  maxLength={30}
+                  defaultValue={editing?.phone ?? ""}
+                />
+              </label>
+            </div>
+            <label className="block space-y-1.5 text-sm font-medium">
+              Bio
+              <Textarea
+                name="bio"
+                maxLength={500}
+                rows={3}
+                defaultValue={editing?.bio ?? ""}
+              />
+            </label>
+            <fieldset className="space-y-2">
+              <legend className="text-sm font-medium">Serviços</legend>
+              {services.length ? (
+                services.map((service) => (
+                  <label
+                    key={service.id}
+                    className="flex items-center gap-2 text-sm"
+                  >
+                    <input
+                      type="checkbox"
+                      name="serviceIds"
+                      value={service.id}
+                      defaultChecked={editing?.services.some(
+                        (item) => item.id === service.id,
+                      )}
+                    />
+                    <span>
+                      {service.name}
+                      {!service.isActive && " (inativo)"}
+                    </span>
+                  </label>
+                ))
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  Cadastre serviços antes de associá-los.
+                </p>
+              )}
+            </fieldset>
+            <div className="flex gap-3 pt-2">
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full"
+                onClick={() => setEditing(undefined)}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" className="w-full" disabled={isPending}>
+                {editing ? "Salvar" : "Criar profissional"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
+  )
+}
+
+export default TeamManager

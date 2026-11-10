@@ -1,6 +1,7 @@
 import {
   CalendarRangeIcon,
   LayoutDashboardIcon,
+  UsersRoundIcon,
   ScissorsIcon,
   SettingsIcon,
 } from "lucide-react"
@@ -26,6 +27,13 @@ const NAV_ITEMS = [
     label: "Serviços",
     shortLabel: "Serviços",
     icon: ScissorsIcon,
+  },
+  {
+    href: "/team",
+    tour: "tour-team",
+    label: "Equipe",
+    shortLabel: "Equipe",
+    icon: UsersRoundIcon,
   },
   {
     href: "/settings",

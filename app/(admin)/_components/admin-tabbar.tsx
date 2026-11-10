@@ -11,7 +11,7 @@ const AdminTabBar = ({ slug }: { slug: string }) => {
 
   return (
     <nav className="bg-card/95 fixed inset-x-0 bottom-0 z-40 border-t pb-[env(safe-area-inset-bottom)] backdrop-blur-sm lg:hidden">
-      <div className="grid grid-cols-4">
+      <div className="grid grid-cols-5">
         {navItems.map((item) => {
           const Icon = item.icon
           const active = pathname.startsWith(item.href)
