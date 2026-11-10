@@ -8,6 +8,12 @@ import {
   isWithinProfessionalLimit,
   lockAndGetTenantEntitlements,
 } from "../../app/_lib/platform/entitlements"
+import {
+  createInvitationToken,
+  hashInvitationToken,
+  isInvitationAcceptable,
+  membershipInvitationExpiresAt,
+} from "../../app/_lib/membership-invitation"
 
 const databaseUrl = process.env.DATABASE_URL
 const databaseName = databaseUrl
@@ -40,6 +46,104 @@ const ids = {
   bookings: Array.from({ length: 5 }, () => randomUUID()),
 }
 
+async function testTenantRls() {
+  const role = `rls_test_${randomUUID().replaceAll("-", "")}`
+  const connection = await pool.connect()
+  await pool.query(`CREATE ROLE "${role}" NOLOGIN`)
+  await pool.query(
+    `GRANT SELECT, INSERT, UPDATE, DELETE ON "BarbershopService" TO "${role}"`,
+  )
+  try {
+    await connection.query("BEGIN")
+    await connection.query(`SET LOCAL ROLE "${role}"`)
+    const noContext = await connection.query(
+      `SELECT "id" FROM "BarbershopService" WHERE "id" = ANY($1::text[])`,
+      [[ids.service, ids.otherService]],
+    )
+    assert.deepEqual(noContext.rows, [])
+    await connection.query("COMMIT")
+
+    await connection.query("BEGIN")
+    await connection.query(`SET LOCAL ROLE "${role}"`)
+    await connection.query(`SELECT set_config('app.tenant_id', $1, true)`, [
+      ids.shop,
+    ])
+    const tenantRows = await connection.query(
+      `SELECT "id" FROM "BarbershopService" WHERE "id" = ANY($1::text[]) ORDER BY "id"`,
+      [[ids.service, ids.otherService]],
+    )
+    assert.deepEqual(
+      tenantRows.rows.map((row) => row.id),
+      [ids.service],
+    )
+    const changed = await connection.query(
+      `UPDATE "BarbershopService" SET "name" = 'cross-tenant-write' WHERE "id" = $1`,
+      [ids.otherService],
+    )
+    assert.equal(changed.rowCount, 0)
+    const deleted = await connection.query(
+      `DELETE FROM "BarbershopService" WHERE "id" = $1`,
+      [ids.otherService],
+    )
+    assert.equal(deleted.rowCount, 0)
+    await assert.rejects(
+      connection.query(
+        `INSERT INTO "BarbershopService" ("id", "name", "description", "imageUrl", "price", "barbershopId", "updatedAt") VALUES ($1, 'cross-tenant-insert', '', '', 10, $2, NOW())`,
+        [randomUUID(), ids.otherShop],
+      ),
+      (error: { code?: string }) => error.code === "42501",
+    )
+    await connection.query("ROLLBACK")
+
+    await connection.query("BEGIN")
+    await connection.query(`SET LOCAL ROLE "${role}"`)
+    const afterCommit = await connection.query(
+      `SELECT "id" FROM "BarbershopService" WHERE "id" = ANY($1::text[])`,
+      [[ids.service, ids.otherService]],
+    )
+    assert.deepEqual(afterCommit.rows, [])
+    await connection.query("ROLLBACK")
+  } finally {
+    connection.release()
+    await pool.query(`DROP OWNED BY "${role}"`)
+    await pool.query(`DROP ROLE "${role}"`)
+  }
+}
+
+async function assertTenantRlsCoverage() {
+  const expectedTables = [
+    "Barbershop",
+    "Membership",
+    "OpeningHour",
+    "BarbershopService",
+    "Professional",
+    "ProfessionalInvitation",
+    "Customer",
+    "ProfessionalService",
+    "ProfessionalSchedule",
+    "ProfessionalScheduleException",
+    "Booking",
+    "Subscription",
+    "SubscriptionEvent",
+    "AuditLog",
+    "ScheduleBlock",
+  ]
+  const result = await pool.query(
+    `SELECT c.relname AS name, c.relrowsecurity AS enabled, c.relforcerowsecurity AS forced
+     FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+     WHERE n.nspname = 'public' AND c.relname = ANY($1::text[])`,
+    [expectedTables],
+  )
+  assert.deepEqual(
+    result.rows
+      .filter((table) => table.enabled && table.forced)
+      .map((table) => table.name)
+      .sort(),
+    [...expectedTables].sort(),
+    "Every tenant-owned table must enable and force row-level security",
+  )
+}
+
 async function insertBooking(
   id: string,
   professionalId: string,
@@ -65,8 +169,9 @@ async function insertBooking(
   )
 }
 
-test("PostgreSQL enforces booking overlap and one current subscription per tenant", async () => {
+test("PostgreSQL enforces booking, subscription, tenant invitation, and membership constraints", async () => {
   try {
+    await assertTenantRlsCoverage()
     await pool.query(
       `INSERT INTO "Barbershop" ("id", "name", "slug", "address", "phones", "description", "imageUrl", "updatedAt")
        VALUES ($1, 'Integration test', $2, '', ARRAY[]::TEXT[], '', '', NOW()),
@@ -96,6 +201,7 @@ test("PostgreSQL enforces booking overlap and one current subscription per tenan
        VALUES ($1, 'Other tenant service', '', '', 10, $2, NOW())`,
       [ids.otherService, ids.otherShop],
     )
+    await testTenantRls()
     for (const [index, professionalId] of ids.professionals.entries()) {
       await pool.query(
         `INSERT INTO "Professional" ("id", "barbershopId", "name", "updatedAt") VALUES ($1, $2, $3, NOW())`,
@@ -106,6 +212,96 @@ test("PostgreSQL enforces booking overlap and one current subscription per tenan
         [ids.shop, professionalId, ids.service],
       )
     }
+    const invitationToken = createInvitationToken()
+    const invitationExpiry = membershipInvitationExpiresAt(new Date())
+    await prisma.professionalInvitation.create({
+      data: {
+        professionalId: ids.professionals[0],
+        email: "staff@example.test",
+        tokenHash: hashInvitationToken(invitationToken),
+        expiresAt: invitationExpiry,
+      },
+    })
+    const invitation = await prisma.professionalInvitation.findUniqueOrThrow({
+      where: { tokenHash: hashInvitationToken(invitationToken) },
+      include: { professional: { select: { barbershopId: true } } },
+    })
+    assert.equal(invitation.professional.barbershopId, ids.shop)
+
+    const resentToken = createInvitationToken()
+    await prisma.professionalInvitation.update({
+      where: { professionalId: ids.professionals[0] },
+      data: {
+        tokenHash: hashInvitationToken(resentToken),
+        expiresAt: membershipInvitationExpiresAt(new Date()),
+        canceledAt: null,
+      },
+    })
+    assert.equal(
+      await prisma.professionalInvitation.findUnique({
+        where: { tokenHash: hashInvitationToken(invitationToken) },
+      }),
+      null,
+    )
+    const resentInvitation =
+      await prisma.professionalInvitation.findUniqueOrThrow({
+        where: { tokenHash: hashInvitationToken(resentToken) },
+      })
+    assert.equal(
+      isInvitationAcceptable(resentInvitation, "staff@example.test"),
+      true,
+    )
+    const canceledAt = new Date()
+    await prisma.professionalInvitation.update({
+      where: { id: resentInvitation.id },
+      data: { canceledAt },
+    })
+    assert.equal(
+      isInvitationAcceptable(
+        { ...resentInvitation, canceledAt },
+        "staff@example.test",
+      ),
+      false,
+    )
+    const activeToken = createInvitationToken()
+    await prisma.professionalInvitation.update({
+      where: { id: resentInvitation.id },
+      data: {
+        tokenHash: hashInvitationToken(activeToken),
+        expiresAt: membershipInvitationExpiresAt(new Date()),
+        canceledAt: null,
+      },
+    })
+    const activeInvitation =
+      await prisma.professionalInvitation.findUniqueOrThrow({
+        where: { tokenHash: hashInvitationToken(activeToken) },
+      })
+    assert.equal(
+      isInvitationAcceptable(activeInvitation, "staff@example.test"),
+      true,
+    )
+    const acceptCondition = {
+      id: activeInvitation.id,
+      tokenHash: hashInvitationToken(activeToken),
+      acceptedAt: null,
+      canceledAt: null,
+      expiresAt: { gt: new Date() },
+    }
+    const acceptAttempts = await Promise.all([
+      prisma.professionalInvitation.updateMany({
+        where: acceptCondition,
+        data: { acceptedAt: new Date() },
+      }),
+      prisma.professionalInvitation.updateMany({
+        where: acceptCondition,
+        data: { acceptedAt: new Date() },
+      }),
+    ])
+    assert.deepEqual(
+      acceptAttempts.map((attempt) => attempt.count).sort(),
+      [0, 1],
+    )
+
     await assert.rejects(
       pool.query(
         `INSERT INTO "ProfessionalService" ("barbershopId", "professionalId", "serviceId") VALUES ($1, $2, $3)`,

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { planSchema } from "./plan-schema"
+import { planSchema, platformPlanActiveSchema } from "./plan-schema"
 
 const plan = {
   name: "Starter",
@@ -33,6 +33,24 @@ test("plan schema rejects malformed prices and feature names", () => {
   )
   assert.equal(
     planSchema.safeParse({ ...plan, features: "reports basic" }).success,
+    false,
+  )
+})
+
+test("plan activation accepts only a UUID and explicit boolean value", () => {
+  assert.deepEqual(
+    platformPlanActiveSchema.parse({
+      id: "00000000-0000-4000-8000-000000000001",
+      isActive: "false",
+    }),
+    {
+      id: "00000000-0000-4000-8000-000000000001",
+      isActive: false,
+    },
+  )
+  assert.equal(
+    platformPlanActiveSchema.safeParse({ id: "plan-1", isActive: "anything" })
+      .success,
     false,
   )
 })

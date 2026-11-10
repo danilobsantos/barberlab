@@ -3,12 +3,15 @@
 import { db } from "@/app/_lib/prisma"
 import { requirePlatformAdmin } from "@/app/_lib/platform/require-platform-admin"
 import { platformBarbershopStatusSchema } from "@/app/_lib/platform/barbershop-status-schema"
+import { consumeRateLimit } from "@/app/_lib/rate-limit"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
 export async function setPlatformBarbershopStatus(formData: FormData) {
   const admin = await requirePlatformAdmin()
   if (!admin) redirect("/painel")
+  const limit = await consumeRateLimit("platformWrite", admin.userId)
+  if (!limit.allowed) redirect("/painel/barbearias?error=rate-limit")
 
   const parsed = platformBarbershopStatusSchema.safeParse(
     Object.fromEntries(formData),

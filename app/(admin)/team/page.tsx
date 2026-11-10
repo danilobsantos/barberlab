@@ -4,6 +4,7 @@ import { requireAdminContext } from "@/app/_lib/tenant/require-admin-context"
 import { redirect } from "next/navigation"
 import PageHeader from "../_components/page-header"
 import TeamManager from "../_components/team-manager"
+import { isInvitationOwner } from "@/app/_lib/membership-invitation"
 
 export const metadata: Metadata = {
   title: "Equipe | Barber Lab",
@@ -20,6 +21,14 @@ const TeamPage = async ({ params }: { params: Promise<{ slug: string }> }) => {
       where: { barbershopId: admin.barbershopId },
       orderBy: [{ status: "asc" }, { name: "asc" }],
       include: {
+        invitation: {
+          select: {
+            email: true,
+            expiresAt: true,
+            acceptedAt: true,
+            canceledAt: true,
+          },
+        },
         services: {
           where: { barbershopId: admin.barbershopId },
           select: { service: { select: { id: true, name: true } } },
@@ -71,6 +80,15 @@ const TeamPage = async ({ params }: { params: Promise<{ slug: string }> }) => {
           phone: professional.phone,
           bio: professional.bio,
           isActive: professional.status === "ACTIVE",
+          hasLogin: !!professional.userId,
+          invitation: professional.invitation
+            ? {
+                email: professional.invitation.email,
+                expiresAt: professional.invitation.expiresAt.toISOString(),
+                accepted: !!professional.invitation.acceptedAt,
+                canceled: !!professional.invitation.canceledAt,
+              }
+            : null,
           services: professional.services.map(({ service }) => service),
           schedules: professional.schedules,
           exceptions: professional.exceptions.map((exception) => ({
@@ -79,6 +97,7 @@ const TeamPage = async ({ params }: { params: Promise<{ slug: string }> }) => {
           })),
         }))}
         services={services}
+        canInvite={isInvitationOwner(admin.role)}
       />
     </div>
   )

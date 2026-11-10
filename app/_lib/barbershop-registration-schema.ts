@@ -5,6 +5,7 @@ const reservedSlugs = new Set([
   "api",
   "login",
   "cadastro",
+  "convite",
   "precos",
   "barbershops",
   "bookings",

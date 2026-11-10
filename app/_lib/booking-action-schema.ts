@@ -2,6 +2,16 @@ import { z } from "zod"
 
 export const serviceIdSchema = z.string().min(1).max(100)
 export const publicSlugSchema = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+export const publicBookingTenantFilter = (
+  slug: string | undefined,
+  singleTenantId: string | null,
+) =>
+  singleTenantId
+    ? { id: singleTenantId, ...(slug ? { slug } : {}) }
+    : slug
+      ? { slug }
+      : null
+
 export const serviceInputSchema = z.union([
   serviceIdSchema,
   z.object({ serviceId: serviceIdSchema, slug: publicSlugSchema.optional() }),

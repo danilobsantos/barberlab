@@ -1,7 +1,7 @@
 import { z } from "zod"
 
 export const planSchema = z.object({
-  id: z.string().optional(),
+  id: z.uuid().optional(),
   name: z.string().trim().min(1).max(80),
   slug: z
     .string()
@@ -27,6 +27,11 @@ export const planSchema = z.object({
     .transform((features) =>
       Object.fromEntries(features.map((feature) => [feature, true])),
     ),
+})
+
+export const platformPlanActiveSchema = z.object({
+  id: z.uuid(),
+  isActive: z.enum(["true", "false"]).transform((value) => value === "true"),
 })
 
 export type PlanInput = z.infer<typeof planSchema>

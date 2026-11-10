@@ -7,8 +7,12 @@ import { auth } from "../_lib/auth"
 import { db } from "../_lib/prisma"
 import { canTenantAcceptBookings } from "../_lib/platform/subscription-lifecycle"
 import { consumeRateLimit, rateLimitError } from "../_lib/rate-limit"
-import { createBookingSchema } from "../_lib/booking-action-schema"
+import {
+  createBookingSchema,
+  publicBookingTenantFilter,
+} from "../_lib/booking-action-schema"
 import { localDateTimeToInstant } from "../_lib/booking-availability"
+import { SINGLE_BARBERSHOP_ID } from "../_lib/deployment"
 import { getUnavailableIntervals } from "./get-bookings"
 import { isBookingConflictError } from "../_lib/booking-conflict"
 
@@ -20,19 +24,25 @@ export const createBooking = async (input: unknown) => {
   if (!session?.user?.id)
     return { ok: false as const, error: "Você precisa estar logado." }
 
-  const limit = await consumeRateLimit("createBooking", session.user.id)
-  if (!limit.allowed) return rateLimitError(limit.retryAfterSeconds)
-
   const parsed = createBookingSchema.safeParse(input)
   if (!parsed.success)
     return { ok: false as const, error: "Dados do agendamento inválidos." }
   const { serviceId, professionalId, date, time, slug } = parsed.data
+  const tenantFilter = publicBookingTenantFilter(slug, SINGLE_BARBERSHOP_ID)
+  if (!tenantFilter) {
+    return { ok: false as const, error: "Barbearia inválida para agendamento." }
+  }
+  const limit = await consumeRateLimit(
+    "createBooking",
+    `${slug ?? SINGLE_BARBERSHOP_ID}:${session.user.id}`,
+  )
+  if (!limit.allowed) return rateLimitError(limit.retryAfterSeconds)
 
   const service = await db.barbershopService.findFirst({
     where: {
       id: serviceId,
       isActive: true,
-      barbershop: { status: "ACTIVE", ...(slug ? { slug } : {}) },
+      barbershop: { status: "ACTIVE", ...tenantFilter },
       professionals: {
         some: { professionalId, professional: { status: "ACTIVE" } },
       },

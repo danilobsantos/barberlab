@@ -17,10 +17,13 @@ import { MAX_PROFESSIONAL_SCHEDULE_INTERVALS } from "@/app/_lib/professional-sch
 import { MAX_PROFESSIONAL_SCHEDULE_EXCEPTIONS } from "@/app/_lib/professional-schedule-exception-limit"
 import {
   CalendarClockIcon,
+  CopyIcon,
+  MailPlusIcon,
   PencilIcon,
   PlusIcon,
   Trash2Icon,
   UsersRoundIcon,
+  XCircleIcon,
 } from "lucide-react"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
@@ -35,6 +38,10 @@ import {
 } from "../_actions/professional-schedule-exceptions"
 import { useAdminSlug } from "./use-admin-slug"
 import { useRouter } from "next/navigation"
+import {
+  cancelProfessionalInvitation,
+  sendProfessionalInvitation,
+} from "../_actions/professional-invitations"
 
 interface TeamService {
   id: string
@@ -50,6 +57,13 @@ export interface TeamProfessional {
   phone: string | null
   bio: string | null
   isActive: boolean
+  hasLogin: boolean
+  invitation: {
+    email: string
+    expiresAt: string
+    accepted: boolean
+    canceled: boolean
+  } | null
   services: { id: string; name: string }[]
   schedules: { weekday: number; startsAtLocal: string; endsAtLocal: string }[]
   exceptions: {
@@ -76,9 +90,11 @@ const weekdays = [
 const TeamManager = ({
   professionals,
   services,
+  canInvite,
 }: {
   professionals: TeamProfessional[]
   services: TeamService[]
+  canInvite: boolean
 }) => {
   const slug = useAdminSlug()
   const router = useRouter()
@@ -91,6 +107,9 @@ const TeamManager = ({
   >("UNAVAILABLE")
   const [intervals, setIntervals] = useState<ScheduleInterval[]>([])
   const [isPending, startTransition] = useTransition()
+  const [invitationLinks, setInvitationLinks] = useState<
+    Record<string, string>
+  >({})
 
   const save = (formData: FormData) => {
     const input = {
@@ -198,6 +217,55 @@ const TeamManager = ({
     })
   }
 
+  const sendInvitation = (professional: TeamProfessional) => {
+    startTransition(async () => {
+      const result = await sendProfessionalInvitation(professional.id, slug)
+      if (!result.ok) {
+        toast.error(result.error)
+        return
+      }
+      setInvitationLinks((current) => ({
+        ...current,
+        [professional.id]: result.url,
+      }))
+      toast.success(
+        result.emailSent
+          ? "Convite enviado por e-mail. Você também pode copiar o link."
+          : "Link de convite gerado. O e-mail não foi enviado; copie o link.",
+      )
+      router.refresh()
+    })
+  }
+
+  const cancelInvitation = (professional: TeamProfessional) => {
+    if (!window.confirm(`Cancelar o convite de ${professional.name}?`)) return
+    startTransition(async () => {
+      const result = await cancelProfessionalInvitation(professional.id, slug)
+      if (!result.ok) {
+        toast.error(result.error)
+        return
+      }
+      setInvitationLinks((current) => {
+        const next = { ...current }
+        delete next[professional.id]
+        return next
+      })
+      toast.success("Convite cancelado.")
+      router.refresh()
+    })
+  }
+
+  const copyInvitationLink = async (professionalId: string) => {
+    const url = invitationLinks[professionalId]
+    if (!url) return
+    try {
+      await navigator.clipboard.writeText(url)
+      toast.success("Link copiado.")
+    } catch {
+      toast.error("Não foi possível copiar. Selecione e copie o link exibido.")
+    }
+  }
+
   return (
     <>
       <div className="flex items-center justify-between">
@@ -272,6 +340,81 @@ const TeamManager = ({
                     </p>
                   )}
                 </div>
+                {canInvite && (
+                  <div className="space-y-2 rounded-md border p-3">
+                    {professional.hasLogin ? (
+                      <p className="text-muted-foreground text-sm">
+                        Conta vinculada ao profissional.
+                      </p>
+                    ) : professional.invitation?.accepted ? (
+                      <p className="text-sm">Convite aceito.</p>
+                    ) : (
+                      <>
+                        <p className="text-muted-foreground text-xs">
+                          {professional.invitation?.canceled
+                            ? "Convite cancelado."
+                            : professional.invitation &&
+                                new Date(professional.invitation.expiresAt) <=
+                                  new Date()
+                              ? "Convite expirado."
+                              : professional.invitation
+                                ? `Aguardando ${professional.invitation.email}`
+                                : "Sem acesso ao painel"}
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => sendInvitation(professional)}
+                            disabled={isPending || !professional.email}
+                          >
+                            <MailPlusIcon />
+                            {professional.invitation
+                              ? "Reenviar convite"
+                              : "Convidar"}
+                          </Button>
+                          {professional.invitation &&
+                            !professional.invitation.canceled && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => cancelInvitation(professional)}
+                                disabled={isPending}
+                              >
+                                <XCircleIcon /> Cancelar
+                              </Button>
+                            )}
+                        </div>
+                        {invitationLinks[professional.id] && (
+                          <div className="flex gap-2">
+                            <Input
+                              aria-label="Link de convite"
+                              readOnly
+                              value={invitationLinks[professional.id]}
+                              className="text-xs"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              aria-label="Copiar link do convite"
+                              onClick={() =>
+                                copyInvitationLink(professional.id)
+                              }
+                            >
+                              <CopyIcon />
+                            </Button>
+                          </div>
+                        )}
+                        {!professional.email && (
+                          <p className="text-muted-foreground text-xs">
+                            Cadastre um e-mail para enviar o convite.
+                          </p>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
                 <div className="flex flex-wrap gap-1.5">
                   {professional.services.length ? (
                     professional.services.map((service) => (

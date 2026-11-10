@@ -2,7 +2,11 @@
 
 import { db } from "@/app/_lib/prisma"
 import { requirePlatformAdmin } from "@/app/_lib/platform/require-platform-admin"
-import { planSchema } from "@/app/_lib/platform/plan-schema"
+import {
+  planSchema,
+  platformPlanActiveSchema,
+} from "@/app/_lib/platform/plan-schema"
+import { consumeRateLimit } from "@/app/_lib/rate-limit"
 import { Prisma } from "@prisma/client"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
@@ -10,6 +14,8 @@ import { redirect } from "next/navigation"
 export async function savePlatformPlan(formData: FormData) {
   const admin = await requirePlatformAdmin()
   if (!admin) redirect("/painel")
+  const limit = await consumeRateLimit("platformWrite", admin.userId)
+  if (!limit.allowed) redirect("/painel/planos?error=rate-limit")
 
   const parsed = planSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) redirect("/painel/planos?error=invalid")
@@ -54,9 +60,13 @@ export async function setPlatformPlanActive(formData: FormData) {
   const admin = await requirePlatformAdmin()
   if (!admin) redirect("/painel")
 
-  const id = formData.get("id")
-  const isActive = formData.get("isActive") === "true"
-  if (typeof id !== "string" || !id) redirect("/painel/planos?error=invalid")
+  const limit = await consumeRateLimit("platformWrite", admin.userId)
+  if (!limit.allowed) redirect("/painel/planos?error=rate-limit")
+  const parsed = platformPlanActiveSchema.safeParse(
+    Object.fromEntries(formData),
+  )
+  if (!parsed.success) redirect("/painel/planos?error=invalid")
+  const { id, isActive } = parsed.data
 
   await db.$transaction(async (tx) => {
     const plan = await tx.plan.update({ where: { id }, data: { isActive } })

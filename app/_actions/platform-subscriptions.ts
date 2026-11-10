@@ -5,12 +5,15 @@ import { requirePlatformAdmin } from "@/app/_lib/platform/require-platform-admin
 import { subscriptionSchema } from "@/app/_lib/platform/subscription-schema"
 import { lockAndGetTenantEntitlements } from "@/app/_lib/platform/entitlements"
 import { Prisma } from "@prisma/client"
+import { consumeRateLimit } from "@/app/_lib/rate-limit"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
 export async function savePlatformSubscription(formData: FormData) {
   const admin = await requirePlatformAdmin()
   if (!admin) redirect("/painel")
+  const limit = await consumeRateLimit("platformWrite", admin.userId)
+  if (!limit.allowed) redirect("/painel/assinaturas?error=rate-limit")
 
   const parsed = subscriptionSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) redirect("/painel/assinaturas?error=invalid")

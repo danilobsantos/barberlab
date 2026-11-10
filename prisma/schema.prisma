@@ -234,6 +234,7 @@ model Professional {
   barbershop   Barbershop         @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
   user         User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
   membership   Membership?        @relation(fields: [userId, barbershopId], references: [userId, barbershopId], onDelete: Restrict)
+  invitation   ProfessionalInvitation?
   services     ProfessionalService[]
   bookings     Booking[]
   schedules    ProfessionalSchedule[]
@@ -243,6 +244,21 @@ model Professional {
   @@unique([barbershopId, id])
   @@index([barbershopId, status])
   @@index([userId])
+}
+
+model ProfessionalInvitation {
+  id             String       @id @default(uuid())
+  professionalId String       @unique
+  email          String
+  tokenHash      String       @unique
+  expiresAt      DateTime     @db.Timestamptz(6)
+  acceptedAt     DateTime?    @db.Timestamptz(6)
+  canceledAt     DateTime?    @db.Timestamptz(6)
+  createdAt      DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime     @updatedAt @db.Timestamptz(6)
+  professional   Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
 }
 
 model Customer {

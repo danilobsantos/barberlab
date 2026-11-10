@@ -3,8 +3,8 @@ import test from "node:test"
 import { subscriptionSchema } from "./subscription-schema"
 
 const input = {
-  barbershopId: "shop-1",
-  planId: "plan-1",
+  barbershopId: "00000000-0000-4000-8000-000000000001",
+  planId: "00000000-0000-4000-8000-000000000002",
   status: "TRIALING",
   currentPeriodStart: "2026-11-10",
   currentPeriodEnd: "2026-12-10",

@@ -8,9 +8,11 @@ import { canTenantAcceptBookings } from "../_lib/platform/subscription-lifecycle
 import { withDefaults } from "../_lib/opening-hours"
 import { consumeRateLimit, getClientIp } from "../_lib/rate-limit"
 import {
+  publicBookingTenantFilter,
   serviceInputSchema,
   unavailableIntervalsSchema,
 } from "../_lib/booking-action-schema"
+import { SINGLE_BARBERSHOP_ID } from "../_lib/deployment"
 import {
   calculateAvailableSlots,
   effectiveScheduleException,
@@ -21,18 +23,24 @@ import {
 } from "../_lib/booking-availability"
 
 export const getServiceProfessionals = async (input: unknown) => {
-  const limit = await consumeRateLimit("readSchedule", await getClientIp())
   const parsed = serviceInputSchema.safeParse(input)
-  if (!limit.allowed || !parsed.success) return []
+  if (!parsed.success) return []
   const serviceId =
     typeof parsed.data === "string" ? parsed.data : parsed.data.serviceId
   const slug = typeof parsed.data === "string" ? undefined : parsed.data.slug
+  const tenantFilter = publicBookingTenantFilter(slug, SINGLE_BARBERSHOP_ID)
+  if (!tenantFilter) return []
+  const limit = await consumeRateLimit(
+    "readSchedule",
+    `${slug ?? SINGLE_BARBERSHOP_ID}:${await getClientIp()}`,
+  )
+  if (!limit.allowed) return []
 
   const service = await db.barbershopService.findFirst({
     where: {
       id: serviceId,
       isActive: true,
-      barbershop: { status: "ACTIVE", ...(slug ? { slug } : {}) },
+      barbershop: { status: "ACTIVE", ...tenantFilter },
     },
     select: { barbershopId: true },
   })
@@ -66,15 +74,20 @@ export const getUnavailableIntervals = async (
   const parsed = unavailableIntervalsSchema.safeParse(input)
   if (!parsed.success) return []
   const { serviceId, professionalId, date, slug } = parsed.data
+  const tenantFilter = publicBookingTenantFilter(slug, SINGLE_BARBERSHOP_ID)
+  if (!tenantFilter) return []
 
-  const limit = await consumeRateLimit("readSchedule", session.user.id)
+  const limit = await consumeRateLimit(
+    "readSchedule",
+    `${slug ?? SINGLE_BARBERSHOP_ID}:${session.user.id}`,
+  )
   if (!limit.allowed) return []
 
   const service = await db.barbershopService.findFirst({
     where: {
       id: serviceId,
       isActive: true,
-      barbershop: { status: "ACTIVE", ...(slug ? { slug } : {}) },
+      barbershop: { status: "ACTIVE", ...tenantFilter },
       professionals: {
         some: { professionalId, professional: { status: "ACTIVE" } },
       },

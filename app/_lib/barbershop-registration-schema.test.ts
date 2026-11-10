@@ -15,6 +15,7 @@ test("rejects reserved and non-kebab-case slugs", () => {
     "api",
     "login",
     "cadastro",
+    "convite",
     "precos",
     "barbershops",
     "bookings",

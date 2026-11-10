@@ -3,7 +3,7 @@ import Header from "@/app/_components/header"
 import { getBarbershopsById } from "@/app/_data/get-barbershop-by-id"
 import { getConfirmedBookings } from "@/app/_data/get-confirmed-bookings"
 import { getBarbershopOpeningHours } from "@/app/_data/get-opening-hours"
-import { SINGLE_BARBERSHOP_ID, isSingleTenant } from "@/app/_lib/deployment"
+import { isSingleTenant } from "@/app/_lib/deployment"
 import type { Metadata } from "next"
 import { CalendarIcon } from "lucide-react"
 import { notFound } from "next/navigation"
@@ -18,7 +18,7 @@ interface HomeProps {
 export async function generateMetadata(): Promise<Metadata> {
   if (!isSingleTenant) return {}
 
-  const barbershop = await getBarbershopsById(SINGLE_BARBERSHOP_ID!)
+  const barbershop = await getBarbershopsById()
   if (!barbershop) return {}
 
   return {
@@ -32,7 +32,7 @@ const Home = async ({ searchParams }: HomeProps) => {
 
   if (!isSingleTenant) redirect("/cadastro")
 
-  const barbershop = await getBarbershopsById(SINGLE_BARBERSHOP_ID!)
+  const barbershop = await getBarbershopsById()
   if (!barbershop) {
     notFound()
   }

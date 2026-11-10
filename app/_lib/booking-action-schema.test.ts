@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import test from "node:test"
 import {
   createBookingSchema,
+  publicBookingTenantFilter,
   serviceIdSchema,
   serviceInputSchema,
   unavailableIntervalsSchema,
@@ -47,4 +48,18 @@ test("validates booking service IDs and dates at the action boundary", () => {
       .success,
     true,
   )
+})
+
+test("booking actions require a tenant slug outside single-tenant mode", () => {
+  assert.deepEqual(publicBookingTenantFilter("shop-a", null), {
+    slug: "shop-a",
+  })
+  assert.deepEqual(publicBookingTenantFilter("shop-a", "shop-id"), {
+    id: "shop-id",
+    slug: "shop-a",
+  })
+  assert.deepEqual(publicBookingTenantFilter(undefined, "shop-id"), {
+    id: "shop-id",
+  })
+  assert.equal(publicBookingTenantFilter(undefined, null), null)
 })

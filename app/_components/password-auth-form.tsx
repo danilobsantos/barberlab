@@ -9,15 +9,18 @@ import { Input } from "@/app/_components/ui/input"
 import { Label } from "@/app/_components/ui/label"
 
 type AccountType = "CUSTOMER" | "BARBERSHOP"
+type AuthAccountType = AccountType | "INVITATION"
 
 export function PasswordAuthForm({
   accountType,
   callbackUrl,
 }: {
-  accountType: AccountType
+  accountType: AuthAccountType
   callbackUrl?: string
 }) {
   const [mode, setMode] = useState<"login" | "register">("login")
+  const [invitationAccountType, setInvitationAccountType] =
+    useState<AccountType>("CUSTOMER")
   const [pending, setPending] = useState(false)
   const [message, setMessage] = useState("")
   const [error, setError] = useState("")
@@ -53,7 +56,8 @@ export function PasswordAuthForm({
         const result = await signIn("credentials", {
           email,
           password: formData.get("password"),
-          accountType,
+          accountType:
+            accountType === "INVITATION" ? invitationAccountType : accountType,
           callbackUrl: returnTo,
           redirect: false,
         })
@@ -74,7 +78,27 @@ export function PasswordAuthForm({
     <div className="w-full space-y-3">
       <form className="space-y-3" onSubmit={submit}>
         {mode === "register" && (
-          <input type="hidden" name="accountType" value={accountType} />
+          <input
+            type="hidden"
+            name="accountType"
+            value={accountType === "INVITATION" ? "CUSTOMER" : accountType}
+          />
+        )}
+        {accountType === "INVITATION" && mode === "login" && (
+          <div className="space-y-2">
+            <Label htmlFor="invitation-account-type">Tipo da conta</Label>
+            <select
+              id="invitation-account-type"
+              value={invitationAccountType}
+              onChange={(event) =>
+                setInvitationAccountType(event.target.value as AccountType)
+              }
+              className="border-input bg-background h-10 w-full rounded-md border px-3 text-sm"
+            >
+              <option value="CUSTOMER">Cliente / profissional</option>
+              <option value="BARBERSHOP">Conta de barbearia</option>
+            </select>
+          </div>
         )}
         <div className="space-y-2">
           <Label htmlFor={`auth-email-${accountType}`}>E-mail</Label>

@@ -3,8 +3,8 @@ import { z } from "zod"
 
 export const subscriptionSchema = z
   .object({
-    barbershopId: z.string().min(1),
-    planId: z.string().min(1),
+    barbershopId: z.uuid(),
+    planId: z.uuid(),
     status: z.nativeEnum(SubscriptionStatus),
     currentPeriodStart: z.iso.date(),
     currentPeriodEnd: z.iso.date(),
