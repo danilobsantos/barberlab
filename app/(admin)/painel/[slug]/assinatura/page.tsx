@@ -6,6 +6,7 @@ import {
   CardTitle,
 } from "@/app/_components/ui/card"
 import { db } from "@/app/_lib/prisma"
+import { refreshSubscriptionLifecycle } from "@/app/_lib/platform/subscription-lifecycle"
 import { requireAdminContext } from "@/app/_lib/tenant/require-admin-context"
 import { ArrowLeftIcon } from "lucide-react"
 import Link from "next/link"
@@ -31,6 +32,7 @@ export default async function TenantSubscriptionPage({
   const admin = await requireAdminContext(slug, "manageSettings")
   if (!admin || admin.role !== "OWNER") notFound()
 
+  await refreshSubscriptionLifecycle(admin.barbershopId)
   const subscription = await db.subscription.findFirst({
     where: { barbershopId: admin.barbershopId, status: { not: "CANCELED" } },
     orderBy: { createdAt: "desc" },

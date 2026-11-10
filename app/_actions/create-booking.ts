@@ -6,6 +6,7 @@ import { Prisma } from "@prisma/client"
 import { revalidatePath } from "next/cache"
 import { auth } from "../_lib/auth"
 import { db } from "../_lib/prisma"
+import { canTenantAcceptBookings } from "../_lib/platform/subscription-lifecycle"
 import { consumeRateLimit, rateLimitError } from "../_lib/rate-limit"
 import { createBookingSchema } from "../_lib/booking-action-schema"
 import { localDateTimeToInstant } from "../_lib/booking-availability"
@@ -49,6 +50,13 @@ export const createBooking = async (input: unknown) => {
       ok: false as const,
       error: "Serviço ou profissional indisponível.",
     }
+
+  if (!(await canTenantAcceptBookings(service.barbershopId))) {
+    return {
+      ok: false as const,
+      error: "Esta barbearia não está aceitando novos agendamentos no momento.",
+    }
+  }
 
   const startsAt = localDateTimeToInstant(
     date,

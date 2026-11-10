@@ -1,0 +1,85 @@
+import "server-only"
+
+import { SubscriptionStatus, type Prisma } from "@prisma/client"
+import { db } from "@/app/_lib/prisma"
+import {
+  nextSubscriptionStatus,
+  parseNonNegativeDays,
+} from "./subscription-lifecycle-policy"
+
+export {
+  nextSubscriptionStatus,
+  parseNonNegativeDays,
+} from "./subscription-lifecycle-policy"
+
+const DEFAULT_TRIAL_DAYS = 14
+const DEFAULT_GRACE_DAYS = 7
+
+export const subscriptionTrialDays = parseNonNegativeDays(
+  process.env.SUBSCRIPTION_TRIAL_DAYS,
+  DEFAULT_TRIAL_DAYS,
+)
+export const subscriptionGraceDays = parseNonNegativeDays(
+  process.env.SUBSCRIPTION_GRACE_DAYS,
+  DEFAULT_GRACE_DAYS,
+)
+
+// shortcut: lifecycle transitions run when a tenant is accessed, not on a scheduler; add a scheduled job if exact transition timing is required.
+export async function refreshSubscriptionLifecycle(
+  barbershopId: string,
+  now = new Date(),
+): Promise<SubscriptionStatus | null> {
+  return db.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "Barbershop" WHERE id = ${barbershopId} FOR UPDATE`
+    const subscription = await tx.subscription.findFirst({
+      where: { barbershopId, status: { not: SubscriptionStatus.CANCELED } },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        status: true,
+        currentPeriodEnd: true,
+        updatedAt: true,
+      },
+    })
+    if (!subscription) return null
+
+    const status = nextSubscriptionStatus(
+      subscription.status,
+      subscription.currentPeriodEnd,
+      now,
+    )
+    if (status === subscription.status) return status
+
+    await tx.subscription.update({
+      where: { id: subscription.id },
+      data: { status },
+    })
+    await tx.subscriptionEvent.create({
+      data: {
+        provider: "barberlab",
+        externalEventId: `lifecycle:${subscription.id}:${status}:${subscription.updatedAt.getTime()}`,
+        eventType: `SUBSCRIPTION_${status}`,
+        barbershopId,
+        subscriptionId: subscription.id,
+        payload: {
+          previousStatus: subscription.status,
+          status,
+          currentPeriodEnd: subscription.currentPeriodEnd.toISOString(),
+          graceDays: subscriptionGraceDays,
+        } satisfies Prisma.InputJsonValue,
+        processedAt: now,
+      },
+    })
+
+    return status
+  })
+}
+
+export async function canTenantAcceptBookings(barbershopId: string) {
+  const status = await refreshSubscriptionLifecycle(barbershopId)
+  return (
+    status === SubscriptionStatus.TRIALING ||
+    status === SubscriptionStatus.ACTIVE ||
+    status === SubscriptionStatus.PAST_DUE
+  )
+}

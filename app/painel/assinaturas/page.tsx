@@ -8,6 +8,7 @@ import {
 } from "@/app/_components/ui/card"
 import { Input } from "@/app/_components/ui/input"
 import { requirePlatformAdmin } from "@/app/_lib/platform/require-platform-admin"
+import { subscriptionTrialDays } from "@/app/_lib/platform/subscription-lifecycle"
 import { db } from "@/app/_lib/prisma"
 import { SubscriptionStatus } from "@prisma/client"
 import Link from "next/link"
@@ -23,15 +24,10 @@ const statuses = Object.values(SubscriptionStatus)
 const asDateInput = (date?: Date) =>
   date?.toISOString().slice(0, 10) ?? new Date().toISOString().slice(0, 10)
 
-const nextMonth = () => {
+const trialEnd = () => {
   const date = new Date()
-  const day = date.getUTCDate()
-  date.setUTCDate(1)
-  date.setUTCMonth(date.getUTCMonth() + 1)
-  const lastDay = new Date(
-    Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0),
-  ).getUTCDate()
-  date.setUTCDate(Math.min(day, lastDay))
+  date.setUTCHours(0, 0, 0, 0)
+  date.setUTCDate(date.getUTCDate() + subscriptionTrialDays)
   return asDateInput(date)
 }
 
@@ -172,7 +168,7 @@ export default async function PlatformSubscriptionsPage({
                         defaultValue={
                           current
                             ? asDateInput(current.currentPeriodEnd)
-                            : nextMonth()
+                            : trialEnd()
                         }
                       />
                     </label>

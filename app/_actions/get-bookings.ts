@@ -4,6 +4,7 @@ import { ProfessionalScheduleExceptionType } from "@prisma/client"
 import { addMinutes } from "date-fns"
 import { auth } from "../_lib/auth"
 import { db } from "../_lib/prisma"
+import { canTenantAcceptBookings } from "../_lib/platform/subscription-lifecycle"
 import { withDefaults } from "../_lib/opening-hours"
 import { consumeRateLimit, getClientIp } from "../_lib/rate-limit"
 import {
@@ -36,6 +37,7 @@ export const getServiceProfessionals = async (input: unknown) => {
     select: { barbershopId: true },
   })
   if (!service) return []
+  if (!(await canTenantAcceptBookings(service.barbershopId))) return []
   return db.professional
     .findMany({
       where: {
@@ -85,6 +87,7 @@ export const getUnavailableIntervals = async (
     },
   })
   if (!service) return []
+  if (!(await canTenantAcceptBookings(service.barbershopId))) return []
 
   const weekday = weekdayForLocalDate(date)
   const { startsAt: dayStart, endsAt: dayEnd } = localDayBounds(
