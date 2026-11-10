@@ -13,13 +13,21 @@ import {
 import { Input } from "@/app/_components/ui/input"
 import { Switch } from "@/app/_components/ui/switch"
 import { Textarea } from "@/app/_components/ui/textarea"
-import { PencilIcon, PlusIcon, UsersRoundIcon } from "lucide-react"
+import { MAX_PROFESSIONAL_SCHEDULE_INTERVALS } from "@/app/_lib/professional-schedule-limit"
+import {
+  CalendarClockIcon,
+  PencilIcon,
+  PlusIcon,
+  Trash2Icon,
+  UsersRoundIcon,
+} from "lucide-react"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 import {
   setProfessionalActive,
   upsertProfessional,
 } from "../_actions/professionals"
+import { saveProfessionalSchedule } from "../_actions/professional-schedules"
 import { useAdminSlug } from "./use-admin-slug"
 
 interface TeamService {
@@ -37,7 +45,19 @@ export interface TeamProfessional {
   bio: string | null
   isActive: boolean
   services: { id: string; name: string }[]
+  schedules: { weekday: number; startsAtLocal: string; endsAtLocal: string }[]
 }
+
+type ScheduleInterval = TeamProfessional["schedules"][number]
+const weekdays = [
+  "Domingo",
+  "Segunda-feira",
+  "Terça-feira",
+  "Quarta-feira",
+  "Quinta-feira",
+  "Sexta-feira",
+  "Sábado",
+]
 
 const TeamManager = ({
   professionals,
@@ -48,6 +68,8 @@ const TeamManager = ({
 }) => {
   const slug = useAdminSlug()
   const [editing, setEditing] = useState<TeamProfessional | null | undefined>()
+  const [scheduling, setScheduling] = useState<TeamProfessional | null>(null)
+  const [intervals, setIntervals] = useState<ScheduleInterval[]>([])
   const [isPending, startTransition] = useTransition()
 
   const save = (formData: FormData) => {
@@ -84,6 +106,23 @@ const TeamManager = ({
         toast.success(
           isActive ? "Profissional ativado." : "Profissional desativado.",
         )
+      } else {
+        toast.error(result.error)
+      }
+    })
+  }
+
+  const saveSchedule = () => {
+    if (!scheduling) return
+    startTransition(async () => {
+      const result = await saveProfessionalSchedule(
+        scheduling.id,
+        intervals,
+        slug,
+      )
+      if (result.ok) {
+        toast.success("Jornada semanal salva.")
+        setScheduling(null)
       } else {
         toast.error(result.error)
       }
@@ -187,6 +226,16 @@ const TeamManager = ({
                   onClick={() => setEditing(professional)}
                 >
                   <PencilIcon /> Editar
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setIntervals(professional.schedules)
+                    setScheduling(professional)
+                  }}
+                >
+                  <CalendarClockIcon /> Jornada
                 </Button>
               </CardContent>
             </Card>
@@ -297,6 +346,128 @@ const TeamManager = ({
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={scheduling !== null}
+        onOpenChange={(open) => !open && setScheduling(null)}
+      >
+        <DialogContent className="max-h-[90vh] w-[92%] max-w-lg overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Jornada semanal</DialogTitle>
+            <DialogDescription>
+              {scheduling?.displayName || scheduling?.name}. Configure um ou
+              mais intervalos por dia.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {weekdays.map((weekday, day) => {
+              const dayIntervals = intervals
+                .map((interval, index) => ({ interval, index }))
+                .filter(({ interval }) => interval.weekday === day)
+              return (
+                <fieldset key={day} className="space-y-2 rounded-md border p-3">
+                  <legend className="px-1 text-sm font-semibold">
+                    {weekday}
+                  </legend>
+                  {dayIntervals.map(({ interval, index }) => (
+                    <div
+                      key={`${day}-${index}`}
+                      className="flex items-center gap-2"
+                    >
+                      <Input
+                        type="time"
+                        aria-label={`${weekday}, início`}
+                        value={interval.startsAtLocal}
+                        onChange={(event) =>
+                          setIntervals((current) =>
+                            current.map((item, itemIndex) =>
+                              itemIndex === index
+                                ? { ...item, startsAtLocal: event.target.value }
+                                : item,
+                            ),
+                          )
+                        }
+                      />
+                      <span className="text-muted-foreground">até</span>
+                      <Input
+                        type="time"
+                        aria-label={`${weekday}, fim`}
+                        value={interval.endsAtLocal}
+                        onChange={(event) =>
+                          setIntervals((current) =>
+                            current.map((item, itemIndex) =>
+                              itemIndex === index
+                                ? { ...item, endsAtLocal: event.target.value }
+                                : item,
+                            ),
+                          )
+                        }
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`Remover intervalo de ${weekday}`}
+                        onClick={() =>
+                          setIntervals((current) =>
+                            current.filter(
+                              (_, itemIndex) => itemIndex !== index,
+                            ),
+                          )
+                        }
+                      >
+                        <Trash2Icon />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={
+                      intervals.length >= MAX_PROFESSIONAL_SCHEDULE_INTERVALS
+                    }
+                    onClick={() =>
+                      setIntervals((current) =>
+                        current.length >= MAX_PROFESSIONAL_SCHEDULE_INTERVALS
+                          ? current
+                          : [
+                              ...current,
+                              {
+                                weekday: day,
+                                startsAtLocal: "09:00",
+                                endsAtLocal: "18:00",
+                              },
+                            ],
+                      )
+                    }
+                  >
+                    <PlusIcon /> Adicionar intervalo
+                  </Button>
+                </fieldset>
+              )
+            })}
+            <div className="flex gap-3 pt-2">
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full"
+                onClick={() => setScheduling(null)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                className="w-full"
+                disabled={isPending}
+                onClick={saveSchedule}
+              >
+                Salvar jornada
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </>

@@ -24,6 +24,15 @@ const TeamPage = async ({ params }: { params: Promise<{ slug: string }> }) => {
           where: { barbershopId: admin.barbershopId },
           select: { service: { select: { id: true, name: true } } },
         },
+        schedules: {
+          where: { barbershopId: admin.barbershopId },
+          orderBy: [{ weekday: "asc" }, { startsAtLocal: "asc" }],
+          select: {
+            weekday: true,
+            startsAtLocal: true,
+            endsAtLocal: true,
+          },
+        },
       },
     }),
     db.barbershopService.findMany({
@@ -50,6 +59,7 @@ const TeamPage = async ({ params }: { params: Promise<{ slug: string }> }) => {
           bio: professional.bio,
           isActive: professional.status === "ACTIVE",
           services: professional.services.map(({ service }) => service),
+          schedules: professional.schedules,
         }))}
         services={services}
       />

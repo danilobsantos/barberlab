@@ -1043,7 +1043,7 @@ As fases abaixo estão em ordem de dependência técnica. As tasks são numerada
 |---:|---|---|---|---|---|
 | 1 | BL-050 | P0 | Criar CRUD de profissionais | OWNER/MANAGER gerenciam profissionais do próprio tenant | ✅ Concluído |
 | 2 | BL-051 | P0 | Criar associação de profissionais a serviços | Serviço só aparece para profissionais habilitados | 🟡 Parcialmente implementado |
-| 3 | BL-052 | P0 | Implementar jornada semanal individual | Profissional pode ter um ou mais intervalos por dia | ⏳ Pendente |
+| 3 | BL-052 | P0 | Implementar jornada semanal individual | Profissional pode ter um ou mais intervalos por dia | ✅ Concluído |
 | 4 | BL-053 | P1 | Implementar folgas, férias e exceções | Exceções prevalecem conforme regra documentada | ⏳ Pendente |
 | 5 | BL-054 | P1 | Implementar bloqueios gerais e individuais | Bloqueio individual não afeta outros profissionais; geral afeta todos | ⏳ Pendente |
 | 6 | BL-055 | P1 | Implementar convite de profissional para criar/acessar conta | Profissional vincula conta sem ganhar acesso a outro tenant | ⏳ Pendente |
@@ -1052,7 +1052,7 @@ As fases abaixo estão em ordem de dependência técnica. As tasks são numerada
 
 **Saída da fase:** barbearia gerencia sua equipe e cada profissional possui calendário próprio.
 
-**BL-050 concluído:** OWNER/MANAGER podem cadastrar, editar, ativar e desativar profissionais no tenant autorizado; registros não são excluídos e preservam o histórico. **BL-057 concluído:** a tela `/painel/[slug]/team` lista status e serviços associados e permite gerenciar a equipe. A edição valida que os serviços pertencem ao tenant; associações já usadas por agendamentos não podem ser removidas para preservar o histórico. **BL-051 parcialmente implementado:** a associação de serviços é gerenciável no painel, mas os fluxos de agendamento ainda não filtram os serviços pelos profissionais habilitados. Jornadas individuais, folgas/exceções, bloqueios, convites e limites por plano (BL-052–056) permanecem pendentes.
+**BL-050 concluído:** OWNER/MANAGER podem cadastrar, editar, ativar e desativar profissionais no tenant autorizado; registros não são excluídos e preservam o histórico. **BL-057 concluído:** a tela `/painel/[slug]/team` lista status e serviços associados e permite gerenciar a equipe. A edição valida que os serviços pertencem ao tenant; associações já usadas por agendamentos não podem ser removidas para preservar o histórico. **BL-051 parcialmente implementado:** a associação de serviços é gerenciável no painel, mas os fluxos de agendamento ainda não filtram os serviços pelos profissionais habilitados. **BL-052 concluído:** OWNER/MANAGER podem configurar múltiplos intervalos semanais por profissional, com validação de horário e sobreposição e isolamento por tenant. A jornada ainda não participa do cálculo da disponibilidade nem do fluxo de reservas; essa integração permanece pendente para BL-061. Folgas/exceções, bloqueios, convites e limites por plano (BL-053–056) permanecem pendentes.
 
 ### Fase 5 — Motor de agendamento multi-profissional
 
