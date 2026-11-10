@@ -12,9 +12,9 @@ import { verifyPassword } from "./password-crypto"
 import { consumeRateLimit } from "./rate-limit"
 
 const emailAuthEnabled =
-  process.env.NEXT_PUBLIC_EMAIL_SIGN_IN_ENABLED === "true" &&
-  !!process.env.EMAIL_SERVER &&
-  !!process.env.EMAIL_FROM
+  process.env.NEXT_PUBLIC_EMAIL_SIGN_IN_ENABLED === "true"
+const emailLinkEnabled =
+  emailAuthEnabled && !!process.env.EMAIL_SERVER && !!process.env.EMAIL_FROM
 
 export const authOptions: AuthOptions = {
   adapter: PrismaAdapter(db) as Adapter,
@@ -25,12 +25,16 @@ export const authOptions: AuthOptions = {
       // Google supplies verified email addresses; allow that identity to link to email auth.
       allowDangerousEmailAccountLinking: true,
     }),
-    ...(emailAuthEnabled
+    ...(emailLinkEnabled
       ? [
           EmailProvider({
             server: process.env.EMAIL_SERVER,
             from: process.env.EMAIL_FROM,
           }),
+        ]
+      : []),
+    ...(emailAuthEnabled
+      ? [
           CredentialsProvider({
             credentials: {
               email: { label: "E-mail", type: "email" },

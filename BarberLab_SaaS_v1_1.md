@@ -1035,7 +1035,7 @@ As fases abaixo estão em ordem de dependência técnica. As tasks são numerada
 
 **Saída da fase:** identidade global, memberships por tenant e autorização centralizada e testada.
 
-**BL-039 operacional:** habilitar `NEXT_PUBLIC_EMAIL_SIGN_IN_ENABLED=true` somente junto com `EMAIL_SERVER` e `EMAIL_FROM` configurados. Os provedores de e-mail só são registrados quando os três valores existem; sem SMTP, o login Google continua disponível. O fluxo mantém link mágico e oferece senha, confirmação de endereço e recuperação; contas CUSTOMER/BARBERSHOP usam e-mail único. Senhas são armazenadas com scrypt e o reset usa token aleatório com validade de 1 hora, persistido somente como hash e consumido uma vez. A estratégia de sessão mudou de database para JWT (sessões atuais expiram no primeiro deploy); reset incrementa `authVersion` para invalidar sessões anteriores.
+**BL-039 operacional:** `NEXT_PUBLIC_EMAIL_SIGN_IN_ENABLED=true` habilita login/cadastro por senha; para cadastro com confirmação, link mágico e recuperação também configure `EMAIL_SERVER` e `EMAIL_FROM`. Sem SMTP, login com senha de contas já verificadas e Google continuam disponíveis. Contas CUSTOMER/BARBERSHOP usam e-mail único. Senhas são armazenadas com scrypt e o reset usa token aleatório com validade de 1 hora, persistido somente como hash e consumido uma vez. A estratégia de sessão mudou de database para JWT (sessões atuais expiram no primeiro deploy); reset incrementa `authVersion` para invalidar sessões anteriores.
 
 ### Fase 4 — Cadastro e gestão de profissionais
 
