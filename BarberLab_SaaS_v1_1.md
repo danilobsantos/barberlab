@@ -1123,12 +1123,12 @@ As fases abaixo estão em ordem de dependência técnica. As tasks são numerada
 
 | Ordem | ID | Prioridade | Task | Critério de aceite | Status |
 |---:|---|---|---|---|---|
-| 1 | BL-100 | P0 | Executar suíte de testes unitários e integração | Testes essenciais passam em CI | 🟡 Parcial — testes unitários e build disponíveis; integração completa/CI não verificados |
+| 1 | BL-100 | P0 | Executar suíte de testes unitários e integração | Testes essenciais passam em CI | 🟡 Parcial — testes unitários disponíveis e workflow de CI configurado; testes de integração completos ausentes e execução no GitHub não verificada |
 | 2 | BL-101 | P0 | Executar matriz de testes de isolamento A/B | Nenhum acesso cruzado em leitura, escrita, update, delete e arquivos | ⏳ Pendente |
 | 3 | BL-102 | P0 | Executar testes de concorrência de agendamento | Banco rejeita reservas conflitantes | 🟡 Parcial — testes unitários de timezone/sobreposição; teste concorrente PostgreSQL não executado |
 | 4 | BL-103 | P0 | Testar migração de banco em cópia atualizada | Sem perda ou associação indevida de dados | ⏳ Pendente |
 | 5 | BL-104 | P0 | Testar fluxo de cadastro, convite, agendamento, cancelamento e suspensão | Fluxos completos aprovados | ⏳ Pendente |
-| 6 | BL-105 | P1 | Configurar CI para lint, typecheck, testes e build | Pull requests bloqueados em falhas críticas | ⏳ Pendente |
+| 6 | BL-105 | P1 | Configurar CI para lint, typecheck, testes e build | Pull requests bloqueados em falhas críticas | 🟡 Parcial — workflow configurado para PRs e pushes em `main`/`dev`; branch protection e execução no GitHub não verificadas |
 | 7 | BL-106 | P1 | Configurar deploy Docker e Traefik | HTTPS, health check e rollback documentados | ⏳ Pendente |
 | 8 | BL-107 | P1 | Configurar backup automatizado e política de retenção | Restauração testada e procedimento registrado | ⏳ Pendente |
 | 9 | BL-108 | P1 | Configurar monitoramento e logs | Erros de aplicação, banco e processos assíncronos existentes observáveis; preparar métricas para avaliar necessidade futura de Redis | ⏳ Pendente |
