@@ -29,6 +29,9 @@ export default async function PlatformPanelPage() {
         <Link href="/painel/planos">Gerenciar planos</Link>
       </Button>
       <Button asChild variant="outline" className="w-fit">
+        <Link href="/painel/assinaturas">Gerenciar assinaturas</Link>
+      </Button>
+      <Button asChild variant="outline" className="w-fit">
         <Link href="/minhas-barbearias">
           <ArrowLeftIcon />
           Minhas barbearias
