@@ -24,7 +24,7 @@ export const subscriptionGraceDays = parseNonNegativeDays(
   DEFAULT_GRACE_DAYS,
 )
 
-// shortcut: lifecycle transitions run when a tenant is accessed, not on a scheduler; add a scheduled job if exact transition timing is required.
+// shortcut: the secured scheduler endpoint needs a host cron trigger; configure its schedule with deployment infrastructure.
 export async function refreshSubscriptionLifecycle(
   barbershopId: string,
   now = new Date(),
