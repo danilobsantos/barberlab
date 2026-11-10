@@ -33,6 +33,19 @@ const TeamPage = async ({ params }: { params: Promise<{ slug: string }> }) => {
             endsAtLocal: true,
           },
         },
+        exceptions: {
+          where: { barbershopId: admin.barbershopId },
+          orderBy: [{ date: "desc" }, { type: "asc" }],
+          take: 100,
+          select: {
+            id: true,
+            date: true,
+            type: true,
+            startsAtLocal: true,
+            endsAtLocal: true,
+            reason: true,
+          },
+        },
       },
     }),
     db.barbershopService.findMany({
@@ -60,6 +73,10 @@ const TeamPage = async ({ params }: { params: Promise<{ slug: string }> }) => {
           isActive: professional.status === "ACTIVE",
           services: professional.services.map(({ service }) => service),
           schedules: professional.schedules,
+          exceptions: professional.exceptions.map((exception) => ({
+            ...exception,
+            date: exception.date.toISOString().slice(0, 10),
+          })),
         }))}
         services={services}
       />

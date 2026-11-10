@@ -14,6 +14,7 @@ import { Input } from "@/app/_components/ui/input"
 import { Switch } from "@/app/_components/ui/switch"
 import { Textarea } from "@/app/_components/ui/textarea"
 import { MAX_PROFESSIONAL_SCHEDULE_INTERVALS } from "@/app/_lib/professional-schedule-limit"
+import { MAX_PROFESSIONAL_SCHEDULE_EXCEPTIONS } from "@/app/_lib/professional-schedule-exception-limit"
 import {
   CalendarClockIcon,
   PencilIcon,
@@ -28,7 +29,12 @@ import {
   upsertProfessional,
 } from "../_actions/professionals"
 import { saveProfessionalSchedule } from "../_actions/professional-schedules"
+import {
+  deleteProfessionalScheduleException,
+  saveProfessionalScheduleException,
+} from "../_actions/professional-schedule-exceptions"
 import { useAdminSlug } from "./use-admin-slug"
+import { useRouter } from "next/navigation"
 
 interface TeamService {
   id: string
@@ -46,6 +52,14 @@ export interface TeamProfessional {
   isActive: boolean
   services: { id: string; name: string }[]
   schedules: { weekday: number; startsAtLocal: string; endsAtLocal: string }[]
+  exceptions: {
+    id: string
+    date: string
+    type: "UNAVAILABLE" | "CUSTOM_HOURS"
+    startsAtLocal: string | null
+    endsAtLocal: string | null
+    reason: string | null
+  }[]
 }
 
 type ScheduleInterval = TeamProfessional["schedules"][number]
@@ -67,8 +81,14 @@ const TeamManager = ({
   services: TeamService[]
 }) => {
   const slug = useAdminSlug()
+  const router = useRouter()
   const [editing, setEditing] = useState<TeamProfessional | null | undefined>()
   const [scheduling, setScheduling] = useState<TeamProfessional | null>(null)
+  const [exceptionProfessional, setExceptionProfessional] =
+    useState<TeamProfessional | null>(null)
+  const [exceptionType, setExceptionType] = useState<
+    "UNAVAILABLE" | "CUSTOM_HOURS"
+  >("UNAVAILABLE")
   const [intervals, setIntervals] = useState<ScheduleInterval[]>([])
   const [isPending, startTransition] = useTransition()
 
@@ -123,6 +143,55 @@ const TeamManager = ({
       if (result.ok) {
         toast.success("Jornada semanal salva.")
         setScheduling(null)
+      } else {
+        toast.error(result.error)
+      }
+    })
+  }
+
+  const saveException = (formData: FormData) => {
+    if (!exceptionProfessional) return
+    const input = {
+      date: formData.get("date"),
+      type: exceptionType,
+      ...(exceptionType === "CUSTOM_HOURS"
+        ? {
+            startsAtLocal: formData.get("startsAtLocal"),
+            endsAtLocal: formData.get("endsAtLocal"),
+          }
+        : {}),
+      reason: formData.get("reason"),
+    }
+    startTransition(async () => {
+      const result = await saveProfessionalScheduleException(
+        exceptionProfessional.id,
+        input,
+        slug,
+      )
+      if (result.ok) {
+        toast.success("Exceção de agenda salva.")
+        setExceptionProfessional(null)
+        router.refresh()
+      } else {
+        toast.error(result.error)
+      }
+    })
+  }
+
+  const removeException = (
+    professional: TeamProfessional,
+    exceptionId: string,
+  ) => {
+    startTransition(async () => {
+      const result = await deleteProfessionalScheduleException(
+        professional.id,
+        exceptionId,
+        slug,
+      )
+      if (result.ok) {
+        toast.success("Exceção removida.")
+        setExceptionProfessional(null)
+        router.refresh()
       } else {
         toast.error(result.error)
       }
@@ -237,6 +306,16 @@ const TeamManager = ({
                 >
                   <CalendarClockIcon /> Jornada
                 </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setExceptionProfessional(professional)
+                    setExceptionType("UNAVAILABLE")
+                  }}
+                >
+                  Exceções ({professional.exceptions.length})
+                </Button>
               </CardContent>
             </Card>
           ))}
@@ -346,6 +425,113 @@ const TeamManager = ({
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={exceptionProfessional !== null}
+        onOpenChange={(open) => !open && setExceptionProfessional(null)}
+      >
+        <DialogContent className="max-h-[90vh] w-[92%] max-w-lg overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Exceções de agenda</DialogTitle>
+            <DialogDescription>
+              {exceptionProfessional?.displayName ||
+                exceptionProfessional?.name}
+              . Folgas e horários especiais por data. Até{" "}
+              {MAX_PROFESSIONAL_SCHEDULE_EXCEPTIONS} exceções.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <form
+              action={saveException}
+              className="space-y-3 rounded-md border p-3"
+            >
+              <label className="block space-y-1.5 text-sm font-medium">
+                Data
+                <Input name="date" type="date" required />
+              </label>
+              <label className="block space-y-1.5 text-sm font-medium">
+                Tipo
+                <select
+                  className="border-input bg-background h-9 w-full rounded-md border px-3 text-sm"
+                  value={exceptionType}
+                  onChange={(event) =>
+                    setExceptionType(
+                      event.target.value as "UNAVAILABLE" | "CUSTOM_HOURS",
+                    )
+                  }
+                >
+                  <option value="UNAVAILABLE">Indisponível / folga</option>
+                  <option value="CUSTOM_HOURS">Horário especial</option>
+                </select>
+              </label>
+              {exceptionType === "CUSTOM_HOURS" && (
+                <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2">
+                  <label className="space-y-1.5 text-sm font-medium">
+                    Início
+                    <Input name="startsAtLocal" type="time" required />
+                  </label>
+                  <span className="text-muted-foreground pb-2 text-sm">
+                    até
+                  </span>
+                  <label className="space-y-1.5 text-sm font-medium">
+                    Fim
+                    <Input name="endsAtLocal" type="time" required />
+                  </label>
+                </div>
+              )}
+              <label className="block space-y-1.5 text-sm font-medium">
+                Motivo (opcional)
+                <Input name="reason" maxLength={200} />
+              </label>
+              <Button type="submit" disabled={isPending}>
+                <PlusIcon /> Salvar exceção
+              </Button>
+            </form>
+            <div className="space-y-2">
+              {exceptionProfessional?.exceptions.length ? (
+                exceptionProfessional.exceptions.map((exception) => (
+                  <div
+                    key={exception.id}
+                    className="flex items-center justify-between gap-3 rounded-md border p-3 text-sm"
+                  >
+                    <div>
+                      <p className="font-medium">
+                        {new Date(
+                          `${exception.date}T12:00:00Z`,
+                        ).toLocaleDateString("pt-BR", { timeZone: "UTC" })}
+                        {exception.type === "UNAVAILABLE"
+                          ? " · Indisponível"
+                          : ` · ${exception.startsAtLocal}–${exception.endsAtLocal}`}
+                      </p>
+                      {exception.reason && (
+                        <p className="text-muted-foreground">
+                          {exception.reason}
+                        </p>
+                      )}
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Remover exceção"
+                      disabled={isPending}
+                      onClick={() =>
+                        removeException(exceptionProfessional, exception.id)
+                      }
+                    >
+                      <Trash2Icon />
+                    </Button>
+                  </div>
+                ))
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  Nenhuma exceção cadastrada.
+                </p>
+              )}
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
