@@ -4,6 +4,8 @@ import { withDefaults } from "@/app/_lib/opening-hours"
 import { db } from "@/app/_lib/prisma"
 import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
+import Link from "next/link"
+import { Button } from "@/app/_components/ui/button"
 import BarbershopProfileForm from "../_components/barbershop-profile-form"
 import OpeningHoursForm from "../_components/opening-hours-form"
 import PageHeader from "../_components/page-header"
@@ -15,9 +17,8 @@ export const metadata: Metadata = {
 
 const Settings = async ({ params }: { params: Promise<{ slug?: string }> }) => {
   const { slug } = await params
-  const admin = slug
-    ? await requireAdminContext(slug)
-    : await requireBarbershopAdmin()
+  const tenantAdmin = slug ? await requireAdminContext(slug) : null
+  const admin = slug ? tenantAdmin : await requireBarbershopAdmin()
   if (!admin) redirect("/")
 
   if (!slug) {
@@ -75,6 +76,19 @@ const Settings = async ({ params }: { params: Promise<{ slug?: string }> }) => {
 
         <OpeningHoursForm hours={withDefaults(salvos)} />
       </section>
+
+      {tenantAdmin?.role === "OWNER" && (
+        <section className="space-y-4 border-t pt-6">
+          <PageHeader
+            eyebrow="Conta"
+            title="Plano e assinatura"
+            description="Consulte o plano, o status e o período contratado."
+          />
+          <Button asChild variant="outline">
+            <Link href={`/painel/${slug}/assinatura`}>Ver assinatura</Link>
+          </Button>
+        </section>
+      )}
     </div>
   )
 }
