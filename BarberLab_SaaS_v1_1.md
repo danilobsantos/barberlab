@@ -1125,10 +1125,10 @@ As fases abaixo estão em ordem de dependência técnica. As tasks são numerada
 
 | Ordem | ID | Prioridade | Task | Critério de aceite | Status |
 |---:|---|---|---|---|---|
-| 1 | BL-100 | P0 | Executar suíte de testes unitários e integração | Testes essenciais passam em CI | 🟡 Parcial — testes unitários disponíveis e workflow de CI configurado; testes de integração completos ausentes e execução no GitHub não verificada |
+| 1 | BL-100 | P0 | Executar suíte de testes unitários e integração | Testes essenciais passam em CI | 🟡 Parcial — CI agora sobe PostgreSQL 16 descartável, aplica migrations e testa constraints; execução no GitHub ainda não verificada |
 | 2 | BL-101 | P0 | Executar matriz de testes de isolamento A/B | Nenhum acesso cruzado em leitura, escrita, update, delete e arquivos | ⏳ Pendente |
-| 3 | BL-102 | P0 | Executar testes de concorrência de agendamento | Banco rejeita reservas conflitantes | 🟡 Parcial — testes unitários de timezone/sobreposição; teste concorrente PostgreSQL não executado |
-| 4 | BL-103 | P0 | Testar migração de banco em cópia atualizada | Sem perda ou associação indevida de dados | ⏳ Pendente |
+| 3 | BL-102 | P0 | Executar testes de concorrência de agendamento | Banco rejeita reservas conflitantes | 🟡 Parcial — teste concorrente PostgreSQL incluído no CI; execução no GitHub ainda não verificada |
+| 4 | BL-103 | P0 | Testar migração de banco em cópia atualizada | Sem perda ou associação indevida de dados | 🟡 Parcial — CI aplica toda a cadeia em banco descartável vazio; falta validar cópia atualizada com dados reais/homologação |
 | 5 | BL-104 | P0 | Testar fluxo de cadastro, convite, agendamento, cancelamento e suspensão | Fluxos completos aprovados | ⏳ Pendente |
 | 6 | BL-105 | P1 | Configurar CI para lint, typecheck, testes e build | Pull requests bloqueados em falhas críticas | 🟡 Parcial — workflow configurado para PRs e pushes em `main`/`dev`; branch protection e execução no GitHub não verificadas |
 | 7 | BL-106 | P1 | Configurar deploy Docker e Traefik | HTTPS, health check e rollback documentados | 🟡 Parcial — endpoint de health verifica PostgreSQL e container Docker monitora; Traefik/HTTPS/rollback operacional dependem do ambiente de deploy |
@@ -1137,7 +1137,7 @@ As fases abaixo estão em ordem de dependência técnica. As tasks são numerada
 | 10 | BL-109 | P1 | Revisar LGPD, termos, privacidade e retenção | Documentos e processos revisados antes do lançamento | ⏳ Pendente |
 | 11 | BL-110 | P1 | Executar piloto com duas ou mais barbearias independentes | Teste real comprova isolamento, agenda e operação comercial | ⏳ Pendente |
 
-**Nota:** critérios dependentes de produção, homologação ou banco PostgreSQL não foram verificados.
+**Nota:** o workflow de CI usa PostgreSQL 16 efêmero (`barberlab_test`), aplica `prisma migrate deploy` e valida unicidade de assinatura e concorrência de bookings. O teste PostgreSQL exige opt-in explícito e recusa URLs cujo banco não seja `barberlab_test`; nenhum banco local foi usado. A execução no GitHub ainda não foi verificada; critérios dependentes de produção, homologação ou dados reais continuam pendentes.
 
 **Saída da fase:** primeira versão comercial homologada e operacional.
 
