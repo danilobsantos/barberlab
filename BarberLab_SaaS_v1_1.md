@@ -1131,7 +1131,7 @@ As fases abaixo estão em ordem de dependência técnica. As tasks são numerada
 | 4 | BL-103 | P0 | Testar migração de banco em cópia atualizada | Sem perda ou associação indevida de dados | ⏳ Pendente |
 | 5 | BL-104 | P0 | Testar fluxo de cadastro, convite, agendamento, cancelamento e suspensão | Fluxos completos aprovados | ⏳ Pendente |
 | 6 | BL-105 | P1 | Configurar CI para lint, typecheck, testes e build | Pull requests bloqueados em falhas críticas | 🟡 Parcial — workflow configurado para PRs e pushes em `main`/`dev`; branch protection e execução no GitHub não verificadas |
-| 7 | BL-106 | P1 | Configurar deploy Docker e Traefik | HTTPS, health check e rollback documentados | ⏳ Pendente |
+| 7 | BL-106 | P1 | Configurar deploy Docker e Traefik | HTTPS, health check e rollback documentados | 🟡 Parcial — endpoint de health verifica PostgreSQL e container Docker monitora; Traefik/HTTPS/rollback operacional dependem do ambiente de deploy |
 | 8 | BL-107 | P1 | Configurar backup automatizado e política de retenção | Restauração testada e procedimento registrado | ⏳ Pendente |
 | 9 | BL-108 | P1 | Configurar monitoramento e logs | Erros de aplicação, banco e processos assíncronos existentes observáveis; preparar métricas para avaliar necessidade futura de Redis | ⏳ Pendente |
 | 10 | BL-109 | P1 | Revisar LGPD, termos, privacidade e retenção | Documentos e processos revisados antes do lançamento | ⏳ Pendente |
