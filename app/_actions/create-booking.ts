@@ -2,7 +2,6 @@
 
 import { BookingStatus } from "@prisma/client"
 import { addMinutes } from "date-fns"
-import { Prisma } from "@prisma/client"
 import { revalidatePath } from "next/cache"
 import { auth } from "../_lib/auth"
 import { db } from "../_lib/prisma"
@@ -11,6 +10,7 @@ import { consumeRateLimit, rateLimitError } from "../_lib/rate-limit"
 import { createBookingSchema } from "../_lib/booking-action-schema"
 import { localDateTimeToInstant } from "../_lib/booking-availability"
 import { getUnavailableIntervals } from "./get-bookings"
+import { isBookingConflictError } from "../_lib/booking-conflict"
 
 const MAXIMO_DE_RESERVAS_EM_ABERTO = 3
 const SLOT_CONFLICT = "Esse horário acabou de ser ocupado. Escolha outro."
@@ -97,39 +97,66 @@ export const createBooking = async (input: unknown) => {
   }
 
   const endsAt = addMinutes(startsAt, service.durationMinutes)
-  const customer = await db.customer.findFirst({
-    where: { barbershopId: service.barbershopId, userId: session.user.id },
-    select: { id: true },
-  })
-  if (!customer) {
+  const [user, customer] = await Promise.all([
+    db.user.findUnique({
+      where: { id: session.user.id },
+      select: { name: true, email: true, phone: true },
+    }),
+    db.customer.findUnique({
+      where: {
+        barbershopId_userId: {
+          barbershopId: service.barbershopId,
+          userId: session.user.id,
+        },
+      },
+      select: { id: true },
+    }),
+  ])
+  if (!user) return { ok: false as const, error: "Conta não encontrada." }
+  if (!customer && !user.phone?.trim()) {
     return {
       ok: false as const,
-      error:
-        "Complete seu cadastro de cliente nesta barbearia (nome e telefone) antes de reservar.",
+      error: "Informe seu telefone no perfil antes de reservar.",
     }
   }
 
   try {
-    await db.booking.create({
-      data: {
-        serviceId,
-        userId: session.user.id,
-        barbershopId: service.barbershopId,
-        customerId: customer.id,
-        professionalId,
-        date: startsAt,
-        startsAt,
-        endsAt,
-        priceSnapshot: service.price,
-        durationMinutesSnapshot: service.durationMinutes,
-      },
+    await db.$transaction(async (tx) => {
+      const tenantCustomer = await tx.customer.upsert({
+        where: {
+          barbershopId_userId: {
+            barbershopId: service.barbershopId,
+            userId: session.user.id,
+          },
+        },
+        update: {},
+        create: {
+          barbershopId: service.barbershopId,
+          userId: session.user.id,
+          name: user.name?.trim() || user.email.split("@")[0] || "Cliente",
+          email: user.email,
+          phone: user.phone!.trim(),
+        },
+        select: { id: true },
+      })
+
+      await tx.booking.create({
+        data: {
+          serviceId,
+          userId: session.user.id,
+          barbershopId: service.barbershopId,
+          customerId: tenantCustomer.id,
+          professionalId,
+          date: startsAt,
+          startsAt,
+          endsAt,
+          priceSnapshot: service.price,
+          durationMinutesSnapshot: service.durationMinutes,
+        },
+      })
     })
   } catch (error) {
-    const databaseDetails = `${error instanceof Prisma.PrismaClientKnownRequestError ? JSON.stringify(error.meta ?? {}) : ""} ${error instanceof Error ? error.message : ""}`
-    if (
-      databaseDetails.includes("Booking_professional_no_overlap") ||
-      databaseDetails.includes("23P01")
-    ) {
+    if (isBookingConflictError(error)) {
       return { ok: false as const, error: SLOT_CONFLICT }
     }
     throw error

@@ -29,8 +29,7 @@ const Footer = () => {
               <div className="space-y-4">
                 <h3 className="text-xl font-bold">Barber Lab</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">
-                  A melhor plataforma para agendar seu horário com os melhores
-                  barbeiros da cidade.
+                  Gestão de equipe, serviços e agendamentos para barbearias.
                 </p>
                 <div className="text-muted-foreground flex items-center gap-2 text-sm">
                   <MapPinIcon className="h-4 w-4" />
@@ -39,59 +38,45 @@ const Footer = () => {
               </div>
 
               {/* Services column */}
-              <div className="space-y-4">
-                <h4 className="font-semibold">Serviços</h4>
-                <ul className="text-muted-foreground space-y-2 text-sm">
-                  <li>
-                    <Link
-                      href={
-                        isSingleTenant
-                          ? "/#servicos"
-                          : "/barbershops?service=Cabelo"
-                      }
-                      className="hover:text-primary transition-colors"
-                    >
-                      Corte de Cabelo
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href={
-                        isSingleTenant
-                          ? "/#servicos"
-                          : "/barbershops?service=Barba"
-                      }
-                      className="hover:text-primary transition-colors"
-                    >
-                      Barba
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href={
-                        isSingleTenant
-                          ? "/#servicos"
-                          : "/barbershops?service=Acabamento"
-                      }
-                      className="hover:text-primary transition-colors"
-                    >
-                      Acabamento
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href={
-                        isSingleTenant
-                          ? "/#servicos"
-                          : "/barbershops?service=Massagem"
-                      }
-                      className="hover:text-primary transition-colors"
-                    >
-                      Massagem
-                    </Link>
-                  </li>
-                </ul>
-              </div>
+              {isSingleTenant && (
+                <div className="space-y-4">
+                  <h4 className="font-semibold">Serviços</h4>
+                  <ul className="text-muted-foreground space-y-2 text-sm">
+                    <li>
+                      <Link
+                        href="/#servicos"
+                        className="hover:text-primary transition-colors"
+                      >
+                        Corte de Cabelo
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/#servicos"
+                        className="hover:text-primary transition-colors"
+                      >
+                        Barba
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/#servicos"
+                        className="hover:text-primary transition-colors"
+                      >
+                        Acabamento
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/#servicos"
+                        className="hover:text-primary transition-colors"
+                      >
+                        Massagem
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
+              )}
 
               {/* Company column */}
               <div className="space-y-4">

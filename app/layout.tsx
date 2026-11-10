@@ -11,25 +11,24 @@ const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://barber-lab.vercel.app/"),
-  title: "Barber Lab - Sistema para Barbearias | Agendamento Online",
+  title: "Barber Lab - Gestão e Agendamento para Barbearias",
   description:
-    "Barber Lab é o sistema ideal para barbearias. Agende horários online, encontre barbearias próximas e gerencie seus agendamentos facilmente.",
+    "Gerencie sua barbearia, equipe, serviços e agendamentos online com o Barber Lab.",
   keywords: [
     "Barber Lab",
     "sistema para barbearia",
     "agendamento barbearia",
     "barbearia online",
     "software barbearia",
-    "agendar corte de cabelo",
-    "barbearias próximas",
+    "gestão de barbearia",
     "Barbearia",
     "Cabeleireiro",
     "barber lab",
   ],
   openGraph: {
-    title: "Barber Lab - Sistema para Barbearia",
+    title: "Barber Lab - Gestão para Barbearias",
     description:
-      "Encontre e agende nas melhores barbearias com o Barber Lab. Plataforma completa para clientes e barbeiros.",
+      "Gerencie equipe, serviços e agendamentos da sua barbearia em uma plataforma.",
     url: "https://barber-lab.vercel.app/",
     siteName: "Barber Lab",
     images: [
@@ -37,7 +36,7 @@ export const metadata: Metadata = {
         url: "/mobile-banner.png",
         width: 1200,
         height: 630,
-        alt: "Barber Lab - Sistema para Barbearia",
+        alt: "Barber Lab - Gestão para Barbearias",
       },
     ],
     locale: "pt_BR",

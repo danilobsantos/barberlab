@@ -11,6 +11,6 @@ BEGIN
     END IF;
 END $$;
 
-CREATE UNIQUE INDEX "Subscription_one_current_per_barbershop_key"
+CREATE UNIQUE INDEX IF NOT EXISTS "Subscription_one_current_per_barbershop_key"
     ON "Subscription"("barbershopId")
     WHERE "status" <> 'CANCELED';

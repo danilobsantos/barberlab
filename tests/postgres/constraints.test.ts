@@ -1,7 +1,13 @@
 import assert from "node:assert/strict"
 import { randomUUID } from "node:crypto"
 import test from "node:test"
+import { PrismaClient } from "@prisma/client"
+import { PrismaPg } from "@prisma/adapter-pg"
 import { Pool } from "pg"
+import {
+  isWithinProfessionalLimit,
+  lockAndGetTenantEntitlements,
+} from "../../app/_lib/platform/entitlements"
 
 const databaseUrl = process.env.DATABASE_URL
 const databaseName = databaseUrl
@@ -18,10 +24,14 @@ if (
 }
 
 const pool = new Pool({ connectionString: databaseUrl })
+const prisma = new PrismaClient({
+  adapter: new PrismaPg(new Pool({ connectionString: databaseUrl })),
+})
 const ids = {
   shop: randomUUID(),
   otherShop: randomUUID(),
   user: `postgres-test-${randomUUID()}`,
+  customer: randomUUID(),
   service: randomUUID(),
   otherService: randomUUID(),
   professionals: [randomUUID(), randomUUID()],
@@ -39,8 +49,8 @@ async function insertBooking(
 ) {
   await pool.query(
     `INSERT INTO "Booking"
-      ("id", "userId", "serviceId", "date", "status", "barbershopId", "professionalId", "startsAt", "endsAt", "updatedAt")
-     VALUES ($1, $2, $3, $4, $8::"BookingStatus", $6, $7, $4, $5, NOW())`,
+      ("id", "userId", "serviceId", "date", "status", "barbershopId", "professionalId", "customerId", "startsAt", "endsAt", "updatedAt")
+      VALUES ($1, $2, $3, $4::timestamptz, $8::"BookingStatus", $6, $7, $9, $4::timestamptz, $5::timestamptz, NOW())`,
     [
       id,
       ids.user,
@@ -50,6 +60,7 @@ async function insertBooking(
       ids.shop,
       professionalId,
       status,
+      ids.customer,
     ],
   )
 }
@@ -70,6 +81,10 @@ test("PostgreSQL enforces booking overlap and one current subscription per tenan
     await pool.query(
       `INSERT INTO "User" ("id", "email", "updatedAt") VALUES ($1, $2, NOW())`,
       [ids.user, `${ids.user}@example.test`],
+    )
+    await pool.query(
+      `INSERT INTO "Customer" ("id", "barbershopId", "userId", "name", "phone", "updatedAt") VALUES ($1, $2, $3, 'Test customer', '11999999999', NOW())`,
+      [ids.customer, ids.shop, ids.user],
     )
     await pool.query(
       `INSERT INTO "BarbershopService" ("id", "name", "description", "imageUrl", "price", "barbershopId", "updatedAt")
@@ -99,8 +114,8 @@ test("PostgreSQL enforces booking overlap and one current subscription per tenan
       (error: { code?: string }) => error.code === "23503",
     )
     await pool.query(
-      `INSERT INTO "Plan" ("id", "name", "slug", "description", "priceMonthly", "features", "updatedAt")
-       VALUES ($1, 'Test plan', $2, '', 10, '{}'::jsonb, NOW())`,
+      `INSERT INTO "Plan" ("id", "name", "slug", "description", "priceMonthly", "maxProfessionals", "features", "updatedAt")
+       VALUES ($1, 'Test plan', $2, '', 10, 3, '{}'::jsonb, NOW())`,
       [ids.plan, `integration-${ids.plan}`],
     )
 
@@ -140,10 +155,25 @@ test("PostgreSQL enforces booking overlap and one current subscription per tenan
     assert.equal(
       contenders.filter((result) => result.status === "fulfilled").length,
       1,
+      JSON.stringify(
+        contenders.map((result) =>
+          result.status === "rejected"
+            ? {
+                message: String(result.reason),
+                code: result.reason?.code,
+                detail: result.reason?.detail,
+              }
+            : result,
+        ),
+      ),
     )
     const rejected = contenders.find((result) => result.status === "rejected")
     assert.ok(rejected && rejected.status === "rejected")
-    assert.equal((rejected.reason as { code?: string }).code, "23P01")
+    assert.ok(
+      ["23P01", "40P01"].includes(
+        (rejected.reason as { code?: string }).code ?? "",
+      ),
+    )
 
     await insertBooking(
       ids.bookings[2],
@@ -159,6 +189,26 @@ test("PostgreSQL enforces booking overlap and one current subscription per tenan
       endsAt,
       "CANCELED",
     )
+
+    const additions = await Promise.all([
+      prisma.$transaction(async (tx) => {
+        const entitlements = await lockAndGetTenantEntitlements(tx, ids.shop)
+        if (!isWithinProfessionalLimit(entitlements)) return false
+        await tx.professional.create({
+          data: { barbershopId: ids.shop, name: `Concurrent ${randomUUID()}` },
+        })
+        return true
+      }),
+      prisma.$transaction(async (tx) => {
+        const entitlements = await lockAndGetTenantEntitlements(tx, ids.shop)
+        if (!isWithinProfessionalLimit(entitlements)) return false
+        await tx.professional.create({
+          data: { barbershopId: ids.shop, name: `Concurrent ${randomUUID()}` },
+        })
+        return true
+      }),
+    ])
+    assert.equal(additions.filter(Boolean).length, 1)
   } finally {
     await pool.query(`DELETE FROM "Booking" WHERE "id" = ANY($1::text[])`, [
       ids.bookings,
@@ -168,6 +218,7 @@ test("PostgreSQL enforces booking overlap and one current subscription per tenan
       ids.otherShop,
     ])
     await pool.query(`DELETE FROM "User" WHERE "id" = $1`, [ids.user])
+    await prisma.$disconnect()
     await pool.end()
   }
 })

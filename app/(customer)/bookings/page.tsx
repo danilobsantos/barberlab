@@ -253,7 +253,7 @@ const Bookings = async () => {
                       </h3>
                       <p className="text-muted-foreground mx-auto mb-8 max-w-md lg:text-lg">
                         Você ainda não possui agendamentos. Que tal agendar seu
-                        primeiro horário com os melhores barbeiros da cidade?
+                        primeiro horário na sua barbearia?
                       </p>
                       <div className="flex flex-col justify-center gap-4 sm:flex-row">
                         <Button
@@ -261,13 +261,10 @@ const Bookings = async () => {
                           className="bg-primary hover:bg-primary/90 shadow-lg"
                           asChild
                         >
-                          <Link href="/barbershops">
+                          <Link href="/">
                             <CalendarIcon className="mr-2 h-5 w-5" />
                             Agendar Agora
                           </Link>
-                        </Button>
-                        <Button variant="outline" size="lg" asChild>
-                          <Link href="/">Explorar Barbearias</Link>
                         </Button>
                       </div>
                     </div>
@@ -352,7 +349,7 @@ const Bookings = async () => {
                       className="bg-primary hover:bg-primary/90 shadow-lg"
                       asChild
                     >
-                      <Link href="/barbershops">
+                      <Link href="/">
                         <CalendarIcon className="mr-2 h-5 w-5" />
                         Agendar Novo Horário
                       </Link>

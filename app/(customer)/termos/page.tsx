@@ -20,10 +20,10 @@ const Termos = () => {
     >
       <Section title="O que o Barber Lab é">
         <p>
-          Uma plataforma que conecta clientes a barbearias para marcação de
-          horários. Não somos uma barbearia e não prestamos o serviço de
-          barbearia: quem atende, define preço, cumpre horário e responde pela
-          qualidade é o estabelecimento.
+          O Barber Lab fornece software para barbearias gerenciarem seus
+          serviços, equipes e agendamentos. O atendimento é prestado pelo
+          estabelecimento, que define preços, horários e responde pela
+          qualidade.
         </p>
       </Section>
 

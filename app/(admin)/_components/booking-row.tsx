@@ -11,7 +11,7 @@ import { Card, CardContent } from "@/app/_components/ui/card"
 import { cn } from "@/app/_lib/utils"
 import { BookingStatus } from "@prisma/client"
 import { addMinutes, format } from "date-fns"
-import { CheckIcon, RotateCcwIcon, UserXIcon, XIcon } from "lucide-react"
+import { CheckIcon, UserXIcon, XIcon } from "lucide-react"
 import { useTransition } from "react"
 import { toast } from "sonner"
 import WhatsAppButton from "@/app/_components/whatsapp-button"
@@ -41,7 +41,6 @@ const BookingRow = ({
   const meta = BOOKING_STATUS_META[booking.status]
   const endsAt = addMinutes(booking.date, booking.service.durationMinutes)
   const customerName = booking.customer.name ?? booking.customer.email
-  const isClosed = booking.status !== BookingStatus.CONFIRMED
 
   const changeStatus = (status: BookingStatus, successMessage: string) => {
     startTransition(async () => {
@@ -125,19 +124,38 @@ const BookingRow = ({
                 customerName: booking.customer.name,
               })}
             />
-            {isClosed ? (
-              <Button
-                size="sm"
-                variant="ghost"
-                disabled={isPending}
-                onClick={() =>
-                  changeStatus(BookingStatus.CONFIRMED, "Atendimento reaberto.")
-                }
-              >
-                <RotateCcwIcon />
-                Reabrir
-              </Button>
-            ) : (
+            {booking.status === BookingStatus.PENDING ? (
+              <>
+                <Button
+                  size="sm"
+                  disabled={isPending}
+                  onClick={() =>
+                    changeStatus(
+                      BookingStatus.CONFIRMED,
+                      "Agendamento confirmado.",
+                    )
+                  }
+                >
+                  <CheckIcon />
+                  Confirmar
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-destructive hover:text-destructive"
+                  disabled={isPending}
+                  onClick={() =>
+                    changeStatus(
+                      BookingStatus.CANCELED,
+                      "Agendamento cancelado.",
+                    )
+                  }
+                >
+                  <XIcon />
+                  Cancelar
+                </Button>
+              </>
+            ) : booking.status === BookingStatus.CONFIRMED ? (
               <>
                 <Button
                   size="sm"
@@ -179,7 +197,7 @@ const BookingRow = ({
                   Cancelar
                 </Button>
               </>
-            )}
+            ) : null}
           </div>
         </div>
       </CardContent>

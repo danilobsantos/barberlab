@@ -109,7 +109,6 @@ const BookingItem = ({ booking }: BookingItemProps) => {
       <SheetTrigger className="w-full min-w-[90%]">
         <Card
           id={booking.id}
-          data-search-name={barbershop.name}
           className="hover:bg-card/20 min-w-[90%] transition-shadow hover:scale-[1.03] hover:cursor-pointer hover:shadow-md"
         >
           <CardContent className="flex justify-between p-0">

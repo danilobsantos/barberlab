@@ -42,7 +42,6 @@ interface BarbershopDetailProps {
   barbershop: PublicBarbershop
   openingHours: OpeningHourSlot[]
   showHeroNav?: boolean
-  singleTenant?: boolean
   publicProfile?: boolean
   sidebarSlot?: React.ReactNode
   bookingSlug?: string
@@ -53,7 +52,6 @@ const BarbershopDetail = ({
   barbershop,
   openingHours,
   showHeroNav = true,
-  singleTenant = false,
   publicProfile = false,
   sidebarSlot,
   bookingSlug,
@@ -94,7 +92,7 @@ const BarbershopDetail = ({
                     <MenuIcon className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
-                <SidebarSheet singleTenant={singleTenant} />
+                <SidebarSheet />
               </Sheet>
             </div>
           </>

@@ -9,7 +9,7 @@ import { CalendarIcon } from "lucide-react"
 import { notFound } from "next/navigation"
 import AccessNotice from "./_components/access-notice"
 import BarbershopDetail from "./_components/barbershop-detail"
-import CatalogHome from "./_components/catalog-home"
+import { redirect } from "next/navigation"
 
 interface HomeProps {
   searchParams: Promise<{ erro?: string }>
@@ -30,9 +30,7 @@ export async function generateMetadata(): Promise<Metadata> {
 const Home = async ({ searchParams }: HomeProps) => {
   const { erro } = await searchParams
 
-  if (!isSingleTenant) {
-    return <CatalogHome erro={erro} />
-  }
+  if (!isSingleTenant) redirect("/cadastro")
 
   const barbershop = await getBarbershopsById(SINGLE_BARBERSHOP_ID!)
   if (!barbershop) {
@@ -53,7 +51,6 @@ const Home = async ({ searchParams }: HomeProps) => {
         barbershop={barbershop}
         openingHours={openingHours}
         showHeroNav={false}
-        singleTenant
         sidebarSlot={
           confirmedBookings.length > 0 ? (
             <section className="space-y-4">
