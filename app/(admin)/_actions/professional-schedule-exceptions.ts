@@ -5,6 +5,10 @@ import { professionalScheduleExceptionSchema } from "@/app/_lib/professional-sch
 import { MAX_PROFESSIONAL_SCHEDULE_EXCEPTIONS } from "@/app/_lib/professional-schedule-exception-limit"
 import { consumeRateLimit, rateLimitError } from "@/app/_lib/rate-limit"
 import { requireAdminContext } from "@/app/_lib/tenant/require-admin-context"
+import {
+  canUseFeature,
+  lockAndGetTenantEntitlements,
+} from "@/app/_lib/platform/entitlements"
 import { revalidatePath } from "next/cache"
 
 const isUuid = (value: unknown): value is string =>
@@ -34,6 +38,14 @@ export const saveProfessionalScheduleException = async (
   }
 
   const result = await db.$transaction(async (tx) => {
+    const entitlements = await lockAndGetTenantEntitlements(
+      tx,
+      admin.barbershopId,
+    )
+    if (!canUseFeature(entitlements, "professional_schedule")) {
+      return "feature" as const
+    }
+
     const professional = await tx.professional.findFirst({
       where: { id: professionalId, barbershopId: admin.barbershopId },
       select: { id: true },
@@ -87,6 +99,12 @@ export const saveProfessionalScheduleException = async (
       error: `O limite é de ${MAX_PROFESSIONAL_SCHEDULE_EXCEPTIONS} exceções por profissional.`,
     }
   }
+  if (result === "feature") {
+    return {
+      ok: false as const,
+      error: "O plano atual não inclui exceções de jornada profissional.",
+    }
+  }
 
   revalidatePath(`/painel/${slug}/team`)
   return { ok: true as const }
@@ -107,14 +125,29 @@ export const deleteProfessionalScheduleException = async (
     return { ok: false as const, error: "Exceção não encontrada." }
   }
 
-  const deleted = await db.professionalScheduleException.deleteMany({
-    where: {
-      id: exceptionId,
-      professionalId,
-      barbershopId: admin.barbershopId,
-    },
+  const result = await db.$transaction(async (tx) => {
+    const entitlements = await lockAndGetTenantEntitlements(
+      tx,
+      admin.barbershopId,
+    )
+    if (!canUseFeature(entitlements, "professional_schedule")) return "feature"
+
+    const deleted = await tx.professionalScheduleException.deleteMany({
+      where: {
+        id: exceptionId,
+        professionalId,
+        barbershopId: admin.barbershopId,
+      },
+    })
+    return deleted.count ? "deleted" : "missing"
   })
-  if (!deleted.count) {
+  if (result === "feature") {
+    return {
+      ok: false as const,
+      error: "O plano atual não inclui exceções de jornada profissional.",
+    }
+  }
+  if (result === "missing") {
     return { ok: false as const, error: "Exceção não encontrada." }
   }
 
