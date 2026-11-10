@@ -1,6 +1,11 @@
 import assert from "node:assert/strict"
 import test from "node:test"
-import { createBookingSchema, serviceIdSchema } from "./booking-action-schema"
+import {
+  createBookingSchema,
+  serviceIdSchema,
+  serviceInputSchema,
+  unavailableIntervalsSchema,
+} from "./booking-action-schema"
 
 test("validates booking service IDs and dates at the action boundary", () => {
   assert.equal(serviceIdSchema.safeParse("service-1").success, true)
@@ -17,4 +22,29 @@ test("validates booking service IDs and dates at the action boundary", () => {
     false,
   )
   assert.equal(createBookingSchema.safeParse(validBooking).success, true)
+  assert.equal(
+    createBookingSchema.safeParse({ ...validBooking, slug: "barber-lab" })
+      .success,
+    true,
+  )
+  assert.equal(
+    createBookingSchema.safeParse({ ...validBooking, slug: "Other Tenant" })
+      .success,
+    false,
+  )
+  assert.equal(
+    unavailableIntervalsSchema.safeParse({
+      serviceId: "service-1",
+      professionalId: "professional-1",
+      date: "2026-01-05",
+      slug: "barber-lab",
+    }).success,
+    true,
+  )
+  assert.equal(serviceInputSchema.safeParse("service-1").success, true)
+  assert.equal(
+    serviceInputSchema.safeParse({ serviceId: "service-1", slug: "barber-lab" })
+      .success,
+    true,
+  )
 })

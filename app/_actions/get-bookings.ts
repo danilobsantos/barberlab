@@ -7,7 +7,7 @@ import { db } from "../_lib/prisma"
 import { withDefaults } from "../_lib/opening-hours"
 import { consumeRateLimit, getClientIp } from "../_lib/rate-limit"
 import {
-  serviceIdSchema,
+  serviceInputSchema,
   unavailableIntervalsSchema,
 } from "../_lib/booking-action-schema"
 import {
@@ -21,14 +21,17 @@ import {
 
 export const getServiceProfessionals = async (input: unknown) => {
   const limit = await consumeRateLimit("readSchedule", await getClientIp())
-  const parsed = serviceIdSchema.safeParse(input)
+  const parsed = serviceInputSchema.safeParse(input)
   if (!limit.allowed || !parsed.success) return []
+  const serviceId =
+    typeof parsed.data === "string" ? parsed.data : parsed.data.serviceId
+  const slug = typeof parsed.data === "string" ? undefined : parsed.data.slug
 
   const service = await db.barbershopService.findFirst({
     where: {
-      id: parsed.data,
+      id: serviceId,
       isActive: true,
-      barbershop: { status: "ACTIVE" },
+      barbershop: { status: "ACTIVE", ...(slug ? { slug } : {}) },
     },
     select: { barbershopId: true },
   })
@@ -39,7 +42,7 @@ export const getServiceProfessionals = async (input: unknown) => {
         barbershopId: service.barbershopId,
         status: "ACTIVE",
         services: {
-          some: { serviceId: parsed.data, barbershopId: service.barbershopId },
+          some: { serviceId, barbershopId: service.barbershopId },
         },
       },
       select: { id: true, displayName: true, name: true },
@@ -60,7 +63,7 @@ export const getUnavailableIntervals = async (
   if (!session?.user) return []
   const parsed = unavailableIntervalsSchema.safeParse(input)
   if (!parsed.success) return []
-  const { serviceId, professionalId, date } = parsed.data
+  const { serviceId, professionalId, date, slug } = parsed.data
 
   const limit = await consumeRateLimit("readSchedule", session.user.id)
   if (!limit.allowed) return []
@@ -69,7 +72,7 @@ export const getUnavailableIntervals = async (
     where: {
       id: serviceId,
       isActive: true,
-      barbershop: { status: "ACTIVE" },
+      barbershop: { status: "ACTIVE", ...(slug ? { slug } : {}) },
       professionals: {
         some: { professionalId, professional: { status: "ACTIVE" } },
       },

@@ -40,6 +40,7 @@ export default async function BarbershopPage({ params }: BarbershopPageProps) {
       barbershop={barbershop}
       openingHours={openingHours}
       publicProfile
+      bookingSlug={barbershop.slug}
       showHeroNav={false}
     />
   )

@@ -45,6 +45,8 @@ interface BarbershopDetailProps {
   singleTenant?: boolean
   publicProfile?: boolean
   sidebarSlot?: React.ReactNode
+  bookingSlug?: string
+  bookingEnabled?: boolean
 }
 
 const BarbershopDetail = ({
@@ -54,6 +56,8 @@ const BarbershopDetail = ({
   singleTenant = false,
   publicProfile = false,
   sidebarSlot,
+  bookingSlug,
+  bookingEnabled = !publicProfile,
 }: BarbershopDetailProps) => {
   return (
     <div className="from-background via-background to-muted/20 min-h-svh bg-linear-to-br">
@@ -239,6 +243,13 @@ const BarbershopDetail = ({
                       {barbershop.services.length} serviços
                     </Badge>
                   </div>
+                  {publicProfile && !bookingEnabled && bookingSlug && (
+                    <Button asChild className="mt-4">
+                      <Link href={`/${bookingSlug}/agendar`}>
+                        Agendar horário
+                      </Link>
+                    </Button>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-4 lg:gap-6">
@@ -251,7 +262,8 @@ const BarbershopDetail = ({
                           timezone: barbershop.timezone,
                         }}
                         service={JSON.parse(JSON.stringify(service))}
-                        bookingEnabled={!publicProfile}
+                        bookingEnabled={bookingEnabled}
+                        slug={bookingSlug}
                       />
                     ))}
                   </div>

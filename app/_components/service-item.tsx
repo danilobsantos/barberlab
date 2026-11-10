@@ -38,12 +38,14 @@ interface ServiceItemProps {
   >
   barbershop: Pick<Barbershop, "name" | "phones" | "timezone">
   bookingEnabled?: boolean
+  slug?: string
 }
 
 const ServiceItem = ({
   service,
   barbershop,
   bookingEnabled = true,
+  slug,
 }: ServiceItemProps) => {
   const { data } = useSession()
   const [signInDialogIsOpen, setSignInDialogIsOpen] = useState(false)
@@ -63,13 +65,15 @@ const ServiceItem = ({
   useEffect(() => {
     if (!bookingEnabled) return
     let current = true
-    getServiceProfessionals(service.id).then((result) => {
+    getServiceProfessionals(
+      slug ? { serviceId: service.id, slug } : service.id,
+    ).then((result) => {
       if (current) setProfessionals(result)
     })
     return () => {
       current = false
     }
-  }, [bookingEnabled, service.id])
+  }, [bookingEnabled, service.id, slug])
 
   useEffect(() => {
     if (!bookingEnabled || !selectedDay || !professionalId) return
@@ -83,6 +87,7 @@ const ServiceItem = ({
         date: format(selectedDay, "yyyy-MM-dd"),
         serviceId: service.id,
         professionalId,
+        slug,
       })
       if (!current) return
       setTimeList(slots)
@@ -93,7 +98,7 @@ const ServiceItem = ({
     return () => {
       current = false
     }
-  }, [bookingEnabled, selectedDay, service.id, professionalId])
+  }, [bookingEnabled, selectedDay, service.id, professionalId, slug])
 
   const selectedDate = useMemo(() => {
     if (!selectedDay || !selectedTime) return
@@ -141,6 +146,7 @@ const ServiceItem = ({
           professionalId,
           date: format(selectedDay, "yyyy-MM-dd"),
           time: selectedTime,
+          slug,
         })
 
         if (!result.ok) {

@@ -25,13 +25,13 @@ export const createBooking = async (input: unknown) => {
   const parsed = createBookingSchema.safeParse(input)
   if (!parsed.success)
     return { ok: false as const, error: "Dados do agendamento inválidos." }
-  const { serviceId, professionalId, date, time } = parsed.data
+  const { serviceId, professionalId, date, time, slug } = parsed.data
 
   const service = await db.barbershopService.findFirst({
     where: {
       id: serviceId,
       isActive: true,
-      barbershop: { status: "ACTIVE" },
+      barbershop: { status: "ACTIVE", ...(slug ? { slug } : {}) },
       professionals: {
         some: { professionalId, professional: { status: "ACTIVE" } },
       },
@@ -63,6 +63,7 @@ export const createBooking = async (input: unknown) => {
     serviceId,
     professionalId,
     date,
+    slug,
   })
   if (!slots.includes(time)) return { ok: false as const, error: SLOT_CONFLICT }
 
@@ -112,6 +113,7 @@ export const createBooking = async (input: unknown) => {
   }
 
   revalidatePath("/barbershops", "page")
+  if (slug) revalidatePath(`/${slug}`)
   revalidatePath("/bookings", "page")
   revalidatePath("/dashboard")
   revalidatePath("/schedule")
