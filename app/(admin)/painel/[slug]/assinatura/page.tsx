@@ -23,6 +23,8 @@ const formatDate = (date: Date) =>
     timeZone: "UTC",
   }).format(date)
 
+const paymentInstructions = process.env.MANUAL_PAYMENT_INSTRUCTIONS?.trim()
+
 export default async function TenantSubscriptionPage({
   params,
 }: {
@@ -87,10 +89,13 @@ export default async function TenantSubscriptionPage({
                 <dd>{formatDate(subscription.currentPeriodEnd)}</dd>
               </div>
             </dl>
-            <p className="text-muted-foreground text-sm">
-              A cobrança é administrada manualmente. As instruções de pagamento
-              são fornecidas pela administração da plataforma.
-            </p>
+            <section className="space-y-1 border-t pt-3">
+              <h2 className="text-sm font-medium">Instruções de pagamento</h2>
+              <p className="text-muted-foreground text-sm whitespace-pre-wrap">
+                {paymentInstructions ||
+                  "A administração da plataforma ainda não configurou as instruções de pagamento."}
+              </p>
+            </section>
           </CardContent>
         </Card>
       ) : (
