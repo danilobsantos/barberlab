@@ -3,6 +3,7 @@
 import { db } from "@/app/_lib/prisma"
 import { requirePlatformAdmin } from "@/app/_lib/platform/require-platform-admin"
 import { subscriptionSchema } from "@/app/_lib/platform/subscription-schema"
+import { lockAndGetTenantEntitlements } from "@/app/_lib/platform/entitlements"
 import { Prisma } from "@prisma/client"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
@@ -21,6 +22,10 @@ export async function savePlatformSubscription(formData: FormData) {
   try {
     await db.$transaction(
       async (tx) => {
+        const entitlements = await lockAndGetTenantEntitlements(
+          tx,
+          input.barbershopId,
+        )
         const [barbershop, plan, current] = await Promise.all([
           tx.barbershop.findUnique({
             where: { id: input.barbershopId },
@@ -28,7 +33,12 @@ export async function savePlatformSubscription(formData: FormData) {
           }),
           tx.plan.findUnique({
             where: { id: input.planId },
-            select: { id: true, priceMonthly: true, isActive: true },
+            select: {
+              id: true,
+              priceMonthly: true,
+              maxProfessionals: true,
+              isActive: true,
+            },
           }),
           tx.subscription.findFirst({
             where: {
@@ -45,6 +55,12 @@ export async function savePlatformSubscription(formData: FormData) {
           (!plan.isActive && current?.planId !== plan.id)
         ) {
           throw new Error("INVALID_SUBSCRIPTION_TARGET")
+        }
+        if (
+          plan.maxProfessionals !== null &&
+          entitlements.activeProfessionals > plan.maxProfessionals
+        ) {
+          throw new Error("PLAN_LIMIT_BELOW_CURRENT_USAGE")
         }
 
         const changingPlan = !!current && current.planId !== plan.id
@@ -103,6 +119,12 @@ export async function savePlatformSubscription(formData: FormData) {
       error.message === "INVALID_SUBSCRIPTION_TARGET"
     ) {
       redirect("/painel/assinaturas?error=invalid")
+    }
+    if (
+      error instanceof Error &&
+      error.message === "PLAN_LIMIT_BELOW_CURRENT_USAGE"
+    ) {
+      redirect("/painel/assinaturas?error=limit")
     }
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&

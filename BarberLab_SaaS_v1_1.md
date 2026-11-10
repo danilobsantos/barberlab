@@ -1106,7 +1106,7 @@ As fases abaixo estão em ordem de dependência técnica. As tasks são numerada
 |---:|---|---|---|---|---|
 | 1 | BL-090 | P0 | Criar cadastro e edição de planos | Superadmin define preço, limites e funcionalidades | ✅ Concluído; CRUD protegido, validação server-side e auditoria |
 | 2 | BL-091 | P0 | Criar assinatura vinculada ao tenant | Barbearia possui plano e status verificáveis | ✅ Concluído; atribuição manual de plano/status e período pelo superadmin |
-| 3 | BL-092 | P0 | Criar serviço central de entitlements/limites | Backend valida limites e features sem depender da UI | ⏳ Pendente |
+| 3 | BL-092 | P0 | Criar serviço central de entitlements/limites | Backend valida limites e features sem depender da UI | 🟡 Parcial — limite de profissionais aplicado no servidor e checagem de feature central disponível; gates de features em funcionalidades ainda pendentes |
 | 4 | BL-093 | P0 | Criar painel de superadmin | Acesso restrito a usuários com `SUPER_ADMIN` | 🟡 Parcial — painel protegido e acesso à gestão de planos; visão global e gestão de tenants/assinaturas pendentes |
 | 5 | BL-094 | P1 | Criar gestão de barbearias | Superadmin ativa, suspende e consulta tenants | ⏳ Pendente |
 | 6 | BL-095 | P1 | Criar gestão de assinaturas | Superadmin altera plano/status com auditoria | ✅ Concluído; mudanças auditadas e troca de plano preserva assinatura anterior cancelada |
@@ -1117,7 +1117,7 @@ As fases abaixo estão em ordem de dependência técnica. As tasks são numerada
 
 **Saída da fase:** plataforma consegue administrar planos, limites e status de seus clientes SaaS.
 
-**Andamento:** BL-090 concluído com gestão manual de planos em `/painel/planos`; alterações e ativações são registradas em `AuditLog`. BL-091/095 concluídos com gestão manual em `/painel/assinaturas`, snapshots de preço, histórico de plano e auditoria. Uma migration adiciona unicidade parcial para assinatura não cancelada por barbearia; **não foi aplicada nem testada em PostgreSQL**. BL-093 parcialmente implementado: `/painel` continua restrito a `SUPER_ADMIN` e oferece links para planos e assinaturas. Gestão geral de tenants, serviço de entitlements, trial/tolerância automática e tela do proprietário permanecem pendentes; gateway e webhooks continuam fora até escolha do provedor.
+**Andamento:** BL-090 concluído com gestão manual de planos em `/painel/planos`; alterações e ativações são registradas em `AuditLog`. BL-091/095 concluídos com gestão manual em `/painel/assinaturas`, snapshots de preço, histórico de plano e auditoria. BL-092 parcialmente implementado: serviço central resolve limites/features, e criação/reativação de profissionais e downgrade de plano respeitam o limite em transações com lock por tenant; ainda não há funcionalidades de produto condicionadas pelas feature flags. Uma migration adiciona unicidade parcial para assinatura não cancelada por barbearia; **não foi aplicada nem testada em PostgreSQL**. BL-093 parcialmente implementado: `/painel` continua restrito a `SUPER_ADMIN` e oferece links para planos e assinaturas. Gestão geral de tenants e ativação de gates de features, trial/tolerância automática e tela do proprietário permanecem pendentes; gateway e webhooks continuam fora até escolha do provedor.
 
 ### Fase 8 — Testes finais, deploy e operação
 

@@ -4,6 +4,10 @@ import { db } from "@/app/_lib/prisma"
 import { requireAdminContext } from "@/app/_lib/tenant/require-admin-context"
 import { consumeRateLimit, rateLimitError } from "@/app/_lib/rate-limit"
 import { ProfessionalStatus } from "@prisma/client"
+import {
+  isWithinProfessionalLimit,
+  lockAndGetTenantEntitlements,
+} from "@/app/_lib/platform/entitlements"
 import { revalidatePath } from "next/cache"
 import { professionalSchema } from "../_lib/professional-schema"
 
@@ -40,6 +44,10 @@ export const upsertProfessional = async (input: unknown, slug: string) => {
   }
 
   const result = await db.$transaction(async (tx) => {
+    const entitlements = await lockAndGetTenantEntitlements(
+      tx,
+      admin.barbershopId,
+    )
     let professionalId = id
 
     if (id) {
@@ -72,6 +80,7 @@ export const upsertProfessional = async (input: unknown, slug: string) => {
         },
       })
     } else {
+      if (!isWithinProfessionalLimit(entitlements)) return "limit" as const
       const professional = await tx.professional.create({
         data: { ...data, barbershopId: admin.barbershopId },
         select: { id: true },
@@ -102,6 +111,12 @@ export const upsertProfessional = async (input: unknown, slug: string) => {
         "Não é possível remover um serviço com agendamentos deste profissional.",
     }
   }
+  if (result === "limit") {
+    return {
+      ok: false as const,
+      error: "O plano atual atingiu o limite de profissionais ativos.",
+    }
+  }
 
   revalidateTeam(slug)
   return { ok: true as const }
@@ -124,16 +139,42 @@ export const setProfessionalActive = async (
     return { ok: false as const, error: "Dados inválidos." }
   }
 
-  const result = await db.professional.updateMany({
-    where: { id: professionalId, barbershopId: admin.barbershopId },
-    data: {
-      status: isActive
-        ? ProfessionalStatus.ACTIVE
-        : ProfessionalStatus.INACTIVE,
-    },
+  const result = await db.$transaction(async (tx) => {
+    const entitlements = await lockAndGetTenantEntitlements(
+      tx,
+      admin.barbershopId,
+    )
+    const current = await tx.professional.findFirst({
+      where: { id: professionalId, barbershopId: admin.barbershopId },
+      select: { status: true },
+    })
+    if (!current) return "missing" as const
+    if (
+      isActive &&
+      current.status !== ProfessionalStatus.ACTIVE &&
+      !isWithinProfessionalLimit(entitlements)
+    ) {
+      return "limit" as const
+    }
+
+    await tx.professional.updateMany({
+      where: { id: professionalId, barbershopId: admin.barbershopId },
+      data: {
+        status: isActive
+          ? ProfessionalStatus.ACTIVE
+          : ProfessionalStatus.INACTIVE,
+      },
+    })
+    return "updated" as const
   })
-  if (!result.count) {
+  if (result === "missing") {
     return { ok: false as const, error: "Profissional não encontrado." }
+  }
+  if (result === "limit") {
+    return {
+      ok: false as const,
+      error: "O plano atual atingiu o limite de profissionais ativos.",
+    }
   }
 
   revalidateTeam(slug)

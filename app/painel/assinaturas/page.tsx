@@ -75,6 +75,12 @@ export default async function PlatformSubscriptionsPage({
       {params.error === "invalid" && (
         <p role="alert">Barbearia, plano ou período inválido.</p>
       )}
+      {params.error === "limit" && (
+        <p role="alert">
+          O plano escolhido tem limite inferior ao número de profissionais
+          ativos.
+        </p>
+      )}
       {params.error === "conflict" && (
         <p role="alert">
           A assinatura mudou em outra operação. Atualize a página e tente
