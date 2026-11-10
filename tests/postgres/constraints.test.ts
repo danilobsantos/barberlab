@@ -20,8 +20,10 @@ if (
 const pool = new Pool({ connectionString: databaseUrl })
 const ids = {
   shop: randomUUID(),
+  otherShop: randomUUID(),
   user: `postgres-test-${randomUUID()}`,
   service: randomUUID(),
+  otherService: randomUUID(),
   professionals: [randomUUID(), randomUUID()],
   plan: randomUUID(),
   subscriptions: [randomUUID(), randomUUID(), randomUUID()],
@@ -56,8 +58,14 @@ test("PostgreSQL enforces booking overlap and one current subscription per tenan
   try {
     await pool.query(
       `INSERT INTO "Barbershop" ("id", "name", "slug", "address", "phones", "description", "imageUrl", "updatedAt")
-       VALUES ($1, 'Integration test', $2, '', ARRAY[]::TEXT[], '', '', NOW())`,
-      [ids.shop, `integration-${ids.shop}`],
+       VALUES ($1, 'Integration test', $2, '', ARRAY[]::TEXT[], '', '', NOW()),
+              ($3, 'Other tenant', $4, '', ARRAY[]::TEXT[], '', '', NOW())`,
+      [
+        ids.shop,
+        `integration-${ids.shop}`,
+        ids.otherShop,
+        `integration-${ids.otherShop}`,
+      ],
     )
     await pool.query(
       `INSERT INTO "User" ("id", "email", "updatedAt") VALUES ($1, $2, NOW())`,
@@ -67,6 +75,11 @@ test("PostgreSQL enforces booking overlap and one current subscription per tenan
       `INSERT INTO "BarbershopService" ("id", "name", "description", "imageUrl", "price", "barbershopId", "updatedAt")
        VALUES ($1, 'Test service', '', '', 10, $2, NOW())`,
       [ids.service, ids.shop],
+    )
+    await pool.query(
+      `INSERT INTO "BarbershopService" ("id", "name", "description", "imageUrl", "price", "barbershopId", "updatedAt")
+       VALUES ($1, 'Other tenant service', '', '', 10, $2, NOW())`,
+      [ids.otherService, ids.otherShop],
     )
     for (const [index, professionalId] of ids.professionals.entries()) {
       await pool.query(
@@ -78,6 +91,13 @@ test("PostgreSQL enforces booking overlap and one current subscription per tenan
         [ids.shop, professionalId, ids.service],
       )
     }
+    await assert.rejects(
+      pool.query(
+        `INSERT INTO "ProfessionalService" ("barbershopId", "professionalId", "serviceId") VALUES ($1, $2, $3)`,
+        [ids.shop, ids.professionals[0], ids.otherService],
+      ),
+      (error: { code?: string }) => error.code === "23503",
+    )
     await pool.query(
       `INSERT INTO "Plan" ("id", "name", "slug", "description", "priceMonthly", "features", "updatedAt")
        VALUES ($1, 'Test plan', $2, '', 10, '{}'::jsonb, NOW())`,
@@ -144,6 +164,9 @@ test("PostgreSQL enforces booking overlap and one current subscription per tenan
       ids.bookings,
     ])
     await pool.query(`DELETE FROM "Barbershop" WHERE "id" = $1`, [ids.shop])
+    await pool.query(`DELETE FROM "Barbershop" WHERE "id" = $1`, [
+      ids.otherShop,
+    ])
     await pool.query(`DELETE FROM "User" WHERE "id" = $1`, [ids.user])
     await pool.end()
   }
