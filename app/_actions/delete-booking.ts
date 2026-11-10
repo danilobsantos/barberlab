@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { auth } from "../_lib/auth"
 import { db } from "../_lib/prisma"
 import { consumeRateLimit, rateLimitError } from "../_lib/rate-limit"
+import { BookingStatus } from "@prisma/client"
 
 export const deleteBooking = async (bookingId: string) => {
   const session = await auth()
@@ -19,10 +20,15 @@ export const deleteBooking = async (bookingId: string) => {
     return { ok: false as const, error: "Reserva inválida." }
   }
 
-  const deleted = await db.booking.deleteMany({
-    where: { id: bookingId, userId: session.user.id },
+  const canceled = await db.booking.updateMany({
+    where: {
+      id: bookingId,
+      userId: session.user.id,
+      status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
+    },
+    data: { status: BookingStatus.CANCELED },
   })
-  if (deleted.count === 0) {
+  if (canceled.count === 0) {
     return { ok: false as const, error: "Reserva não encontrada." }
   }
 

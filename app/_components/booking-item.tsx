@@ -3,7 +3,6 @@
 import { Avatar, AvatarImage } from "./ui/avatar"
 import { Badge } from "./ui/badge"
 import { Card, CardContent } from "./ui/card"
-import { isFuture } from "date-fns"
 import {
   Sheet,
   SheetClose,
@@ -34,10 +33,13 @@ import WhatsAppButton from "./whatsapp-button"
 import { buildCustomerConfirmationMessage } from "../_lib/whatsapp"
 import { useSession } from "next-auth/react"
 import { formatBookingDateTime } from "../_lib/booking-date-format"
+import { canCancelBooking } from "../_lib/booking-status"
+import type { BookingStatus } from "@prisma/client"
 
 export interface BookingItemData {
   id: string
   date: Date
+  status: BookingStatus
   service: {
     name: string
     price: number
@@ -62,7 +64,18 @@ const BookingItem = ({ booking }: BookingItemProps) => {
   const {
     service: { barbershop },
   } = booking
-  const isConfirmed = isFuture(booking.date)
+  const isConfirmed = booking.status === "CONFIRMED"
+  const isCancelable = canCancelBooking(booking.status, booking.date)
+  const statusLabel =
+    booking.status === "CANCELED"
+      ? "Cancelado"
+      : booking.status === "COMPLETED"
+        ? "Finalizado"
+        : booking.status === "NO_SHOW"
+          ? "Não compareceu"
+          : booking.status === "PENDING"
+            ? "Pendente"
+            : "Confirmado"
   const bookingLocalTime = formatBookingDateTime(
     booking.date,
     barbershop.timezone,
@@ -106,7 +119,7 @@ const BookingItem = ({ booking }: BookingItemProps) => {
                 className="w-fit"
                 variant={isConfirmed ? "default" : "secondary"}
               >
-                {isConfirmed ? "Confirmado" : "Finalizado"}
+                {statusLabel}
               </Badge>
               <h3 className="font-semibold">{booking.service.name}</h3>
 
@@ -158,7 +171,7 @@ const BookingItem = ({ booking }: BookingItemProps) => {
             className="w-fit"
             variant={isConfirmed ? "default" : "secondary"}
           >
-            {isConfirmed ? "Confirmado" : "Finalizado"}
+            {statusLabel}
           </Badge>
 
           <div className="mt-6 mb-3">
@@ -197,7 +210,7 @@ const BookingItem = ({ booking }: BookingItemProps) => {
                 Voltar
               </Button>
             </SheetClose>
-            {isConfirmed && (
+            {isCancelable && (
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant="destructive" className="w-full">

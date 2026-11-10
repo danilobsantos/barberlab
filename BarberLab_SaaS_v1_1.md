@@ -1070,13 +1070,15 @@ As fases abaixo estão em ordem de dependência técnica. As tasks são numerada
 | 6 | BL-065 | P0 | Criar constraint PostgreSQL de não sobreposição | Migration criada; aplicação/teste concorrente em PostgreSQL — 🟡 Parcial |
 | 7 | BL-066 | P0 | Tratar erro de conflito de banco | Retorno amigável implementado; integração concorrente — 🟡 Parcial |
 | 8 | BL-067 | P1 | Implementar opção “qualquer profissional disponível” | Sistema seleciona apenas profissional apto e com intervalo livre |
-| 9 | BL-068 | P1 | Adaptar cancelamento e alteração de agendamento | Cliente e equipe só operam bookings autorizados dentro do tenant |
+| 9 | BL-068 | P1 | Adaptar cancelamento e alteração de agendamento | 🟡 Parcial — cancelamento do cliente concluído; alterações mais amplas pendentes |
 | 10 | BL-069 | P1 | Revisar calendário do painel para múltiplos profissionais | Agenda permite filtrar/visualizar por profissional e por dia |
 | 11 | BL-070 | P0 | Criar testes de concorrência, duração e timezone | Testes provam ausência de sobreposição e conversão correta de horário |
 
 **Saída da fase (após aplicar a migration BL-065):** profissionais podem atender simultaneamente e o banco impede conflito de agenda.
 
 **BL-060–066 (implementação):** somente `PENDING` e `CONFIRMED` ocupam agenda; `CANCELED`, `COMPLETED` e `NO_SHOW` não. A disponibilidade intersecta jornada do tenant e do profissional, aplica exceções (indisponibilidade prevalece; horário customizado substitui a jornada semanal), bloqueios gerais/individuais e reservas. Datas/horários são interpretados no timezone IANA do tenant; em uma hora local repetida no fim do horário de verão escolhe-se a primeira ocorrência, e horários locais inexistentes são descartados. A criação revalida serviço/profissional/tenant e horário e grava snapshots. `customerId` é preenchido apenas se já existir um Customer ligado ao usuário naquele tenant; caso contrário permanece nullable porque o fluxo ainda não coleta telefone/dados necessários para criar ficha com segurança (cadastro de Customer permanece fora do escopo desta fase). `*` O teste concorrente da constraint e a aplicação da migration precisam ser verificados em um PostgreSQL descartável; não foram executados nesta implementação.
+
+**BL-068 (implementação):** o cliente pode cancelar apenas bookings próprios `PENDING`/`CONFIRMED`; a operação preserva o registro e snapshots e marca `CANCELED`. A listagem futura omite cancelados e a interface não os oferece como confirmados/canceláveis. O caminho de equipe continua tenant-scoped, mas validação de transições de status e alterações mais amplas do cliente/equipe permanecem pendentes.
 
 ### Fase 6 — Perfil público, clientes e remoção do marketplace
 

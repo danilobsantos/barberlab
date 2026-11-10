@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "../_lib/auth"
 import { db } from "../_lib/prisma"
 import { consumeRateLimit } from "../_lib/rate-limit"
+import { BookingStatus } from "@prisma/client"
 
 export const getConfirmedBookings = async () => {
   const session = await getServerSession(authOptions)
@@ -15,6 +16,7 @@ export const getConfirmedBookings = async () => {
   const bookings = await db.booking.findMany({
     where: {
       userId: session.user.id,
+      status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
       date: {
         gte: new Date(),
       },
@@ -22,6 +24,7 @@ export const getConfirmedBookings = async () => {
     select: {
       id: true,
       date: true,
+      status: true,
       service: {
         select: {
           name: true,
@@ -49,6 +52,7 @@ export const getConfirmedBookings = async () => {
 const toBookingItem = (booking: {
   id: string
   date: Date
+  status: "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELED" | "NO_SHOW"
   service: {
     name: string
     price: unknown
@@ -63,6 +67,7 @@ const toBookingItem = (booking: {
 }) => ({
   id: booking.id,
   date: booking.date,
+  status: booking.status,
   service: {
     name: booking.service.name,
     price: Number(booking.service.price),

@@ -20,6 +20,7 @@ export const getConcludedBookings = async () => {
     select: {
       id: true,
       date: true,
+      status: true,
       service: {
         select: {
           name: true,
@@ -47,6 +48,7 @@ export const getConcludedBookings = async () => {
 const toBookingItem = (booking: {
   id: string
   date: Date
+  status: "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELED" | "NO_SHOW"
   service: {
     name: string
     price: unknown
@@ -61,6 +63,7 @@ const toBookingItem = (booking: {
 }) => ({
   id: booking.id,
   date: booking.date,
+  status: booking.status,
   service: {
     name: booking.service.name,
     price: Number(booking.service.price),
