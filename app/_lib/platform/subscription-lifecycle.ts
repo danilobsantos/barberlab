@@ -29,17 +29,36 @@ export async function refreshSubscriptionLifecycle(
   barbershopId: string,
   now = new Date(),
 ): Promise<SubscriptionStatus | null> {
+  const where = {
+    barbershopId,
+    status: { not: SubscriptionStatus.CANCELED },
+  }
+  const select = {
+    id: true,
+    status: true,
+    currentPeriodEnd: true,
+    updatedAt: true,
+  } as const
+  const current = await db.subscription.findFirst({
+    where,
+    orderBy: { createdAt: "desc" },
+    select,
+  })
+  if (!current) return null
+
+  const nextStatus = nextSubscriptionStatus(
+    current.status,
+    current.currentPeriodEnd,
+    now,
+  )
+  if (nextStatus === current.status) return current.status
+
   return db.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM "Barbershop" WHERE id = ${barbershopId} FOR UPDATE`
     const subscription = await tx.subscription.findFirst({
-      where: { barbershopId, status: { not: SubscriptionStatus.CANCELED } },
+      where,
       orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        status: true,
-        currentPeriodEnd: true,
-        updatedAt: true,
-      },
+      select,
     })
     if (!subscription) return null
 
