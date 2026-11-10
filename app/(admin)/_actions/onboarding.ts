@@ -4,7 +4,7 @@ import { requireAdminContext } from "@/app/_lib/tenant/require-admin-context"
 import { db } from "@/app/_lib/prisma"
 
 export const completeOnboarding = async (slug: string) => {
-  const admin = await requireAdminContext(slug)
+  const admin = await requireAdminContext(slug, "manageSettings")
   if (!admin) return { ok: false as const }
 
   await db.user.update({

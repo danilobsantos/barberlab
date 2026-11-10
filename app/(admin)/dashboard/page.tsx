@@ -37,6 +37,10 @@ const Dashboard = async ({ searchParams, params }: DashboardProps) => {
     ? await requireAdminContext(slug)
     : await requireBarbershopAdmin()
   if (!admin) redirect("/")
+  const professionalId: string | null =
+    slug && "professionalId" in admin
+      ? (admin.professionalId as string | null)
+      : null
 
   if (!slug) {
     const shop = await db.barbershop.findUnique({
@@ -51,7 +55,7 @@ const Dashboard = async ({ searchParams, params }: DashboardProps) => {
   const date = parseDateParam(dateParam)
 
   const [{ bookings, blocks }, barbershop] = await Promise.all([
-    getDayAgenda(admin.barbershopId, date),
+    getDayAgenda(admin.barbershopId, date, professionalId),
     db.barbershop.findUnique({
       where: { id: admin.barbershopId },
       select: { name: true, address: true },

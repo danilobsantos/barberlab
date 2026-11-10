@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 const Services = async ({ params }: { params: Promise<{ slug?: string }> }) => {
   const { slug } = await params
   const admin = slug
-    ? await requireAdminContext(slug)
+    ? await requireAdminContext(slug, "manageServices")
     : await requireBarbershopAdmin()
   if (!admin) redirect("/")
 

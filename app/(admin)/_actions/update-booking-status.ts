@@ -32,6 +32,7 @@ export const updateBookingStatus = async (input: unknown, slug: string) => {
     where: {
       id: parsed.data.bookingId,
       service: { barbershopId: admin.barbershopId },
+      ...(admin.professionalId ? { professionalId: admin.professionalId } : {}),
     },
     data: { status: parsed.data.status },
   })

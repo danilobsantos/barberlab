@@ -55,6 +55,10 @@ const Schedule = async ({ searchParams, params }: ScheduleProps) => {
     ? await requireAdminContext(slug)
     : await requireBarbershopAdmin()
   if (!admin) redirect("/")
+  const professionalId: string | null =
+    slug && "professionalId" in admin
+      ? (admin.professionalId as string | null)
+      : null
 
   if (!slug) {
     const shop = await db.barbershop.findUnique({
@@ -68,7 +72,7 @@ const Schedule = async ({ searchParams, params }: ScheduleProps) => {
   const { date: dateParam } = await searchParams
   const date = parseDateParam(dateParam)
   const [{ bookings, blocks }, professionals] = await Promise.all([
-    getDayAgenda(admin.barbershopId, date),
+    getDayAgenda(admin.barbershopId, date, professionalId),
     db.professional.findMany({
       where: { barbershopId: admin.barbershopId, status: "ACTIVE" },
       orderBy: { name: "asc" },
@@ -114,14 +118,16 @@ const Schedule = async ({ searchParams, params }: ScheduleProps) => {
             </CardContent>
           </Card>
 
-          <BlockManager
-            date={date}
-            blocks={blocks}
-            professionals={professionals.map((professional) => ({
-              id: professional.id,
-              name: professional.displayName ?? professional.name,
-            }))}
-          />
+          {!professionalId && (
+            <BlockManager
+              date={date}
+              blocks={blocks}
+              professionals={professionals.map((professional) => ({
+                id: professional.id,
+                name: professional.displayName ?? professional.name,
+              }))}
+            />
+          )}
         </div>
 
         {/* Linha do tempo do dia */}

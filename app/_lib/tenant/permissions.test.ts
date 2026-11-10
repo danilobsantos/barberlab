@@ -22,7 +22,11 @@ test("managers can operate but cannot change tenant settings", () => {
   assert.equal(hasTenantPermission("MANAGER", "manageSettings"), false)
 })
 
-test("professionals cannot access tenant-wide admin data before scoping exists", () => {
-  assert.equal(hasTenantPermission("PROFESSIONAL", "viewAdminPanel"), false)
-  assert.equal(hasTenantPermission("PROFESSIONAL", "manageBookings"), false)
+test("professionals can access their agenda but not tenant-wide management", () => {
+  assert.equal(hasTenantPermission("PROFESSIONAL", "viewAdminPanel"), true)
+  assert.equal(hasTenantPermission("PROFESSIONAL", "manageBookings"), true)
+  assert.equal(hasTenantPermission("PROFESSIONAL", "manageSchedule"), false)
+  assert.equal(hasTenantPermission("PROFESSIONAL", "manageServices"), false)
+  assert.equal(hasTenantPermission("PROFESSIONAL", "manageTeam"), false)
+  assert.equal(hasTenantPermission("PROFESSIONAL", "manageSettings"), false)
 })

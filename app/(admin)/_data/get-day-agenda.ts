@@ -29,7 +29,11 @@ export interface AgendaBlock {
   professional: { id: string; name: string } | null
 }
 
-export const getDayAgenda = async (barbershopId: string, date: Date) => {
+export const getDayAgenda = async (
+  barbershopId: string,
+  date: Date,
+  professionalId?: string | null,
+) => {
   const from = startOfDay(date)
   const to = endOfDay(date)
 
@@ -38,6 +42,7 @@ export const getDayAgenda = async (barbershopId: string, date: Date) => {
       where: {
         date: { gte: from, lte: to },
         service: { barbershopId },
+        ...(professionalId ? { professionalId } : {}),
       },
       orderBy: { date: "asc" },
       select: {
@@ -66,6 +71,9 @@ export const getDayAgenda = async (barbershopId: string, date: Date) => {
     db.scheduleBlock.findMany({
       where: {
         barbershopId,
+        ...(professionalId
+          ? { OR: [{ professionalId }, { professionalId: null }] }
+          : {}),
         startsAt: { lte: to },
         endsAt: { gte: from },
       },

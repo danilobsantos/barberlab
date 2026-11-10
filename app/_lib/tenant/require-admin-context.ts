@@ -3,6 +3,7 @@ import "server-only"
 import { auth } from "../auth"
 import { requireMembership } from "./require-membership"
 import { hasTenantPermission, type TenantPermission } from "./permissions"
+import { db } from "../prisma"
 
 export async function requireAdminContext(
   slug: string,
@@ -15,8 +16,22 @@ export async function requireAdminContext(
   const session = await auth()
   if (!session?.user?.id) return null
 
+  const professional =
+    membership.role === "PROFESSIONAL"
+      ? await db.professional.findFirst({
+          where: {
+            userId: session.user.id,
+            barbershopId: membership.barbershopId,
+            status: "ACTIVE",
+          },
+          select: { id: true },
+        })
+      : null
+  if (membership.role === "PROFESSIONAL" && !professional) return null
+
   return {
     ...membership,
+    professionalId: professional?.id ?? null,
     name: session.user.name ?? null,
     image: session.user.image ?? null,
   }

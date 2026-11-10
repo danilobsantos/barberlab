@@ -24,8 +24,7 @@ const ROLE_PERMISSIONS: Record<MembershipRole, readonly TenantPermission[]> = {
     "manageServices",
     "manageTeam",
   ],
-  // shortcut: professionals have no panel access until agenda queries are scoped to their professionalId.
-  PROFESSIONAL: [],
+  PROFESSIONAL: ["viewAdminPanel", "manageBookings"],
 }
 
 export const hasTenantPermission = (
