@@ -164,10 +164,12 @@ async function seedDatabase() {
           phones: ["(11) 99999-9999"],
           description: descriptions[i],
           imageUrl,
+          status: "ACTIVE",
         },
       })
 
       // Criar serviços para a barbearia
+      const createdServices: { id: string }[] = []
       for (const service of services) {
         if (!isValidUrl(service.imageUrl)) {
           throw new Error(
@@ -175,7 +177,7 @@ async function seedDatabase() {
           )
         }
 
-        await prisma.barbershopService.create({
+        const createdService = await prisma.barbershopService.create({
           data: {
             name: service.name,
             description: service.description,
@@ -184,7 +186,43 @@ async function seedDatabase() {
             imageUrl: service.imageUrl,
           },
         })
+        createdServices.push(createdService)
       }
+
+      const professional = await prisma.professional.create({
+        data: {
+          barbershopId: barbershop.id,
+          name: `Profissional ${name}`,
+          status: "ACTIVE",
+        },
+      })
+      await Promise.all([
+        prisma.openingHour.createMany({
+          data: Array.from({ length: 7 }, (_, weekday) => ({
+            barbershopId: barbershop.id,
+            weekday,
+            opensAt: "09:00",
+            closesAt: "19:00",
+            isClosed: weekday === 0,
+          })),
+        }),
+        prisma.professionalSchedule.createMany({
+          data: Array.from({ length: 6 }, (_, index) => ({
+            barbershopId: barbershop.id,
+            professionalId: professional.id,
+            weekday: index + 1,
+            startsAtLocal: "09:00",
+            endsAtLocal: "19:00",
+          })),
+        }),
+        prisma.professionalService.createMany({
+          data: createdServices.map(({ id }) => ({
+            barbershopId: barbershop.id,
+            professionalId: professional.id,
+            serviceId: id,
+          })),
+        }),
+      ])
 
       barbershops.push(barbershop)
     }

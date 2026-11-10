@@ -524,7 +524,7 @@ Campos conceituais:
 - `endsAtLocal` opcional
 - `reason` opcional
 
-Para a mesma data, pode existir uma exceção de cada tipo; `UNAVAILABLE` prevalece sobre `CUSTOM_HOURS`. O cálculo efetivo dessa precedência e sua aplicação às reservas ficam para BL-061.
+Para a mesma data, pode existir uma exceção de cada tipo; `UNAVAILABLE` prevalece sobre `CUSTOM_HOURS`. BL-061 implementa essa precedência no cálculo da disponibilidade.
 
 #### `ScheduleBlock`
 
@@ -1062,19 +1062,21 @@ As fases abaixo estão em ordem de dependência técnica. As tasks são numerada
 
 | Ordem | ID | Prioridade | Task | Critério de aceite |
 |---:|---|---|---|---|
-| 1 | BL-060 | P0 | Definir regra de disponibilidade e status ocupantes | Regras documentadas e cobertas por testes |
-| 2 | BL-061 | P0 | Criar serviço de cálculo de disponibilidade por profissional | Considera jornada, horário do tenant, serviço, bloqueios e reservas |
-| 3 | BL-062 | P0 | Adaptar consulta `getUnavailableIntervals` | Consulta somente a agenda do profissional escolhido |
-| 4 | BL-063 | P0 | Refatorar `createBooking` para exigir tenant, cliente, serviço e profissional validados | Booking só é criado se todos os relacionamentos forem do mesmo tenant |
-| 5 | BL-064 | P0 | Implementar `startsAt` e `endsAt` e snapshots de preço/duração | Alterar serviço posteriormente não altera booking histórico |
-| 6 | BL-065 | P0 | Criar constraint PostgreSQL de não sobreposição | Duas reservas simultâneas para mesmo profissional/intervalo não podem ser confirmadas |
-| 7 | BL-066 | P0 | Tratar erro de conflito de banco | Cliente recebe mensagem para escolher outro horário, sem erro 500 genérico |
+| 1 | BL-060 | P0 | Definir regra de disponibilidade e status ocupantes | Regras documentadas e cobertas por testes — ✅ Concluído |
+| 2 | BL-061 | P0 | Criar serviço de cálculo de disponibilidade por profissional | Considera jornada, horário do tenant, serviço, bloqueios, reservas e timezone — ✅ Concluído |
+| 3 | BL-062 | P0 | Adaptar consulta `getUnavailableIntervals` | Consulta a agenda do profissional escolhido — ✅ Concluído |
+| 4 | BL-063 | P0 | Refatorar `createBooking` para validar tenant, cliente, serviço e profissional | Relações tenant-scoped validadas — ✅ Concluído* |
+| 5 | BL-064 | P0 | Implementar `startsAt` e `endsAt` e snapshots de preço/duração | Histórico preservado — ✅ Concluído |
+| 6 | BL-065 | P0 | Criar constraint PostgreSQL de não sobreposição | Migration criada; aplicação/teste concorrente em PostgreSQL — 🟡 Parcial |
+| 7 | BL-066 | P0 | Tratar erro de conflito de banco | Retorno amigável implementado; integração concorrente — 🟡 Parcial |
 | 8 | BL-067 | P1 | Implementar opção “qualquer profissional disponível” | Sistema seleciona apenas profissional apto e com intervalo livre |
 | 9 | BL-068 | P1 | Adaptar cancelamento e alteração de agendamento | Cliente e equipe só operam bookings autorizados dentro do tenant |
 | 10 | BL-069 | P1 | Revisar calendário do painel para múltiplos profissionais | Agenda permite filtrar/visualizar por profissional e por dia |
 | 11 | BL-070 | P0 | Criar testes de concorrência, duração e timezone | Testes provam ausência de sobreposição e conversão correta de horário |
 
-**Saída da fase:** profissionais podem atender simultaneamente e o banco impede conflito de agenda.
+**Saída da fase (após aplicar a migration BL-065):** profissionais podem atender simultaneamente e o banco impede conflito de agenda.
+
+**BL-060–066 (implementação):** somente `PENDING` e `CONFIRMED` ocupam agenda; `CANCELED`, `COMPLETED` e `NO_SHOW` não. A disponibilidade intersecta jornada do tenant e do profissional, aplica exceções (indisponibilidade prevalece; horário customizado substitui a jornada semanal), bloqueios gerais/individuais e reservas. Datas/horários são interpretados no timezone IANA do tenant; em uma hora local repetida no fim do horário de verão escolhe-se a primeira ocorrência, e horários locais inexistentes são descartados. A criação revalida serviço/profissional/tenant e horário e grava snapshots. `customerId` é preenchido apenas se já existir um Customer ligado ao usuário naquele tenant; caso contrário permanece nullable porque o fluxo ainda não coleta telefone/dados necessários para criar ficha com segurança (cadastro de Customer permanece fora do escopo desta fase). `*` O teste concorrente da constraint e a aplicação da migration precisam ser verificados em um PostgreSQL descartável; não foram executados nesta implementação.
 
 ### Fase 6 — Perfil público, clientes e remoção do marketplace
 

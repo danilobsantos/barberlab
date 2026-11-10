@@ -1,51 +1,70 @@
 "use server"
 
 import { BookingStatus } from "@prisma/client"
-import { addMinutes, endOfDay, startOfDay } from "date-fns"
+import { addMinutes } from "date-fns"
+import { Prisma } from "@prisma/client"
 import { revalidatePath } from "next/cache"
 import { auth } from "../_lib/auth"
 import { db } from "../_lib/prisma"
-import {
-  buildDaySlots,
-  findDayHours,
-  withDefaults,
-} from "../_lib/opening-hours"
 import { consumeRateLimit, rateLimitError } from "../_lib/rate-limit"
 import { createBookingSchema } from "../_lib/booking-action-schema"
+import { localDateTimeToInstant } from "../_lib/booking-availability"
+import { getUnavailableIntervals } from "./get-bookings"
 
 const MAXIMO_DE_RESERVAS_EM_ABERTO = 3
-
-const overlaps = (aStart: Date, aEnd: Date, bStart: Date, bEnd: Date) =>
-  aStart < bEnd && aEnd > bStart
+const SLOT_CONFLICT = "Esse horário acabou de ser ocupado. Escolha outro."
 
 export const createBooking = async (input: unknown) => {
   const session = await auth()
-
-  if (!session?.user) {
+  if (!session?.user)
     return { ok: false as const, error: "Você precisa estar logado." }
-  }
 
   const limit = await consumeRateLimit("createBooking", session.user.id)
-
-  if (!limit.allowed) {
-    return rateLimitError(limit.retryAfterSeconds)
-  }
+  if (!limit.allowed) return rateLimitError(limit.retryAfterSeconds)
 
   const parsed = createBookingSchema.safeParse(input)
-  if (!parsed.success) {
+  if (!parsed.success)
     return { ok: false as const, error: "Dados do agendamento inválidos." }
-  }
-  const { serviceId, date } = parsed.data
+  const { serviceId, professionalId, date, time } = parsed.data
 
-  const bookingDate = new Date(date)
+  const service = await db.barbershopService.findFirst({
+    where: {
+      id: serviceId,
+      isActive: true,
+      barbershop: { status: "ACTIVE" },
+      professionals: {
+        some: { professionalId, professional: { status: "ACTIVE" } },
+      },
+    },
+    select: {
+      id: true,
+      barbershopId: true,
+      durationMinutes: true,
+      price: true,
+      barbershop: { select: { timezone: true } },
+    },
+  })
+  if (!service)
+    return {
+      ok: false as const,
+      error: "Serviço ou profissional indisponível.",
+    }
 
-  if (Number.isNaN(bookingDate.getTime())) {
-    return { ok: false as const, error: "Data inválida." }
+  const startsAt = localDateTimeToInstant(
+    date,
+    time,
+    service.barbershop.timezone,
+  )
+  if (!startsAt || startsAt.getTime() <= Date.now()) {
+    return { ok: false as const, error: "Escolha um horário válido no futuro." }
   }
 
-  if (bookingDate.getTime() <= Date.now()) {
-    return { ok: false as const, error: "Escolha um horário no futuro." }
-  }
+  const slots = await getUnavailableIntervals({
+    serviceId,
+    professionalId,
+    date,
+  })
+  if (!slots.includes(time)) return { ok: false as const, error: SLOT_CONFLICT }
 
   const emAberto = await db.booking.count({
     where: {
@@ -54,7 +73,6 @@ export const createBooking = async (input: unknown) => {
       date: { gte: new Date() },
     },
   })
-
   if (emAberto >= MAXIMO_DE_RESERVAS_EM_ABERTO) {
     return {
       ok: false as const,
@@ -62,101 +80,40 @@ export const createBooking = async (input: unknown) => {
     }
   }
 
-  const service = await db.barbershopService.findFirst({
-    where: {
-      id: serviceId,
-      isActive: true,
-      barbershop: { status: "ACTIVE" },
-    },
-    select: {
-      id: true,
-      isActive: true,
-      durationMinutes: true,
-      barbershopId: true,
-    },
+  const endsAt = addMinutes(startsAt, service.durationMinutes)
+  const customer = await db.customer.findFirst({
+    where: { barbershopId: service.barbershopId, userId: session.user.id },
+    select: { id: true },
   })
-
-  if (!service || !service.isActive) {
-    return { ok: false as const, error: "Serviço indisponível." }
-  }
-
-  const openingHours = withDefaults(
-    await db.openingHour.findMany({
-      where: { barbershopId: service.barbershopId },
-      select: { weekday: true, opensAt: true, closesAt: true, isClosed: true },
-    }),
-  )
-
-  const horarioValido = buildDaySlots(
-    findDayHours(openingHours, bookingDate),
-    service.durationMinutes,
-  ).includes(
-    `${String(bookingDate.getHours()).padStart(2, "0")}:${String(
-      bookingDate.getMinutes(),
-    ).padStart(2, "0")}`,
-  )
-
-  if (!horarioValido) {
-    return {
-      ok: false as const,
-      error: "A barbearia não atende nesse horário.",
-    }
-  }
-
-  const endsAt = addMinutes(bookingDate, service.durationMinutes)
-  const from = startOfDay(bookingDate)
-  const to = endOfDay(bookingDate)
-
-  const [sameDayBookings, block] = await Promise.all([
-    db.booking.findMany({
-      where: {
-        date: { gte: from, lte: to },
-        status: { not: BookingStatus.CANCELED },
-        service: { barbershopId: service.barbershopId },
-      },
-      select: { date: true, service: { select: { durationMinutes: true } } },
-    }),
-    db.scheduleBlock.findFirst({
-      where: {
+  try {
+    await db.booking.create({
+      data: {
+        serviceId,
+        userId: session.user.id,
         barbershopId: service.barbershopId,
-        startsAt: { lt: endsAt },
-        endsAt: { gt: bookingDate },
+        customerId: customer?.id,
+        professionalId,
+        date: startsAt,
+        startsAt,
+        endsAt,
+        priceSnapshot: service.price,
+        durationMinutesSnapshot: service.durationMinutes,
       },
-      select: { id: true },
-    }),
-  ])
-
-  if (block) {
-    return {
-      ok: false as const,
-      error: "Esse horário está bloqueado pela barbearia.",
+    })
+  } catch (error) {
+    const databaseDetails = `${error instanceof Prisma.PrismaClientKnownRequestError ? JSON.stringify(error.meta ?? {}) : ""} ${error instanceof Error ? error.message : ""}`
+    if (
+      databaseDetails.includes("Booking_professional_no_overlap") ||
+      databaseDetails.includes("23P01")
+    ) {
+      return { ok: false as const, error: SLOT_CONFLICT }
     }
+    throw error
   }
-
-  const conflict = sameDayBookings.some((booking) =>
-    overlaps(
-      bookingDate,
-      endsAt,
-      booking.date,
-      addMinutes(booking.date, booking.service.durationMinutes),
-    ),
-  )
-
-  if (conflict) {
-    return {
-      ok: false as const,
-      error: "Esse horário acabou de ser ocupado. Escolha outro.",
-    }
-  }
-
-  await db.booking.create({
-    data: { serviceId, date: bookingDate, userId: session.user.id },
-  })
 
   revalidatePath("/barbershops", "page")
   revalidatePath("/bookings", "page")
   revalidatePath("/dashboard")
   revalidatePath("/schedule")
-
   return { ok: true as const }
 }

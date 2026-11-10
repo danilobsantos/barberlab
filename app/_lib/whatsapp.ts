@@ -1,5 +1,4 @@
-import { format } from "date-fns"
-import { ptBR } from "date-fns/locale"
+import { formatBookingDateTime } from "./booking-date-format"
 
 const DEFAULT_COUNTRY_CODE = "55"
 
@@ -42,6 +41,7 @@ export const normalizePhone = (
 export interface WhatsAppBookingInfo {
   serviceName: string
   date: Date
+  timeZone?: string
   barbershopName: string
   barbershopAddress?: string | null
   customerName?: string | null
@@ -53,20 +53,30 @@ const formatPrice = (price: number) =>
     price,
   )
 
-const formatWhen = (date: Date) => ({
-  day: format(date, "dd/MM/yyyy", { locale: ptBR }),
-  weekday: format(date, "EEEE", { locale: ptBR }),
-  time: format(date, "HH:mm", { locale: ptBR }),
-})
+const formatWhen = (date: Date, timeZone?: string) => {
+  const zone = timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone
+  const formatted = formatBookingDateTime(date, zone)
+  return {
+    day: new Intl.DateTimeFormat("pt-BR", {
+      timeZone: zone,
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    }).format(date),
+    weekday: formatted.weekday,
+    time: formatted.time,
+  }
+}
 
 export const buildCustomerConfirmationMessage = ({
   serviceName,
   date,
+  timeZone,
   barbershopName,
   customerName,
   price,
 }: WhatsAppBookingInfo) => {
-  const { day, weekday, time } = formatWhen(date)
+  const { day, weekday, time } = formatWhen(date, timeZone)
 
   return [
     `Olá, ${barbershopName}! Acabei de agendar pelo Barber Lab.`,
@@ -86,11 +96,12 @@ export const buildCustomerConfirmationMessage = ({
 export const buildBarberReminderMessage = ({
   serviceName,
   date,
+  timeZone,
   barbershopName,
   barbershopAddress,
   customerName,
 }: WhatsAppBookingInfo) => {
-  const { day, weekday, time } = formatWhen(date)
+  const { day, weekday, time } = formatWhen(date, timeZone)
   const greeting = customerName ? `Olá, ${customerName}!` : "Olá!"
 
   return [

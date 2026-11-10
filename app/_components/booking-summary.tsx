@@ -1,13 +1,12 @@
-import { format } from "date-fns"
 import { Card, CardContent } from "./ui/card"
 import { Barbershop, Prisma } from "@prisma/client"
 
 type Decimal = Prisma.Decimal
-import { ptBR } from "date-fns/locale"
+import { formatBookingDateTime } from "../_lib/booking-date-format"
 
 interface BookingSummaryProps {
   service: { name: string; price: number | Decimal }
-  barbershop: Pick<Barbershop, "name">
+  barbershop: Pick<Barbershop, "name" | "timezone">
   selectedDate: Date
 }
 
@@ -16,6 +15,10 @@ const BookingSummary = ({
   barbershop,
   selectedDate,
 }: BookingSummaryProps) => {
+  const { dateLabel, time } = formatBookingDateTime(
+    selectedDate,
+    barbershop.timezone,
+  )
   return (
     <Card>
       <CardContent className="space-y-3 p-3">
@@ -31,16 +34,12 @@ const BookingSummary = ({
 
         <div className="flex items-center justify-between">
           <h2 className="text-sm text-gray-400">Data</h2>
-          <p className="text-sm">
-            {format(selectedDate, "d 'de' MMMM", {
-              locale: ptBR,
-            })}
-          </p>
+          <p className="text-sm">{dateLabel}</p>
         </div>
 
         <div className="flex items-center justify-between">
           <h2 className="text-sm text-gray-400">Horário</h2>
-          <p className="text-sm">{format(selectedDate, "HH:mm")}</p>
+          <p className="text-sm">{time}</p>
         </div>
 
         <div className="flex items-center justify-between">

@@ -3,8 +3,7 @@
 import { Avatar, AvatarImage } from "./ui/avatar"
 import { Badge } from "./ui/badge"
 import { Card, CardContent } from "./ui/card"
-import { format, isFuture } from "date-fns"
-import { ptBR } from "date-fns/locale"
+import { isFuture } from "date-fns"
 import {
   Sheet,
   SheetClose,
@@ -34,6 +33,7 @@ import BookingSummary from "./booking-summary"
 import WhatsAppButton from "./whatsapp-button"
 import { buildCustomerConfirmationMessage } from "../_lib/whatsapp"
 import { useSession } from "next-auth/react"
+import { formatBookingDateTime } from "../_lib/booking-date-format"
 
 export interface BookingItemData {
   id: string
@@ -46,6 +46,7 @@ export interface BookingItemData {
       address: string
       imageUrl: string
       phones: string[]
+      timezone: string
     }
   }
 }
@@ -62,6 +63,10 @@ const BookingItem = ({ booking }: BookingItemProps) => {
     service: { barbershop },
   } = booking
   const isConfirmed = isFuture(booking.date)
+  const bookingLocalTime = formatBookingDateTime(
+    booking.date,
+    barbershop.timezone,
+  )
   const handleCancelBooking = () =>
     startCanceling(async () => {
       try {
@@ -114,15 +119,9 @@ const BookingItem = ({ booking }: BookingItemProps) => {
             </div>
             {/* DIREITA */}
             <div className="flex flex-col items-center justify-center border-l-2 border-solid px-5">
-              <p className="text-sm capitalize">
-                {format(booking.date, "MMMM", { locale: ptBR })}
-              </p>
-              <p className="text-2xl">
-                {format(booking.date, "dd", { locale: ptBR })}
-              </p>
-              <p className="text-sm">
-                {format(booking.date, "HH:mm", { locale: ptBR })}
-              </p>
+              <p className="text-sm capitalize">{bookingLocalTime.month}</p>
+              <p className="text-2xl">{bookingLocalTime.day}</p>
+              <p className="text-sm">{bookingLocalTime.time}</p>
             </div>
           </CardContent>
         </Card>
@@ -183,6 +182,7 @@ const BookingItem = ({ booking }: BookingItemProps) => {
               message={buildCustomerConfirmationMessage({
                 serviceName: booking.service.name,
                 date: booking.date,
+                timeZone: barbershop.timezone,
                 barbershopName: barbershop.name,
                 customerName: session?.user?.name,
                 price: Number(booking.service.price),

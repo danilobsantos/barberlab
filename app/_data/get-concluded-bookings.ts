@@ -30,6 +30,7 @@ export const getConcludedBookings = async () => {
               address: true,
               imageUrl: true,
               phones: true,
+              timezone: true,
             },
           },
         },
@@ -54,6 +55,7 @@ const toBookingItem = (booking: {
       address: string
       imageUrl: string
       phones: string[]
+      timezone: string
     }
   }
 }) => ({
