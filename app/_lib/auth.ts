@@ -2,6 +2,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import { Role } from "@prisma/client"
 import { AuthOptions, getServerSession } from "next-auth"
 import { Adapter } from "next-auth/adapters"
+import EmailProvider from "next-auth/providers/email"
 import GoogleProvider from "next-auth/providers/google"
 import { DEMO_BARBERSHOP_ID, isDemo } from "./deployment"
 import { db } from "./prisma"
@@ -13,6 +14,16 @@ export const authOptions: AuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
     }),
+    ...(process.env.NEXT_PUBLIC_EMAIL_SIGN_IN_ENABLED === "true" &&
+    process.env.EMAIL_SERVER &&
+    process.env.EMAIL_FROM
+      ? [
+          EmailProvider({
+            server: process.env.EMAIL_SERVER,
+            from: process.env.EMAIL_FROM,
+          }),
+        ]
+      : []),
   ],
   callbacks: {
     async session({ session, user }) {

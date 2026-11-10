@@ -66,10 +66,13 @@ importers:
         version: 16.3.3(@babel/core@7.28.5)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       next-auth:
         specifier: ^4.24.15
-        version: 4.24.15(next@16.3.3(@babel/core@7.28.5)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 4.24.15(next@16.3.3(@babel/core@7.28.5)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(nodemailer@7.0.13)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      nodemailer:
+        specifier: ^7.0.13
+        version: 7.0.13
       pg:
         specifier: ^8.23.0
         version: 8.23.0
@@ -2971,6 +2974,10 @@ packages:
       nodemailer:
         optional: true
 
+  nodemailer@7.0.13:
+    resolution: {integrity: sha512-PNDFSJdP+KFgdsG3ZzMXCgquO7I6McjY2vlqILjtJd0hy8wEvtugS9xKRF2NWlPNGxvLCXlTNIae4serI7dinw==}
+    engines: {node: '>=6.0.0'}
+
   next-themes@0.4.6:
     resolution: {integrity: sha512-pZvgD5L0IEvX5/9GWyHMf3m8BKiVQwsCMHfoFosXtXBMnaS0ZnIJ9ST4b4NqLVKDEm8QBxoNNGNaBv2JNF6XNA==}
     peerDependencies:
@@ -3867,6 +3874,8 @@ snapshots:
       oauth4webapi: 3.5.5
       preact: 10.28.3
       preact-render-to-string: 6.5.11(preact@10.28.3)
+    optionalDependencies:
+      nodemailer: 7.0.13
 
   '@auth/prisma-adapter@2.11.3(@prisma/client@7.10.0(prisma@7.10.0(@types/react-dom@19.2.5(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@5.9.3))(typescript@5.9.3))':
     dependencies:
@@ -6550,7 +6559,7 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
-  next-auth@4.24.15(next@16.3.3(@babel/core@7.28.5)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+  next-auth@4.24.15(next@16.3.3(@babel/core@7.28.5)(@types/node@25.9.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(nodemailer@7.0.13)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:
       '@babel/runtime': 7.27.6
       '@panva/hkdf': 1.2.1
@@ -6564,6 +6573,8 @@ snapshots:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
       uuid: 11.1.1
+    optionalDependencies:
+      nodemailer: 7.0.13
 
   next-themes@0.4.6(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:
@@ -6596,6 +6607,8 @@ snapshots:
       - babel-plugin-macros
 
   node-releases@2.0.27: {}
+
+  nodemailer@7.0.13: {}
 
   npm-check-updates@23.1.0: {}
 

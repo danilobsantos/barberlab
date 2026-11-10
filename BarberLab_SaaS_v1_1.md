@@ -1003,16 +1003,17 @@ As fases abaixo estão em ordem de dependência técnica. As tasks são numerada
 | Ordem | ID | Prioridade | Task | Critério de aceite | Status |
 |---:|---|---|---|---|---|
 | 1 | BL-038 | P0 | Implementar cadastro autenticado do proprietário | Tenant `PENDING_SETUP`, membership `OWNER` ativo e horários padrão são criados em uma transação; slug reservado e duplicado é recusado | ✅ Concluído; transação validada no PostgreSQL local |
-| 2 | BL-040 | P0 | Refatorar callbacks/sessão do NextAuth para expor identidade, não um único tenant fixo | Sessão não define `barbershopId` como vínculo exclusivo do usuário | ✅ Concluído |
-| 3 | BL-041 | P0 | Implementar `resolveTenantBySlug` | Slug válido resolve tenant ativo; slug inválido retorna not found | ✅ Concluído; helper validado com tenant ativo, inativo e slug inválido |
-| 4 | BL-042 | P0 | Implementar `requireMembership` | Acesso administrativo exige membership ativo no tenant da URL | ✅ Concluído; layout, páginas e Server Actions por slug; teste cruzado entre tenants |
-| 5 | BL-043 | P0 | Implementar `requirePlatformAdmin` | Painel da plataforma exige privilégio global `SUPER_ADMIN` | ✅ Concluído; rota `/painel` protegida e teste para `SUPER_ADMIN`/`NONE` |
-| 6 | BL-044 | P0 | Criar helpers de autorização por papel/permissão | `OWNER`, `MANAGER` e `PROFESSIONAL` têm limites de operação testados | ⏳ Em andamento; matriz server-side e guards nas ações implementados; falta agenda restrita ao profissional |
-| 7 | BL-045 | P0 | Padronizar leitura/alteração/exclusão tenant-aware | Nenhuma ação administrativa consulta registro apenas pelo ID sem contexto de tenant | ✅ Concluído; mutações e leituras administrativas escopadas pelo contexto validado |
-| 8 | BL-046 | P0 | Revisar todas as Server Actions e Route Handlers | Cada operação sensível revalida sessão, membership, tenant e permissão; endpoints aplicáveis utilizam rate limiting com escopo tenant-aware | ⏳ Em andamento; isolamento HTTP validado e layout corrigido; falta auditoria completa dos endpoints |
-| 9 | BL-047 | P1 | Implementar fluxo de convite e aceite de membership | Convite expira, é de uso único e cria vínculo no tenant correto | ⏳ Pendente |
-| 10 | BL-048 | P1 | Criar testes automatizados de acesso cruzado | Usuário do tenant A não lê, altera ou exclui dados do tenant B | ⏳ Pendente |
-| 11 | BL-049 | P2 | Avaliar e implementar PostgreSQL RLS por transação | RLS testada com pool de conexões sem vazamento de contexto | ⏳ Pendente |
+| 2 | BL-039 | P1 | Oferecer autenticação por link verificado enviado por e-mail para proprietários e clientes, mantendo Google | Conta só autentica após consumir token de verificação; configuração SMTP documentada | ✅ Implementado com NextAuth Email Provider e UI para os dois fluxos; SMTP precisa ser configurado no ambiente antes de habilitar |
+| 3 | BL-040 | P0 | Refatorar callbacks/sessão do NextAuth para expor identidade, não um único tenant fixo | Sessão não define `barbershopId` como vínculo exclusivo do usuário | ✅ Concluído |
+| 4 | BL-041 | P0 | Implementar `resolveTenantBySlug` | Slug válido resolve tenant ativo; slug inválido retorna not found | ✅ Concluído; helper validado com tenant ativo, inativo e slug inválido |
+| 5 | BL-042 | P0 | Implementar `requireMembership` | Acesso administrativo exige membership ativo no tenant da URL | ✅ Concluído; layout, páginas e Server Actions por slug; teste cruzado entre tenants |
+| 6 | BL-043 | P0 | Implementar `requirePlatformAdmin` | Painel da plataforma exige privilégio global `SUPER_ADMIN` | ✅ Concluído; rota `/painel` protegida e teste para `SUPER_ADMIN`/`NONE` |
+| 7 | BL-044 | P0 | Criar helpers de autorização por papel/permissão | `OWNER`, `MANAGER` e `PROFESSIONAL` têm limites de operação testados | ⏳ Em andamento; matriz server-side e guards nas ações implementados; falta agenda restrita ao profissional |
+| 8 | BL-045 | P0 | Padronizar leitura/alteração/exclusão tenant-aware | Nenhuma ação administrativa consulta registro apenas pelo ID sem contexto de tenant | ✅ Concluído; mutações e leituras administrativas escopadas pelo contexto validado |
+| 9 | BL-046 | P0 | Revisar todas as Server Actions e Route Handlers | Cada operação sensível revalida sessão, membership, tenant e permissão; endpoints aplicáveis utilizam rate limiting com escopo tenant-aware | ⏳ Em andamento; isolamento HTTP validado e layout corrigido; falta auditoria completa dos endpoints |
+| 10 | BL-047 | P1 | Implementar fluxo de convite e aceite de membership | Convite expira, é de uso único e cria vínculo no tenant correto | ⏳ Pendente |
+| 11 | BL-048 | P1 | Criar testes automatizados de acesso cruzado | Usuário do tenant A não lê, altera ou exclui dados do tenant B | ⏳ Pendente |
+| 12 | BL-049 | P2 | Avaliar e implementar PostgreSQL RLS por transação | RLS testada com pool de conexões sem vazamento de contexto | ⏳ Pendente |
 
 **Compatibilidade temporária do BL-038:** o cadastro atualiza `User.barbershopId` para a barbearia recém-criada para compatibilidade com dados/fluxos antigos. A relação `Membership` permanece completa. O painel por slug (`/painel/[slug]`) cobre dashboard, agenda, serviços e configurações; as URLs planas autenticam o vínculo legado e redirecionam para a rota equivalente por slug.
 
@@ -1031,6 +1032,8 @@ As fases abaixo estão em ordem de dependência técnica. As tasks são numerada
 **BL-041:** `resolveTenantBySlug` está implementado em `app/_lib/tenant/resolve-tenant.ts`; ainda não está conectado às rotas públicas ou administrativas.
 
 **Saída da fase:** identidade global, memberships por tenant e autorização centralizada e testada.
+
+**BL-039 operacional:** habilitar `NEXT_PUBLIC_EMAIL_SIGN_IN_ENABLED=true` somente junto com `EMAIL_SERVER` e `EMAIL_FROM` configurados. O provedor só é registrado quando os três valores existem; sem SMTP, o login Google continua disponível. A opção de e-mail aparece no login de cliente e no acesso ao cadastro de barbearia. Os links de verificação dependem do serviço SMTP do ambiente.
 
 ### Fase 4 — Cadastro e gestão de profissionais
 

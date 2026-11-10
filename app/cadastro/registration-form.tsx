@@ -12,6 +12,7 @@ import {
 } from "@/app/_components/ui/card"
 import { Input } from "@/app/_components/ui/input"
 import { Label } from "@/app/_components/ui/label"
+import { EmailSignIn } from "@/app/_components/email-sign-in"
 
 const fields: {
   name: "name" | "slug" | "address" | "phone"
@@ -65,7 +66,10 @@ export default function RegistrationForm({
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-muted-foreground text-sm">
-            Use sua conta Google para continuar com o cadastro.
+            Use sua conta Google
+            {process.env.NEXT_PUBLIC_EMAIL_SIGN_IN_ENABLED === "true" &&
+              " ou receba um link por e-mail"}
+            para continuar com o cadastro.
           </p>
           <Button
             className="w-full"
@@ -73,6 +77,9 @@ export default function RegistrationForm({
           >
             Continuar com Google
           </Button>
+          {process.env.NEXT_PUBLIC_EMAIL_SIGN_IN_ENABLED === "true" && (
+            <EmailSignIn callbackUrl="/cadastro" />
+          )}
         </CardContent>
       </Card>
     )
