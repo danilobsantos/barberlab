@@ -101,13 +101,21 @@ export const createBooking = async (input: unknown) => {
     where: { barbershopId: service.barbershopId, userId: session.user.id },
     select: { id: true },
   })
+  if (!customer) {
+    return {
+      ok: false as const,
+      error:
+        "Complete seu cadastro de cliente nesta barbearia (nome e telefone) antes de reservar.",
+    }
+  }
+
   try {
     await db.booking.create({
       data: {
         serviceId,
         userId: session.user.id,
         barbershopId: service.barbershopId,
-        customerId: customer?.id,
+        customerId: customer.id,
         professionalId,
         date: startsAt,
         startsAt,
