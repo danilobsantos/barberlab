@@ -7,7 +7,7 @@ import { consumeRateLimit } from "../_lib/rate-limit"
 
 export const getConcludedBookings = async () => {
   const session = await getServerSession(authOptions)
-  if (!session?.user) return []
+  if (!session?.user?.id || session.user.accountType !== "CUSTOMER") return []
   const limit = await consumeRateLimit("readOwnBookings", session.user.id)
   if (!limit.allowed) return []
   const bookings = await db.booking.findMany({

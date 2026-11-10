@@ -42,7 +42,7 @@ export const metadata: Metadata = {
 
 const Bookings = async () => {
   const session = await getServerSession(authOptions)
-  if (!session?.user) {
+  if (!session?.user?.id || session.user.accountType !== "CUSTOMER") {
     return (
       <>
         <Header />

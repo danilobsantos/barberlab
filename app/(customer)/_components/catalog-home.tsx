@@ -50,7 +50,7 @@ const CatalogHome = async ({ erro }: CatalogHomeProps) => {
               <div className="space-y-4 lg:space-y-6">
                 <div className="space-y-2">
                   <h1 className="from-foreground to-foreground/70 bg-linear-to-r bg-clip-text text-xl font-bold lg:text-4xl lg:leading-tight lg:font-extrabold">
-                    Olá, {session?.user ? session.user.name : "bem vindo"}!
+                    Olá, {session?.user?.id ? session.user.name : "bem vindo"}!
                   </h1>
                   <div className="text-muted-foreground flex items-center gap-2 lg:text-xl">
                     <CalendarIcon className="h-4 w-4 lg:h-5 lg:w-5" />

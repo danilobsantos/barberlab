@@ -16,6 +16,9 @@ export const RATE_LIMITS = {
   updateOwnPhone: { points: 5, duration: 60 },
   saveTenantCustomer: { points: 5, duration: 60 },
   registerBarbershop: { points: 3, duration: 3600 },
+  passwordSignup: { points: 5, duration: 3600 },
+  passwordLogin: { points: 8, duration: 900 },
+  passwordReset: { points: 5, duration: 3600 },
 } as const
 
 export type RateLimitName = keyof typeof RATE_LIMITS

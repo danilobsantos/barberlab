@@ -6,6 +6,14 @@ declare module "next-auth" {
     user: {
       id: string
       isBarbershopAdmin: boolean
+      accountType: "CUSTOMER" | "BARBERSHOP"
     } & DefaultSession["user"]
+  }
+}
+
+declare module "next-auth/jwt" {
+  // eslint-disable-next-line no-unused-vars
+  interface JWT {
+    authVersion?: number
   }
 }

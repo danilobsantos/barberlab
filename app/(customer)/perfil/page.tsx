@@ -38,7 +38,8 @@ const Profile = async () => {
             {user.name} · {user.email}
           </p>
           <p className="text-muted-foreground/70 text-xs">
-            Nome, e-mail e foto vêm da sua conta Google e são alterados por lá.
+            Nome e e-mail identificam sua conta de acesso. Atualize seu telefone
+            aqui.
           </p>
         </header>
 

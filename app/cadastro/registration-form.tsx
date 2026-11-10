@@ -13,6 +13,7 @@ import {
 import { Input } from "@/app/_components/ui/input"
 import { Label } from "@/app/_components/ui/label"
 import { EmailSignIn } from "@/app/_components/email-sign-in"
+import { PasswordAuthForm } from "@/app/_components/password-auth-form"
 
 const fields: {
   name: "name" | "slug" | "address" | "phone"
@@ -66,10 +67,16 @@ export default function RegistrationForm({
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-muted-foreground text-sm">
-            Use sua conta Google
-            {process.env.NEXT_PUBLIC_EMAIL_SIGN_IN_ENABLED === "true" &&
-              " ou receba um link por e-mail"}
-            para continuar com o cadastro.
+            Entre ou crie sua conta de barbearia.
+          </p>
+          {process.env.NEXT_PUBLIC_EMAIL_SIGN_IN_ENABLED === "true" && (
+            <PasswordAuthForm
+              accountType="BARBERSHOP"
+              callbackUrl="/cadastro"
+            />
+          )}
+          <p className="text-muted-foreground text-center text-sm">
+            ou continue com
           </p>
           <Button
             className="w-full"

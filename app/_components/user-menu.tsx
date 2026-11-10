@@ -17,7 +17,7 @@ const UserMenu = () => {
     setMounted(true)
   }, [])
 
-  const isLoggedIn = !!session?.user
+  const isLoggedIn = !!session?.user?.id
 
   if (!mounted || status === "loading") {
     return null
@@ -41,7 +41,7 @@ const UserMenu = () => {
       <Popover>
         <PopoverTrigger asChild>{userButton}</PopoverTrigger>
         <PopoverContent className="mt-2 w-64">
-          {session?.user && <UserInfo user={session.user} />}
+          {session?.user?.id && <UserInfo user={session.user} />}
         </PopoverContent>
       </Popover>
     )

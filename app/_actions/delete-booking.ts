@@ -9,7 +9,7 @@ import { BookingStatus } from "@prisma/client"
 export const deleteBooking = async (bookingId: string) => {
   const session = await auth()
 
-  if (!session?.user) {
+  if (!session?.user?.id || session.user.accountType !== "CUSTOMER") {
     return { ok: false as const, error: "Você precisa estar logado." }
   }
 

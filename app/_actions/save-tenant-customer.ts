@@ -11,6 +11,7 @@ import { resolveTenantBySlug } from "@/app/_lib/tenant/resolve-tenant"
 export async function saveTenantCustomer(formData: FormData) {
   const session = await auth()
   if (!session?.user?.id) redirect("/")
+  if (session.user.accountType !== "CUSTOMER") redirect("/")
 
   const parsed = customerAccountSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) {

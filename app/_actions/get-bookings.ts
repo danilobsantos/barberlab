@@ -62,7 +62,7 @@ export const getUnavailableIntervals = async (
   input: unknown,
 ): Promise<string[]> => {
   const session = await auth()
-  if (!session?.user) return []
+  if (!session?.user?.id) return []
   const parsed = unavailableIntervalsSchema.safeParse(input)
   if (!parsed.success) return []
   const { serviceId, professionalId, date, slug } = parsed.data

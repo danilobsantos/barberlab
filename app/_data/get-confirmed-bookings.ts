@@ -8,7 +8,7 @@ import { BookingStatus } from "@prisma/client"
 
 export const getConfirmedBookings = async () => {
   const session = await getServerSession(authOptions)
-  if (!session?.user) {
+  if (!session?.user?.id || session.user.accountType !== "CUSTOMER") {
     return []
   }
   const limit = await consumeRateLimit("readOwnBookings", session.user.id)

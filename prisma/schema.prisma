@@ -11,6 +11,11 @@ enum Role {
   BARBER_ADMIN
 }
 
+enum AccountType {
+  CUSTOMER
+  BARBERSHOP
+}
+
 enum BarbershopStatus {
   PENDING_SETUP
   ACTIVE
@@ -67,6 +72,9 @@ model User {
   name             String?
   email            String       @unique
   emailVerified    DateTime?
+  accountType      AccountType  @default(CUSTOMER)
+  passwordHash     String?
+  authVersion      Int          @default(0)
   image            String?
   phone            String?
   role             Role         @default(CUSTOMER)

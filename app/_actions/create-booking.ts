@@ -17,7 +17,7 @@ const SLOT_CONFLICT = "Esse horário acabou de ser ocupado. Escolha outro."
 
 export const createBooking = async (input: unknown) => {
   const session = await auth()
-  if (!session?.user)
+  if (!session?.user?.id)
     return { ok: false as const, error: "Você precisa estar logado." }
 
   const limit = await consumeRateLimit("createBooking", session.user.id)
@@ -55,6 +55,13 @@ export const createBooking = async (input: unknown) => {
     return {
       ok: false as const,
       error: "Esta barbearia não está aceitando novos agendamentos no momento.",
+    }
+  }
+
+  if (session.user.accountType !== "CUSTOMER") {
+    return {
+      ok: false as const,
+      error: "Use sua conta de cliente para agendar um horário.",
     }
   }
 

@@ -3,6 +3,7 @@ import { Button } from "./ui/button"
 import { DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog"
 import Image from "next/image"
 import { EmailSignIn } from "./email-sign-in"
+import { PasswordAuthForm } from "./password-auth-form"
 
 const SignInDialog = () => {
   const handleLoginWithGoogleClick = () => signIn("google")
@@ -45,6 +46,9 @@ const SignInDialog = () => {
         />
         Google
       </Button>
+      {process.env.NEXT_PUBLIC_EMAIL_SIGN_IN_ENABLED === "true" && (
+        <PasswordAuthForm accountType="CUSTOMER" />
+      )}
       {process.env.NEXT_PUBLIC_EMAIL_SIGN_IN_ENABLED === "true" && (
         <EmailSignIn />
       )}

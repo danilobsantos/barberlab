@@ -13,6 +13,8 @@ export interface RegistrationState {
   fieldErrors?: Partial<Record<"name" | "slug" | "address" | "phone", string>>
 }
 
+class ExistingCustomerAccountError extends Error {}
+
 export const registerBarbershop = async (
   _previousState: RegistrationState,
   formData: FormData,
@@ -42,6 +44,25 @@ export const registerBarbershop = async (
 
   try {
     await db.$transaction(async (tx) => {
+      const account = await tx.user.findUnique({
+        where: { id: session.user.id },
+        select: { accountType: true },
+      })
+      if (!account) throw new Error("Registration account not found")
+      if (account.accountType === "CUSTOMER") {
+        const [customerProfile, booking] = await Promise.all([
+          tx.customer.findFirst({
+            where: { userId: session.user.id },
+            select: { id: true },
+          }),
+          tx.booking.findFirst({
+            where: { userId: session.user.id },
+            select: { id: true },
+          }),
+        ])
+        if (customerProfile || booking) throw new ExistingCustomerAccountError()
+      }
+
       const shop = await tx.barbershop.create({
         data: {
           name: parsed.data.name,
@@ -70,10 +91,20 @@ export const registerBarbershop = async (
       })
       await tx.user.update({
         where: { id: session.user.id },
-        data: { role: Role.BARBER_ADMIN, barbershopId: shop.id },
+        data: {
+          accountType: "BARBERSHOP",
+          role: Role.BARBER_ADMIN,
+          barbershopId: shop.id,
+        },
       })
     })
   } catch (error) {
+    if (error instanceof ExistingCustomerAccountError) {
+      return {
+        error:
+          "Esta conta já é usada como cliente. Entre com outro e-mail para criar uma conta de barbearia.",
+      }
+    }
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2002"

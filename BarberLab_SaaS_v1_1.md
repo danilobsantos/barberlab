@@ -1005,7 +1005,7 @@ As fases abaixo estão em ordem de dependência técnica. As tasks são numerada
 | Ordem | ID | Prioridade | Task | Critério de aceite | Status |
 |---:|---|---|---|---|---|
 | 1 | BL-038 | P0 | Implementar cadastro autenticado do proprietário | Tenant `PENDING_SETUP`, membership `OWNER` ativo e horários padrão são criados em uma transação; slug reservado e duplicado é recusado | ✅ Concluído; transação validada no PostgreSQL local |
-| 2 | BL-039 | P1 | Oferecer autenticação por link verificado enviado por e-mail para proprietários e clientes, mantendo Google | Conta só autentica após consumir token de verificação; configuração SMTP documentada | ✅ Implementado com NextAuth Email Provider e UI para os dois fluxos; SMTP precisa ser configurado no ambiente antes de habilitar |
+| 2 | BL-039 | P1 | Oferecer autenticação por link verificado enviado por e-mail para proprietários e clientes, mantendo Google | Conta só autentica após consumir token de verificação; configuração SMTP documentada | ✅ Google, link mágico e formulário de senha; e-mail verificado, contas tipadas e recuperação de senha por token de uso único |
 | 3 | BL-040 | P0 | Refatorar callbacks/sessão do NextAuth para expor identidade, não um único tenant fixo | Sessão não define `barbershopId` como vínculo exclusivo do usuário | ✅ Concluído |
 | 4 | BL-041 | P0 | Implementar `resolveTenantBySlug` | Slug válido resolve tenant ativo; slug inválido retorna not found | ✅ Concluído; helper validado com tenant ativo, inativo e slug inválido |
 | 5 | BL-042 | P0 | Implementar `requireMembership` | Acesso administrativo exige membership ativo no tenant da URL | ✅ Concluído; layout, páginas e Server Actions por slug; teste cruzado entre tenants |
@@ -1035,7 +1035,7 @@ As fases abaixo estão em ordem de dependência técnica. As tasks são numerada
 
 **Saída da fase:** identidade global, memberships por tenant e autorização centralizada e testada.
 
-**BL-039 operacional:** habilitar `NEXT_PUBLIC_EMAIL_SIGN_IN_ENABLED=true` somente junto com `EMAIL_SERVER` e `EMAIL_FROM` configurados. O provedor só é registrado quando os três valores existem; sem SMTP, o login Google continua disponível. A opção de e-mail aparece no login de cliente e no acesso ao cadastro de barbearia. Os links de verificação dependem do serviço SMTP do ambiente.
+**BL-039 operacional:** habilitar `NEXT_PUBLIC_EMAIL_SIGN_IN_ENABLED=true` somente junto com `EMAIL_SERVER` e `EMAIL_FROM` configurados. Os provedores de e-mail só são registrados quando os três valores existem; sem SMTP, o login Google continua disponível. O fluxo mantém link mágico e oferece senha, confirmação de endereço e recuperação; contas CUSTOMER/BARBERSHOP usam e-mail único. Senhas são armazenadas com scrypt e o reset usa token aleatório com validade de 1 hora, persistido somente como hash e consumido uma vez. A estratégia de sessão mudou de database para JWT (sessões atuais expiram no primeiro deploy); reset incrementa `authVersion` para invalidar sessões anteriores.
 
 ### Fase 4 — Cadastro e gestão de profissionais
 

@@ -22,7 +22,8 @@ export default async function TenantCustomerAccount({
     searchParams,
     auth(),
   ])
-  if (!session?.user?.id) redirect("/")
+  if (!session?.user?.id || session.user.accountType !== "CUSTOMER")
+    redirect("/")
 
   const barbershop = await getPublicBarbershop(slug)
   if (!barbershop) notFound()
