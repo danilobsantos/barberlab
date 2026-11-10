@@ -16,39 +16,13 @@ export const authOptions: AuthOptions = {
   ],
   callbacks: {
     async session({ session, user }) {
+      const legacyUser = user as typeof user & { role?: Role }
       session.user = {
         ...session.user,
         id: user.id,
-        role: isDemo ? Role.BARBER_ADMIN : (user.role ?? Role.CUSTOMER),
-        barbershopId: isDemo
-          ? DEMO_BARBERSHOP_ID!
-          : (user.barbershopId ?? null),
+        isBarbershopAdmin: isDemo || legacyUser.role === Role.BARBER_ADMIN,
       }
       return session
-    },
-    async jwt({ token, user, trigger }) {
-      if (user) {
-        token.id = user.id
-        token.role = isDemo
-          ? Role.BARBER_ADMIN
-          : ((user as { role?: Role }).role ?? Role.CUSTOMER)
-        token.barbershopId = isDemo
-          ? DEMO_BARBERSHOP_ID!
-          : ((user as { barbershopId?: string | null }).barbershopId ?? null)
-      }
-
-      if (trigger === "update" && token.id) {
-        const fresh = await db.user.findUnique({
-          where: { id: token.id },
-          select: { role: true, barbershopId: true },
-        })
-        if (fresh) {
-          token.role = fresh.role
-          token.barbershopId = fresh.barbershopId
-        }
-      }
-
-      return token
     },
   },
   secret: process.env.NEXT_AUTH_SECRET,
@@ -66,17 +40,24 @@ export const auth = () => getServerSession(authOptions)
 export const requireBarbershopAdmin = async () => {
   const session = await auth()
 
-  if (!session?.user || session.user.role !== Role.BARBER_ADMIN) {
+  if (!session?.user) {
     return null
   }
 
-  if (!session.user.barbershopId) {
+  const user = isDemo
+    ? { role: Role.BARBER_ADMIN, barbershopId: DEMO_BARBERSHOP_ID }
+    : await db.user.findUnique({
+        where: { id: session.user.id },
+        select: { role: true, barbershopId: true },
+      })
+
+  if (user?.role !== Role.BARBER_ADMIN || !user.barbershopId) {
     return null
   }
 
   return {
     userId: session.user.id,
-    barbershopId: session.user.barbershopId,
+    barbershopId: user.barbershopId,
     name: session.user.name ?? null,
     image: session.user.image ?? null,
   }

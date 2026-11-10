@@ -24,6 +24,7 @@ import {
 } from "../_actions/schedule-blocks"
 import type { AgendaBlock } from "../_data/get-day-agenda"
 import { toDateParam } from "../_lib/format"
+import { useAdminSlug } from "./use-admin-slug"
 
 interface BlockManagerProps {
   date: Date
@@ -41,6 +42,7 @@ const PRESETS = [
 ]
 
 const BlockManager = ({ date, blocks }: BlockManagerProps) => {
+  const slug = useAdminSlug()
   const [isOpen, setIsOpen] = useState(false)
   const [startTime, setStartTime] = useState("12:00")
   const [endTime, setEndTime] = useState("13:00")
@@ -55,12 +57,15 @@ const BlockManager = ({ date, blocks }: BlockManagerProps) => {
 
   const handleCreate = () => {
     startTransition(async () => {
-      const result = await createScheduleBlock({
-        date: toDateParam(date),
-        startTime,
-        endTime,
-        reason: reason.trim() || undefined,
-      })
+      const result = await createScheduleBlock(
+        {
+          date: toDateParam(date),
+          startTime,
+          endTime,
+          reason: reason.trim() || undefined,
+        },
+        slug,
+      )
 
       if (result.ok) {
         toast.success("Horário bloqueado.")
@@ -74,7 +79,7 @@ const BlockManager = ({ date, blocks }: BlockManagerProps) => {
 
   const handleDelete = (blockId: string) => {
     startTransition(async () => {
-      const result = await deleteScheduleBlock(blockId)
+      const result = await deleteScheduleBlock(blockId, slug)
       if (result.ok) {
         toast.success("Bloqueio removido.")
       } else {

@@ -1,6 +1,6 @@
 "use server"
 
-import { requireBarbershopAdmin } from "@/app/_lib/auth"
+import { requireAdminContext } from "@/app/_lib/tenant/require-admin-context"
 import { db } from "@/app/_lib/prisma"
 import { BookingStatus } from "@prisma/client"
 import { revalidatePath } from "next/cache"
@@ -27,8 +27,8 @@ const buildDate = (date: string, time: string) => {
   return new Date(year, month - 1, day, hour, minute, 0, 0)
 }
 
-export const createScheduleBlock = async (input: unknown) => {
-  const admin = await requireBarbershopAdmin()
+export const createScheduleBlock = async (input: unknown, slug: string) => {
+  const admin = await requireAdminContext(slug, "manageSchedule")
   if (!admin) {
     return { ok: false as const, error: "Acesso negado." }
   }
@@ -76,12 +76,16 @@ export const createScheduleBlock = async (input: unknown) => {
 
   revalidatePath("/schedule")
   revalidatePath("/dashboard")
+  if (slug) {
+    revalidatePath(`/painel/${slug}/schedule`)
+    revalidatePath(`/painel/${slug}/dashboard`)
+  }
 
   return { ok: true as const }
 }
 
-export const deleteScheduleBlock = async (blockId: string) => {
-  const admin = await requireBarbershopAdmin()
+export const deleteScheduleBlock = async (blockId: string, slug: string) => {
+  const admin = await requireAdminContext(slug, "manageSchedule")
   if (!admin) {
     return { ok: false as const, error: "Acesso negado." }
   }
@@ -101,6 +105,10 @@ export const deleteScheduleBlock = async (blockId: string) => {
 
   revalidatePath("/schedule")
   revalidatePath("/dashboard")
+  if (slug) {
+    revalidatePath(`/painel/${slug}/schedule`)
+    revalidatePath(`/painel/${slug}/dashboard`)
+  }
 
   return { ok: true as const }
 }

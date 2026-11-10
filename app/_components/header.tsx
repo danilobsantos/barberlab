@@ -127,6 +127,13 @@ const Header = ({ singleTenant = false }: HeaderProps) => {
 
           <AdminPanelLink />
 
+          <Link
+            href="/cadastro"
+            className="text-foreground hover:text-primary text-sm font-medium transition-colors"
+          >
+            Criar barbearia
+          </Link>
+
           <UserMenu />
 
           <Button className="bg-primary hover:bg-primary/50" asChild>

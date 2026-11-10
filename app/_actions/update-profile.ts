@@ -4,6 +4,7 @@ import { auth } from "@/app/_lib/auth"
 import { db } from "@/app/_lib/prisma"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
+import { consumeRateLimit, rateLimitError } from "@/app/_lib/rate-limit"
 
 const schema = z.object({
   phone: z
@@ -21,6 +22,9 @@ export const updateOwnPhone = async (input: unknown) => {
   if (!session?.user?.id) {
     return { ok: false as const, error: "Faça login para continuar." }
   }
+
+  const limit = await consumeRateLimit("updateOwnPhone", session.user.id)
+  if (!limit.allowed) return rateLimitError(limit.retryAfterSeconds)
 
   const parsed = schema.safeParse(input)
   if (!parsed.success) {

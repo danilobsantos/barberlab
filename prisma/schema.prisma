@@ -11,29 +11,78 @@ enum Role {
   BARBER_ADMIN
 }
 
+enum BarbershopStatus {
+  PENDING_SETUP
+  ACTIVE
+  SUSPENDED
+  ARCHIVED
+}
+
+enum MembershipRole {
+  OWNER
+  MANAGER
+  PROFESSIONAL
+}
+
+enum MembershipStatus {
+  INVITED
+  ACTIVE
+  SUSPENDED
+  REVOKED
+}
+
+enum PlatformRole {
+  NONE
+  SUPER_ADMIN
+}
+
 enum BookingStatus {
+  PENDING
   CONFIRMED
   COMPLETED
   CANCELED
   NO_SHOW
 }
 
+enum ProfessionalStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ProfessionalScheduleExceptionType {
+  UNAVAILABLE
+  CUSTOM_HOURS
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  SUSPENDED
+}
+
 model User {
-  id               String      @id @default(cuid())
+  id               String       @id @default(cuid())
   name             String?
-  email            String      @unique
+  email            String       @unique
   emailVerified    DateTime?
   image            String?
   phone            String?
-  role             Role        @default(CUSTOMER)
+  role             Role         @default(CUSTOMER)
+  platformRole     PlatformRole @default(NONE)
   onboardingDoneAt DateTime?
   barbershopId     String?
-  barbershop       Barbershop? @relation("BarbershopStaff", fields: [barbershopId], references: [id], onDelete: SetNull)
+  barbershop       Barbershop?  @relation("BarbershopStaff", fields: [barbershopId], references: [id], onDelete: SetNull)
   accounts         Account[]
   sessions         Session[]
   bookings         Booking[]
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
+  memberships      Membership[]
+  auditLogs        AuditLog[]
+  professionals    Professional[]
+  customers        Customer[]
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
   @@index([barbershopId])
 }
@@ -95,6 +144,9 @@ model OpeningHour {
 model Barbershop {
   id           String              @id @default(uuid())
   name         String
+  slug         String              @unique
+  timezone     String              @default("America/Sao_Paulo")
+  status       BarbershopStatus    @default(PENDING_SETUP)
   address      String
   phones       String[]
   description  String
@@ -105,6 +157,36 @@ model Barbershop {
   staff        User[]              @relation("BarbershopStaff")
   blocks       ScheduleBlock[]
   openingHours OpeningHour[]
+  bookings     Booking[]
+  memberships  Membership[]
+  professionals Professional[]
+  customers    Customer[]
+  professionalServices ProfessionalService[]
+  professionalSchedules ProfessionalSchedule[]
+  professionalScheduleExceptions ProfessionalScheduleException[]
+  subscriptions Subscription[]
+  auditLogs AuditLog[]
+  subscriptionEvents SubscriptionEvent[]
+}
+
+model Membership {
+  id           String           @id @default(cuid())
+  userId       String
+  barbershopId String
+  role         MembershipRole
+  status       MembershipStatus @default(INVITED)
+  invitedAt    DateTime?
+  acceptedAt   DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  barbershop   Barbershop       @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  professionals Professional[]
+
+  @@unique([userId, barbershopId])
+  @@index([barbershopId])
+  @@index([userId])
+  @@index([status])
 }
 
 model BarbershopService {
@@ -118,10 +200,109 @@ model BarbershopService {
   barbershopId    String
   barbershop      Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
   bookings        Booking[]
+  tenantBookings  Booking[]   @relation("BookingTenantService")
+  professionals   ProfessionalService[]
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 
   @@index([barbershopId, isActive])
+  @@unique([barbershopId, id])
+}
+
+model Professional {
+  id           String             @id @default(uuid())
+  barbershopId String
+  userId       String?
+  name         String
+  displayName  String?
+  email        String?
+  phone        String?
+  bio          String?
+  imageUrl     String?
+  calendarColor String?
+  status       ProfessionalStatus @default(ACTIVE)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  barbershop   Barbershop         @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  user         User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  membership   Membership?        @relation(fields: [userId, barbershopId], references: [userId, barbershopId], onDelete: Restrict)
+  services     ProfessionalService[]
+  bookings     Booking[]
+  schedules    ProfessionalSchedule[]
+  exceptions   ProfessionalScheduleException[]
+  blocks       ScheduleBlock[]
+
+  @@unique([barbershopId, id])
+  @@index([barbershopId, status])
+  @@index([userId])
+}
+
+model Customer {
+  id           String     @id @default(uuid())
+  barbershopId String
+  userId       String?
+  name         String
+  email        String?
+  phone        String
+  notes        String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  user         User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  bookings     Booking[]
+
+  @@unique([barbershopId, id])
+  @@index([barbershopId])
+  @@index([barbershopId, phone])
+  @@index([barbershopId, email])
+  @@index([userId])
+}
+
+model ProfessionalService {
+  barbershopId  String
+  professionalId String
+  serviceId     String
+  createdAt     DateTime       @default(now())
+  barbershop    Barbershop     @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  professional  Professional   @relation(fields: [barbershopId, professionalId], references: [barbershopId, id], onDelete: Cascade)
+  service       BarbershopService @relation(fields: [barbershopId, serviceId], references: [barbershopId, id], onDelete: Cascade)
+  bookings      Booking[]
+
+  @@id([professionalId, serviceId])
+  @@unique([barbershopId, professionalId, serviceId])
+  @@index([barbershopId])
+}
+
+model ProfessionalSchedule {
+  id             String       @id @default(uuid())
+  barbershopId   String
+  professionalId String
+  weekday        Int
+  startsAtLocal  String
+  endsAtLocal    String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  barbershop     Barbershop   @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  professional   Professional @relation(fields: [barbershopId, professionalId], references: [barbershopId, id], onDelete: Cascade)
+
+  @@index([barbershopId, professionalId, weekday])
+}
+
+model ProfessionalScheduleException {
+  id             String                            @id @default(uuid())
+  barbershopId   String
+  professionalId String
+  date           DateTime                          @db.Date
+  type           ProfessionalScheduleExceptionType
+  startsAtLocal  String?
+  endsAtLocal    String?
+  reason         String?
+  createdAt      DateTime                          @default(now())
+  updatedAt      DateTime                          @updatedAt
+  barbershop     Barbershop                        @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  professional   Professional                      @relation(fields: [barbershopId, professionalId], references: [barbershopId, id], onDelete: Cascade)
+
+  @@index([barbershopId, professionalId, date])
 }
 
 model Booking {
@@ -130,21 +311,112 @@ model Booking {
   user      User              @relation(fields: [userId], references: [id])
   serviceId String
   service   BarbershopService @relation(fields: [serviceId], references: [id])
+  tenantService BarbershopService? @relation("BookingTenantService", fields: [barbershopId, serviceId], references: [barbershopId, id], onDelete: Restrict)
+  professionalService ProfessionalService? @relation(fields: [barbershopId, professionalId, serviceId], references: [barbershopId, professionalId, serviceId], onDelete: Restrict)
   date      DateTime
   status    BookingStatus     @default(CONFIRMED)
+  barbershopId String?
+  customerId String?
+  professionalId String?
+  startsAt DateTime? @db.Timestamptz(3)
+  endsAt DateTime?   @db.Timestamptz(3)
+  priceSnapshot Decimal? @db.Decimal(10, 2)
+  durationMinutesSnapshot Int?
+  customerNameSnapshot String?
+  customerPhoneSnapshot String?
+  notes String?
+  barbershop Barbershop? @relation(fields: [barbershopId], references: [id], onDelete: SetNull)
+  customer Customer? @relation(fields: [barbershopId, customerId], references: [barbershopId, id], onDelete: Restrict)
+  professional Professional? @relation(fields: [barbershopId, professionalId], references: [barbershopId, id], onDelete: Restrict)
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
 
   @@index([serviceId, date])
   @@index([userId, date])
+  @@index([barbershopId, startsAt])
+  @@index([professionalId, startsAt])
+}
+
+model Plan {
+  id                String         @id @default(uuid())
+  name              String
+  slug              String         @unique
+  description       String
+  priceMonthly      Decimal        @db.Decimal(10, 2)
+  maxProfessionals  Int?
+  features          Json
+  isActive          Boolean        @default(true)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  subscriptions     Subscription[]
+}
+
+model Subscription {
+  id                     String             @id @default(uuid())
+  barbershopId           String
+  planId                 String
+  status                 SubscriptionStatus @default(TRIALING)
+  priceAtSubscription    Decimal            @db.Decimal(10, 2)
+  currentPeriodStart     DateTime
+  currentPeriodEnd       DateTime
+  startedAt              DateTime           @default(now())
+  canceledAt             DateTime?
+  externalCustomerId     String?
+  externalSubscriptionId String?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+  barbershop             Barbershop         @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  plan                   Plan               @relation(fields: [planId], references: [id], onDelete: Restrict)
+  events                 SubscriptionEvent[]
+
+  @@index([barbershopId, status])
+  @@index([planId])
+  @@index([externalSubscriptionId])
+}
+
+model SubscriptionEvent {
+  id              String        @id @default(uuid())
+  provider        String
+  externalEventId String
+  eventType       String
+  barbershopId    String?
+  subscriptionId  String?
+  payload         Json
+  receivedAt      DateTime      @default(now())
+  processedAt     DateTime?
+  barbershop      Barbershop?   @relation(fields: [barbershopId], references: [id], onDelete: SetNull)
+  subscription    Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  @@unique([provider, externalEventId])
+  @@index([barbershopId, receivedAt])
+  @@index([subscriptionId])
+}
+
+model AuditLog {
+  id          String     @id @default(uuid())
+  barbershopId String?
+  actorUserId String
+  action      String
+  entityType  String
+  entityId    String
+  metadata    Json?
+  createdAt   DateTime   @default(now())
+  barbershop  Barbershop? @relation(fields: [barbershopId], references: [id], onDelete: SetNull)
+  actor       User       @relation(fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  @@index([barbershopId, createdAt])
+  @@index([actorUserId, createdAt])
+  @@index([entityType, entityId])
 }
 
 model ScheduleBlock {
   id           String     @id @default(uuid())
   barbershopId String
   barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
-  startsAt     DateTime
-  endsAt       DateTime
+  professionalId String?
+  professional Professional? @relation(fields: [barbershopId, professionalId], references: [barbershopId, id], onDelete: Restrict)
+  startsAt     DateTime   @db.Timestamptz(3)
+  endsAt       DateTime   @db.Timestamptz(3)
   reason       String?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt

@@ -25,6 +25,7 @@ import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { upsertService } from "../_actions/services"
+import { useAdminSlug } from "./use-admin-slug"
 import type { AdminService } from "../_data/get-services"
 import { serviceSchema, type ServiceInput } from "../_lib/service-schema"
 
@@ -51,6 +52,7 @@ const ServiceFormDialog = ({
   onOpenChange,
   service,
 }: ServiceFormDialogProps) => {
+  const slug = useAdminSlug()
   const form = useForm<ServiceInput>({
     resolver: zodResolver(serviceSchema),
     defaultValues: EMPTY,
@@ -74,7 +76,7 @@ const ServiceFormDialog = ({
   }, [open, service, form])
 
   const onSubmit = async (values: ServiceInput) => {
-    const result = await upsertService(values)
+    const result = await upsertService(values, slug)
 
     if (result.ok) {
       toast.success(service ? "Serviço atualizado." : "Serviço criado.")

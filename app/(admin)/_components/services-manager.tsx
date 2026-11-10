@@ -23,12 +23,14 @@ import type { AdminService } from "../_data/get-services"
 import { formatCurrency, formatDuration } from "../_lib/format"
 import EmptyState from "./empty-state"
 import ServiceFormDialog from "./service-form-dialog"
+import { useAdminSlug } from "./use-admin-slug"
 
 interface ServicesManagerProps {
   services: AdminService[]
 }
 
 const ServicesManager = ({ services }: ServicesManagerProps) => {
+  const slug = useAdminSlug()
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editing, setEditing] = useState<AdminService | null>(null)
   const [pendingDeletion, setPendingDeletion] = useState<AdminService | null>(
@@ -48,7 +50,7 @@ const ServicesManager = ({ services }: ServicesManagerProps) => {
 
   const handleToggle = (service: AdminService, isActive: boolean) => {
     startTransition(async () => {
-      const result = await setServiceActive(service.id, isActive)
+      const result = await setServiceActive(service.id, isActive, slug)
       if (result.ok) {
         toast.success(isActive ? "Serviço ativado." : "Serviço desativado.")
       } else {
@@ -62,7 +64,7 @@ const ServicesManager = ({ services }: ServicesManagerProps) => {
     const target = pendingDeletion
 
     startTransition(async () => {
-      const result = await deleteService(target.id)
+      const result = await deleteService(target.id, slug)
       if (result.ok) {
         toast.success("Serviço excluído.")
         setPendingDeletion(null)

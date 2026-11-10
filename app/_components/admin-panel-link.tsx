@@ -1,6 +1,5 @@
 "use client"
 
-import { Role } from "@prisma/client"
 import { LayoutDashboardIcon } from "lucide-react"
 import { useSession } from "next-auth/react"
 import Link from "next/link"
@@ -15,13 +14,13 @@ const AdminPanelLink = ({ className }: { className?: string }) => {
     setMounted(true)
   }, [])
 
-  if (!mounted || session?.user?.role !== Role.BARBER_ADMIN) return null
+  if (!mounted || !session?.user?.id) return null
 
   return (
     <Button variant="secondary" className={className} asChild>
-      <Link href="/dashboard">
+      <Link href="/minhas-barbearias">
         <LayoutDashboardIcon size={18} />
-        Painel da barbearia
+        Minhas barbearias
       </Link>
     </Button>
   )

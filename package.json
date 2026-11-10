@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "test": "node --import tsx --test app/_lib/*.test.ts app/_lib/tenant/*.test.ts app/_lib/platform/*.test.ts",
     "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
     "prepare": "husky && prisma generate",
     "analyze": "ANALYZE=true next build"

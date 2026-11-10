@@ -1,5 +1,7 @@
 import type { Metadata } from "next"
+import { requireAdminContext } from "@/app/_lib/tenant/require-admin-context"
 import { requireBarbershopAdmin } from "@/app/_lib/auth"
+import { db } from "@/app/_lib/prisma"
 import { BanknoteIcon, ClockIcon, ScissorsIcon } from "lucide-react"
 import { redirect } from "next/navigation"
 import PageHeader from "../_components/page-header"
@@ -13,9 +15,21 @@ export const metadata: Metadata = {
   description: "Catálogo de serviços com preço e duração.",
 }
 
-const Services = async () => {
-  const admin = await requireBarbershopAdmin()
+const Services = async ({ params }: { params: Promise<{ slug?: string }> }) => {
+  const { slug } = await params
+  const admin = slug
+    ? await requireAdminContext(slug)
+    : await requireBarbershopAdmin()
   if (!admin) redirect("/")
+
+  if (!slug) {
+    const shop = await db.barbershop.findUnique({
+      where: { id: admin.barbershopId },
+      select: { slug: true },
+    })
+    if (shop) redirect(`/painel/${shop.slug}/services`)
+    redirect("/")
+  }
 
   const services = await getAdminServices(admin.barbershopId)
   const active = services.filter((service) => service.isActive)

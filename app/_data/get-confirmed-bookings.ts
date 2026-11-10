@@ -3,15 +3,18 @@
 import { getServerSession } from "next-auth"
 import { authOptions } from "../_lib/auth"
 import { db } from "../_lib/prisma"
+import { consumeRateLimit } from "../_lib/rate-limit"
 
 export const getConfirmedBookings = async () => {
   const session = await getServerSession(authOptions)
   if (!session?.user) {
     return []
   }
+  const limit = await consumeRateLimit("readOwnBookings", session.user.id)
+  if (!limit.allowed) return []
   const bookings = await db.booking.findMany({
     where: {
-      userId: (session.user as { id: string }).id,
+      userId: session.user.id,
       date: {
         gte: new Date(),
       },

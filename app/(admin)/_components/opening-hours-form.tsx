@@ -11,12 +11,14 @@ import { useState, useTransition } from "react"
 import { toast } from "sonner"
 import { saveOpeningHours } from "../_actions/opening-hours"
 import type { OpeningHoursInput } from "../_lib/opening-hours-schema"
+import { useAdminSlug } from "./use-admin-slug"
 
 interface OpeningHoursFormProps {
   hours: OpeningHoursInput
 }
 
 const OpeningHoursForm = ({ hours }: OpeningHoursFormProps) => {
+  const slug = useAdminSlug()
   const [dias, setDias] = useState(hours)
   const [isSaving, startSaving] = useTransition()
 
@@ -27,7 +29,7 @@ const OpeningHoursForm = ({ hours }: OpeningHoursFormProps) => {
 
   const salvar = () =>
     startSaving(async () => {
-      const result = await saveOpeningHours(dias)
+      const result = await saveOpeningHours(dias, slug)
       if (result.ok) {
         toast.success("Horário de funcionamento salvo.")
       } else {

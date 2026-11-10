@@ -11,21 +11,14 @@ import {
   withDefaults,
 } from "../_lib/opening-hours"
 import { consumeRateLimit, rateLimitError } from "../_lib/rate-limit"
-
-interface CreateBookingParams {
-  serviceId: string
-  date: Date
-}
+import { createBookingSchema } from "../_lib/booking-action-schema"
 
 const MAXIMO_DE_RESERVAS_EM_ABERTO = 3
 
 const overlaps = (aStart: Date, aEnd: Date, bStart: Date, bEnd: Date) =>
   aStart < bEnd && aEnd > bStart
 
-export const createBooking = async ({
-  serviceId,
-  date,
-}: CreateBookingParams) => {
+export const createBooking = async (input: unknown) => {
   const session = await auth()
 
   if (!session?.user) {
@@ -37,6 +30,12 @@ export const createBooking = async ({
   if (!limit.allowed) {
     return rateLimitError(limit.retryAfterSeconds)
   }
+
+  const parsed = createBookingSchema.safeParse(input)
+  if (!parsed.success) {
+    return { ok: false as const, error: "Dados do agendamento inválidos." }
+  }
+  const { serviceId, date } = parsed.data
 
   const bookingDate = new Date(date)
 
@@ -63,8 +62,12 @@ export const createBooking = async ({
     }
   }
 
-  const service = await db.barbershopService.findUnique({
-    where: { id: serviceId },
+  const service = await db.barbershopService.findFirst({
+    where: {
+      id: serviceId,
+      isActive: true,
+      barbershop: { status: "ACTIVE" },
+    },
     select: {
       id: true,
       isActive: true,

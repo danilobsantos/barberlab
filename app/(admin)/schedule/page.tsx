@@ -1,5 +1,7 @@
 import type { Metadata } from "next"
+import { requireAdminContext } from "@/app/_lib/tenant/require-admin-context"
 import { requireBarbershopAdmin } from "@/app/_lib/auth"
+import { db } from "@/app/_lib/prisma"
 import { Card, CardContent } from "@/app/_components/ui/card"
 import { addMinutes, format } from "date-fns"
 import { BookingStatus } from "@prisma/client"
@@ -20,6 +22,7 @@ import { cn } from "@/app/_lib/utils"
 
 interface ScheduleProps {
   searchParams: Promise<{ date?: string }>
+  params: Promise<{ slug?: string }>
 }
 
 type TimelineEntry =
@@ -46,9 +49,21 @@ export const metadata: Metadata = {
   description: "Gestão de horários e bloqueios da barbearia.",
 }
 
-const Schedule = async ({ searchParams }: ScheduleProps) => {
-  const admin = await requireBarbershopAdmin()
+const Schedule = async ({ searchParams, params }: ScheduleProps) => {
+  const { slug } = await params
+  const admin = slug
+    ? await requireAdminContext(slug)
+    : await requireBarbershopAdmin()
   if (!admin) redirect("/")
+
+  if (!slug) {
+    const shop = await db.barbershop.findUnique({
+      where: { id: admin.barbershopId },
+      select: { slug: true },
+    })
+    if (shop) redirect(`/painel/${shop.slug}/schedule`)
+    redirect("/")
+  }
 
   const { date: dateParam } = await searchParams
   const date = parseDateParam(dateParam)

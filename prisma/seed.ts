@@ -154,6 +154,12 @@ async function seedDatabase() {
       const barbershop = await prisma.barbershop.create({
         data: {
           name,
+          slug: name
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-|-$/g, ""),
           address,
           phones: ["(11) 99999-9999"],
           description: descriptions[i],

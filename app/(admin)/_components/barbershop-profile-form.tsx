@@ -23,12 +23,14 @@ import {
   barbershopProfileSchema,
   type BarbershopProfileInput,
 } from "../_lib/barbershop-schema"
+import { useAdminSlug } from "./use-admin-slug"
 
 interface BarbershopProfileFormProps {
   profile: BarbershopProfileInput
 }
 
 const BarbershopProfileForm = ({ profile }: BarbershopProfileFormProps) => {
+  const slug = useAdminSlug()
   const form = useForm<BarbershopProfileInput>({
     resolver: zodResolver(barbershopProfileSchema),
     defaultValues: profile,
@@ -42,7 +44,7 @@ const BarbershopProfileForm = ({ profile }: BarbershopProfileFormProps) => {
   const imageUrl = form.watch("imageUrl")
 
   const onSubmit = async (values: BarbershopProfileInput) => {
-    const result = await saveBarbershopProfile(values)
+    const result = await saveBarbershopProfile(values, slug)
 
     if (result.ok) {
       toast.success("Dados da barbearia salvos.")

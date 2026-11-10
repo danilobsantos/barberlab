@@ -17,6 +17,7 @@ import { toast } from "sonner"
 import WhatsAppButton from "@/app/_components/whatsapp-button"
 import { buildBarberReminderMessage } from "@/app/_lib/whatsapp"
 import { updateBookingStatus } from "../_actions/update-booking-status"
+import { useAdminSlug } from "./use-admin-slug"
 import type { AgendaBooking } from "../_data/get-day-agenda"
 import {
   BOOKING_STATUS_META,
@@ -35,6 +36,7 @@ const BookingRow = ({
   barbershopName,
   barbershopAddress,
 }: BookingRowProps) => {
+  const slug = useAdminSlug()
   const [isPending, startTransition] = useTransition()
   const meta = BOOKING_STATUS_META[booking.status]
   const endsAt = addMinutes(booking.date, booking.service.durationMinutes)
@@ -43,10 +45,13 @@ const BookingRow = ({
 
   const changeStatus = (status: BookingStatus, successMessage: string) => {
     startTransition(async () => {
-      const result = await updateBookingStatus({
-        bookingId: booking.id,
-        status,
-      })
+      const result = await updateBookingStatus(
+        {
+          bookingId: booking.id,
+          status,
+        },
+        slug,
+      )
       if (result.ok) {
         toast.success(successMessage)
       } else {

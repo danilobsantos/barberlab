@@ -4,6 +4,7 @@ import { driver, type DriveStep } from "driver.js"
 import "driver.js/dist/driver.css"
 import { useEffect } from "react"
 import { completeOnboarding } from "../_actions/onboarding"
+import { useAdminSlug } from "./use-admin-slug"
 
 interface Passo {
   marca: string
@@ -44,6 +45,7 @@ const elementoVisivel = (marca: string) =>
   ).find((el) => el.offsetParent !== null)
 
 const OnboardingTour = () => {
+  const slug = useAdminSlug()
   useEffect(() => {
     const steps: DriveStep[] = []
 
@@ -60,7 +62,7 @@ const OnboardingTour = () => {
     if (steps.length === 0) return
 
     const encerrar = () => {
-      void completeOnboarding()
+      void completeOnboarding(slug)
     }
 
     const guia = driver({
@@ -77,7 +79,7 @@ const OnboardingTour = () => {
     guia.drive()
 
     return () => guia.destroy()
-  }, [])
+  }, [slug])
 
   return null
 }

@@ -32,6 +32,11 @@ interface StatusMeta {
 }
 
 export const BOOKING_STATUS_META: Record<BookingStatus, StatusMeta> = {
+  PENDING: {
+    label: "Pendente",
+    variant: "secondary",
+    className: "bg-secondary text-secondary-foreground border-transparent",
+  },
   CONFIRMED: {
     label: "Confirmado",
     variant: "default",

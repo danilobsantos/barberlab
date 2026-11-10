@@ -1,6 +1,6 @@
 "use server"
 
-import { requireBarbershopAdmin } from "@/app/_lib/auth"
+import { requireAdminContext } from "@/app/_lib/tenant/require-admin-context"
 import { db } from "@/app/_lib/prisma"
 import { BookingStatus } from "@prisma/client"
 import { revalidatePath } from "next/cache"
@@ -12,8 +12,8 @@ const schema = z.object({
   status: z.enum(BookingStatus),
 })
 
-export const updateBookingStatus = async (input: unknown) => {
-  const admin = await requireBarbershopAdmin()
+export const updateBookingStatus = async (input: unknown, slug: string) => {
+  const admin = await requireAdminContext(slug, "manageBookings")
   if (!admin) {
     return { ok: false as const, error: "Acesso negado." }
   }
@@ -43,6 +43,10 @@ export const updateBookingStatus = async (input: unknown) => {
   revalidatePath("/dashboard")
   revalidatePath("/schedule")
   revalidatePath("/bookings")
+  if (slug) {
+    revalidatePath(`/painel/${slug}/dashboard`)
+    revalidatePath(`/painel/${slug}/schedule`)
+  }
 
   return { ok: true as const }
 }

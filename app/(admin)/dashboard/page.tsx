@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { requireAdminContext } from "@/app/_lib/tenant/require-admin-context"
 import { requireBarbershopAdmin } from "@/app/_lib/auth"
 import { db } from "@/app/_lib/prisma"
 import { format, isToday } from "date-fns"
@@ -22,6 +23,7 @@ import { formatCurrency, formatDuration, parseDateParam } from "../_lib/format"
 
 interface DashboardProps {
   searchParams: Promise<{ date?: string }>
+  params: Promise<{ slug?: string }>
 }
 
 export const metadata: Metadata = {
@@ -29,9 +31,21 @@ export const metadata: Metadata = {
   description: "Agenda do dia, métricas e status dos atendimentos.",
 }
 
-const Dashboard = async ({ searchParams }: DashboardProps) => {
-  const admin = await requireBarbershopAdmin()
+const Dashboard = async ({ searchParams, params }: DashboardProps) => {
+  const { slug } = await params
+  const admin = slug
+    ? await requireAdminContext(slug)
+    : await requireBarbershopAdmin()
   if (!admin) redirect("/")
+
+  if (!slug) {
+    const shop = await db.barbershop.findUnique({
+      where: { id: admin.barbershopId },
+      select: { slug: true },
+    })
+    if (shop) redirect(`/painel/${shop.slug}/dashboard`)
+    redirect("/")
+  }
 
   const { date: dateParam } = await searchParams
   const date = parseDateParam(dateParam)

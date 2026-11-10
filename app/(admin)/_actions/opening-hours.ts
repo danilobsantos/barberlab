@@ -1,13 +1,13 @@
 "use server"
 
-import { requireBarbershopAdmin } from "@/app/_lib/auth"
+import { requireAdminContext } from "@/app/_lib/tenant/require-admin-context"
 import { db } from "@/app/_lib/prisma"
 import { revalidatePath } from "next/cache"
 import { openingHoursSchema } from "../_lib/opening-hours-schema"
 import { consumeRateLimit, rateLimitError } from "@/app/_lib/rate-limit"
 
-export const saveOpeningHours = async (input: unknown) => {
-  const admin = await requireBarbershopAdmin()
+export const saveOpeningHours = async (input: unknown, slug: string) => {
+  const admin = await requireAdminContext(slug, "manageSettings")
   if (!admin) {
     return { ok: false as const, error: "Acesso negado." }
   }
@@ -45,6 +45,8 @@ export const saveOpeningHours = async (input: unknown) => {
   )
 
   revalidatePath("/settings")
+  if (slug) revalidatePath(`/painel/${slug}/schedule`)
+  if (slug) revalidatePath(`/painel/${slug}/settings`)
   revalidatePath("/schedule")
   revalidatePath("/barbershops")
 

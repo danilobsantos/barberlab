@@ -87,6 +87,11 @@ const SidebarSheet = ({ singleTenant = false }: SidebarSheetProps) => {
           </SheetClose>
         )}
         <AdminPanelLink className="w-full justify-start gap-2" />
+        <SheetClose asChild>
+          <Button className="justify-start gap-2" variant="ghost" asChild>
+            <Link href="/cadastro">Criar barbearia</Link>
+          </Button>
+        </SheetClose>
       </div>
 
       {!singleTenant && (

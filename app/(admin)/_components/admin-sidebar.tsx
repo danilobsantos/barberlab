@@ -12,13 +12,14 @@ import { signOut } from "next-auth/react"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ADMIN_NAV_ITEMS } from "./admin-nav"
+import { getAdminNavItems } from "./admin-nav"
 
 interface AdminSidebarProps {
   barbershopName: string
   barbershopImageUrl: string
   userName: string | null
   userImage: string | null
+  slug: string
 }
 
 const AdminSidebar = ({
@@ -26,8 +27,10 @@ const AdminSidebar = ({
   barbershopImageUrl,
   userName,
   userImage,
+  slug,
 }: AdminSidebarProps) => {
   const pathname = usePathname()
+  const navItems = getAdminNavItems(slug)
   const initials = (userName ?? "?").trim().charAt(0).toUpperCase()
 
   return (
@@ -67,7 +70,7 @@ const AdminSidebar = ({
       </div>
 
       <nav className="flex-1 space-y-1 px-3 py-4">
-        {ADMIN_NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           const Icon = item.icon
           const active = pathname.startsWith(item.href)
           return (

@@ -949,21 +949,21 @@ As fases abaixo estão em ordem de dependência técnica. As tasks são numerada
 
 **Objetivo:** introduzir as entidades e as relações necessárias sem perder os dados atuais.
 
-| Ordem | ID | Prioridade | Task | Critério de aceite |
-|---:|---|---|---|---|
-| 1 | BL-010 | P0 | Definir enums finais de `BarbershopStatus`, `MembershipRole`, `MembershipStatus`, `ProfessionalStatus`, `BookingStatus` e `SubscriptionStatus` | Enums documentados e aprovados |
-| 2 | BL-011 | P0 | Adicionar `slug`, `timezone` e `status` em `Barbershop` | Migration aplicada em homologação; slug único e timezone default |
-| 3 | BL-012 | P0 | Criar `Membership` e campo de papel global em `User` | Usuário pode ter memberships em vários tenants; constraints e índices presentes |
-| 4 | BL-013 | P0 | Criar `Professional` independente de `User` | Profissional pode ser cadastrado sem login |
-| 5 | BL-014 | P0 | Criar `Customer` independente por `barbershopId` | Mesmo usuário pode ter fichas locais separadas por tenant |
-| 6 | BL-015 | P0 | Criar `ProfessionalService` | Relação N:N profissional/serviço com integridade de tenant |
-| 7 | BL-016 | P0 | Alterar `Booking` para incluir tenant, cliente, profissional e intervalo | Modelo suporta reservas por profissional e histórico com snapshots |
-| 8 | BL-017 | P0 | Criar `ProfessionalSchedule` e `ProfessionalScheduleException` | Jornada individual e exceções podem ser persistidas |
-| 9 | BL-018 | P0 | Adaptar `ScheduleBlock` para bloqueio geral ou individual | Bloqueios têm escopo definido e validado |
-| 10 | BL-019 | P1 | Criar `Plan` e `Subscription` | Planos e assinaturas associáveis a uma barbearia |
-| 11 | BL-020 | P1 | Criar `AuditLog` e eventos de assinatura | Eventos sensíveis podem ser auditados |
-| 12 | BL-021 | P0 | Criar chaves únicas, índices e foreign keys compostas tenant-aware | Banco impede referências cruzadas entre tenants nos relacionamentos críticos |
-| 13 | BL-022 | P0 | Gerar migrations incrementais e revisar SQL manual | Migrations aplicam em banco vazio e cópia de homologação |
+| Ordem | ID | Prioridade | Task | Critério de aceite | Status |
+|---:|---|---|---|---|---|
+| 1 | BL-010 | P0 | Definir enums finais de `BarbershopStatus`, `MembershipRole`, `MembershipStatus`, `ProfessionalStatus`, `BookingStatus` e `SubscriptionStatus` | Enums documentados e aprovados | ✅ Concluído |
+| 2 | BL-011 | P0 | Adicionar `slug`, `timezone` e `status` em `Barbershop` | Migration aplicada em PostgreSQL local descartável; slug único e timezone default verificados | ✅ Concluído |
+| 3 | BL-012 | P0 | Criar `Membership` e campo de papel global em `User` | Usuário pode ter memberships em vários tenants; constraints e índices presentes | ✅ Concluído |
+| 4 | BL-013 | P0 | Criar `Professional` independente de `User` | Profissional pode ser cadastrado sem login | ✅ Concluído |
+| 5 | BL-014 | P0 | Criar `Customer` independente por `barbershopId` | Mesmo usuário pode ter fichas locais separadas por tenant | ✅ Concluído |
+| 6 | BL-015 | P0 | Criar `ProfessionalService` | Relação N:N profissional/serviço com integridade de tenant | ✅ Concluído |
+| 7 | BL-016 | P0 | Alterar `Booking` para incluir tenant, cliente, profissional e intervalo | Modelo suporta reservas por profissional e histórico com snapshots | ✅ Concluído |
+| 8 | BL-017 | P0 | Criar `ProfessionalSchedule` e `ProfessionalScheduleException` | Jornada individual e exceções podem ser persistidas | ✅ Concluído |
+| 9 | BL-018 | P0 | Adaptar `ScheduleBlock` para bloqueio geral ou individual | Bloqueios têm escopo definido e validado | ✅ Concluído |
+| 10 | BL-019 | P1 | Criar `Plan` e `Subscription` | Planos e assinaturas associáveis a uma barbearia | ✅ Concluído |
+| 11 | BL-020 | P1 | Criar `AuditLog` e eventos de assinatura | Eventos sensíveis podem ser auditados | ✅ Concluído |
+| 12 | BL-021 | P0 | Criar chaves únicas, índices e foreign keys compostas tenant-aware | Banco impede referências cruzadas entre tenants nos relacionamentos críticos | ✅ Concluído; FK testada contra booking cross-tenant |
+| 13 | BL-022 | P0 | Gerar migrations incrementais e revisar SQL manual | Migrations aplicam em banco vazio local; status e seed verificados | ✅ Concluído localmente; homologação não existe |
 
 **Atenção:** não remover `User.barbershopId`, `User.role`, `Booking.userId` ou `Booking.date` nesta fase. Eles serão mantidos temporariamente para permitir backfill e compatibilidade durante a migração.
 
@@ -973,16 +973,18 @@ As fases abaixo estão em ordem de dependência técnica. As tasks são numerada
 
 **Objetivo:** converter os dados atuais para o novo modelo.
 
-| Ordem | ID | Prioridade | Task | Critério de aceite |
-|---:|---|---|---|---|
-| 1 | BL-030 | P0 | Criar script idempotente de migração de `User.barbershopId` para `Membership` | Executar duas vezes não duplica memberships |
-| 2 | BL-031 | P0 | Criar registros `Professional` para usuários atuais que representam equipe | Todos os membros atuais foram classificados e migrados |
-| 3 | BL-032 | P0 | Criar `Customer` por combinação de usuário e barbearia aplicável | Fichas distintas por tenant e sem associação cruzada |
-| 4 | BL-033 | P0 | Criar profissional legado para reservas históricas sem profissional identificável | Histórico antigo permanece consultável e não é atribuído arbitrariamente a profissional real |
-| 5 | BL-034 | P0 | Migrar bookings para `barbershopId`, `customerId`, `professionalId`, `startsAt`, `endsAt` e snapshots | Todos os registros válidos convertidos; exceções registradas em relatório |
-| 6 | BL-035 | P1 | Criar slugs únicos para barbearias existentes | Todos os tenants existentes possuem slug válido e único |
-| 7 | BL-036 | P0 | Criar relatório de reconciliação de contagens e órfãos | Contagens antes/depois conciliadas; órfãos tratados ou documentados |
-| 8 | BL-037 | P0 | Executar migração em cópia representativa do banco de produção | Script concluído com log e rollback testado |
+**Status: não aplicável no estado atual.** O proprietário confirmou que não há produção nem dados a preservar e que o banco é descartável. Não executar backfill; se surgir dado que precise ser mantido, reabrir esta fase antes da migração.
+
+| Ordem | ID | Prioridade | Task | Critério de aceite | Status |
+|---:|---|---|---|---|---|
+| 1 | BL-030 | P0 | Criar script idempotente de migração de `User.barbershopId` para `Membership` | Executar duas vezes não duplica memberships | N/A — sem dados a migrar |
+| 2 | BL-031 | P0 | Criar registros `Professional` para usuários atuais que representam equipe | Todos os membros atuais foram classificados e migrados | N/A — sem dados a migrar |
+| 3 | BL-032 | P0 | Criar `Customer` por combinação de usuário e barbearia aplicável | Fichas distintas por tenant e sem associação cruzada | N/A — sem dados a migrar |
+| 4 | BL-033 | P0 | Criar profissional legado para reservas históricas sem profissional identificável | Histórico antigo permanece consultável e não é atribuído arbitrariamente a profissional real | N/A — sem histórico a preservar |
+| 5 | BL-034 | P0 | Migrar bookings para `barbershopId`, `customerId`, `professionalId`, `startsAt`, `endsAt` e snapshots | Todos os registros válidos convertidos; exceções registradas em relatório | N/A — sem dados a migrar |
+| 6 | BL-035 | P1 | Criar slugs únicos para barbearias existentes | Todos os tenants existentes possuem slug válido e único | N/A — slugs são gerados no cadastro/seed |
+| 7 | BL-036 | P0 | Criar relatório de reconciliação de contagens e órfãos | Contagens antes/depois conciliadas; órfãos tratados ou documentados | N/A — sem dados a migrar |
+| 8 | BL-037 | P0 | Executar migração em cópia representativa do banco de produção | Script concluído com log e rollback testado | N/A — não há produção |
 
 **Regras de migração:**
 
@@ -992,24 +994,41 @@ As fases abaixo estão em ordem de dependência técnica. As tasks são numerada
 - Não fundir fichas `Customer` de tenants diferentes, ainda que tenham mesmo e-mail ou telefone.
 - Fazer backup antes de qualquer migração em produção.
 
-**Saída da fase:** dados atuais representados no novo modelo e relatório de integridade aprovado.
+**Saída da fase:** não aplicável enquanto não houver dados de produção a preservar.
 
 ### Fase 3 — Autenticação, tenant context e autorização
 
 **Objetivo:** retirar a dependência de um único `barbershopId` por usuário e proteger os ambientes.
 
-| Ordem | ID | Prioridade | Task | Critério de aceite |
-|---:|---|---|---|---|
-| 1 | BL-040 | P0 | Refatorar callbacks/sessão do NextAuth para expor identidade, não um único tenant fixo | Sessão não define `barbershopId` como vínculo exclusivo do usuário |
-| 2 | BL-041 | P0 | Implementar `resolveTenantBySlug` | Slug válido resolve tenant ativo; slug inválido retorna not found |
-| 3 | BL-042 | P0 | Implementar `requireMembership` | Acesso administrativo exige membership ativo no tenant da URL |
-| 4 | BL-043 | P0 | Implementar `requirePlatformAdmin` | Painel da plataforma exige privilégio global `SUPER_ADMIN` |
-| 5 | BL-044 | P0 | Criar helpers de autorização por papel/permissão | `OWNER`, `MANAGER` e `PROFESSIONAL` têm limites de operação testados |
-| 6 | BL-045 | P0 | Padronizar leitura/alteração/exclusão tenant-aware | Nenhuma ação administrativa consulta registro apenas pelo ID sem contexto de tenant |
-| 7 | BL-046 | P0 | Revisar todas as Server Actions e Route Handlers | Cada operação sensível revalida sessão, membership, tenant e permissão; endpoints aplicáveis utilizam rate limiting com escopo tenant-aware |
-| 8 | BL-047 | P1 | Implementar fluxo de convite e aceite de membership | Convite expira, é de uso único e cria vínculo no tenant correto |
-| 9 | BL-048 | P1 | Criar testes automatizados de acesso cruzado | Usuário do tenant A não lê, altera ou exclui dados do tenant B |
-| 10 | BL-049 | P2 | Avaliar e implementar PostgreSQL RLS por transação | RLS testada com pool de conexões sem vazamento de contexto |
+| Ordem | ID | Prioridade | Task | Critério de aceite | Status |
+|---:|---|---|---|---|---|
+| 1 | BL-038 | P0 | Implementar cadastro autenticado do proprietário | Tenant `PENDING_SETUP`, membership `OWNER` ativo e horários padrão são criados em uma transação; slug reservado e duplicado é recusado | ✅ Concluído; transação validada no PostgreSQL local |
+| 2 | BL-040 | P0 | Refatorar callbacks/sessão do NextAuth para expor identidade, não um único tenant fixo | Sessão não define `barbershopId` como vínculo exclusivo do usuário | ✅ Concluído |
+| 3 | BL-041 | P0 | Implementar `resolveTenantBySlug` | Slug válido resolve tenant ativo; slug inválido retorna not found | ✅ Concluído; helper validado com tenant ativo, inativo e slug inválido |
+| 4 | BL-042 | P0 | Implementar `requireMembership` | Acesso administrativo exige membership ativo no tenant da URL | ✅ Concluído; layout, páginas e Server Actions por slug; teste cruzado entre tenants |
+| 5 | BL-043 | P0 | Implementar `requirePlatformAdmin` | Painel da plataforma exige privilégio global `SUPER_ADMIN` | ✅ Concluído; rota `/painel` protegida e teste para `SUPER_ADMIN`/`NONE` |
+| 6 | BL-044 | P0 | Criar helpers de autorização por papel/permissão | `OWNER`, `MANAGER` e `PROFESSIONAL` têm limites de operação testados | ⏳ Em andamento; matriz server-side e guards nas ações implementados; falta agenda restrita ao profissional |
+| 7 | BL-045 | P0 | Padronizar leitura/alteração/exclusão tenant-aware | Nenhuma ação administrativa consulta registro apenas pelo ID sem contexto de tenant | ✅ Concluído; mutações e leituras administrativas escopadas pelo contexto validado |
+| 8 | BL-046 | P0 | Revisar todas as Server Actions e Route Handlers | Cada operação sensível revalida sessão, membership, tenant e permissão; endpoints aplicáveis utilizam rate limiting com escopo tenant-aware | ⏳ Em andamento; isolamento HTTP validado e layout corrigido; falta auditoria completa dos endpoints |
+| 9 | BL-047 | P1 | Implementar fluxo de convite e aceite de membership | Convite expira, é de uso único e cria vínculo no tenant correto | ⏳ Pendente |
+| 10 | BL-048 | P1 | Criar testes automatizados de acesso cruzado | Usuário do tenant A não lê, altera ou exclui dados do tenant B | ⏳ Pendente |
+| 11 | BL-049 | P2 | Avaliar e implementar PostgreSQL RLS por transação | RLS testada com pool de conexões sem vazamento de contexto | ⏳ Pendente |
+
+**Compatibilidade temporária do BL-038:** o cadastro atualiza `User.barbershopId` para a barbearia recém-criada para compatibilidade com dados/fluxos antigos. A relação `Membership` permanece completa. O painel por slug (`/painel/[slug]`) cobre dashboard, agenda, serviços e configurações; as URLs planas autenticam o vínculo legado e redirecionam para a rota equivalente por slug.
+
+**BL-042 concluído:** `/minhas-barbearias` lista os memberships ativos de cada usuário para seleção da barbearia; o layout e as ações em `/painel/[slug]` autorizam o tenant pelo membership ativo. `/painel` fica reservado ao painel global de `SUPER_ADMIN`. O teste cobre usuário A tentando acessar tenant B. `PENDING_SETUP` é aceito nesse contexto para permitir a configuração inicial.
+
+**BL-043 concluído:** `/painel` chama `requirePlatformAdmin` e retorna 404 sem privilégio global; o helper consulta `User.platformRole` no banco e o teste cobre `SUPER_ADMIN` e `NONE`. A interface funcional do painel permanece para BL-093. **Pendente operacional:** ainda não há fluxo de promoção de usuário a `SUPER_ADMIN`; o campo fica `NONE` por padrão e precisa ser atribuído manualmente até existir processo administrativo seguro.
+
+**BL-044 em andamento:** matriz inicial server-side: `OWNER` pode operar tudo; `MANAGER` pode operar agenda, serviços e atendimentos, mas não configurações da barbearia; `PROFESSIONAL` não recebe acesso ao painel tenant-wide enquanto consultas não forem filtradas por profissional. As Server Actions administrativas já verificam a permissão correspondente. Falta implementar e testar a agenda isolada do profissional antes de liberar esse papel.
+
+**BL-045 concluído:** revisão das mutações no painel confirmou filtros por `barbershopId` nas atualizações/exclusões de serviços, agendamentos e bloqueios. A exclusão de serviço passou a usar `id + barbershopId`, evitando excluir por ID após uma validação separada. Leituras administrativas usam o tenant fornecido pelo contexto autorizado. A atualização de onboarding por `userId` é pessoal, não uma mutação de entidade do tenant.
+
+**BL-046 em andamento:** Server Actions administrativas exigem `slug` e validam membership/permissão; omitir o slug nega a operação. URLs planas autenticam o vínculo legado e redirecionam para `/painel/[slug]`. `deleteBooking` apaga por `id + userId`; `updateOwnPhone` grava apenas no usuário autenticado. Mutations e leituras de reservas têm rate limit por usuário; consultas de horários validam ID/data e só usam serviços de tenants ativos. Teste HTTP com sessão NextAuth real confirmou acesso ao tenant A e redirect para `/?erro=acesso-negado` no tenant B; a resposta B não contém shell nem dados do tenant A. A sessão e os fixtures locais do smoke test foram removidos. Falta concluir a auditoria dos endpoints antes de fechar BL-046.
+
+**Ponte de compatibilidade das rotas planas:** `requireBarbershopAdmin` permanece somente na entrada das URLs antigas para localizar o tenant legado e redirecionar; mutações administrativas não têm fallback para esse guard. A remoção das URLs planas será avaliada na revisão geral do BL-046.
+
+**BL-041:** `resolveTenantBySlug` está implementado em `app/_lib/tenant/resolve-tenant.ts`; ainda não está conectado às rotas públicas ou administrativas.
 
 **Saída da fase:** identidade global, memberships por tenant e autorização centralizada e testada.
 
@@ -1408,4 +1427,3 @@ Não adotar Redis apenas por previsão de escala ou por fazer parte de uma stack
 - Prisma — Composite IDs and constraints: https://www.prisma.io/docs/orm/prisma-client/special-fields-and-types/working-with-composite-ids-and-constraints
 - PostgreSQL — Range Types: https://www.postgresql.org/docs/current/rangetypes.html
 - PostgreSQL — Exclusion Constraints: https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-EXCLUSION
-

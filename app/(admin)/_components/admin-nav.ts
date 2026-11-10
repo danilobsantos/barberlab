@@ -5,7 +5,7 @@ import {
   SettingsIcon,
 } from "lucide-react"
 
-export const ADMIN_NAV_ITEMS = [
+const NAV_ITEMS = [
   {
     href: "/dashboard",
     tour: "tour-dashboard",
@@ -35,3 +35,6 @@ export const ADMIN_NAV_ITEMS = [
     icon: SettingsIcon,
   },
 ] as const
+
+export const getAdminNavItems = (slug: string) =>
+  NAV_ITEMS.map((item) => ({ ...item, href: `/painel/${slug}${item.href}` }))

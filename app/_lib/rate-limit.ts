@@ -10,7 +10,11 @@ import { getPool } from "./prisma"
 export const RATE_LIMITS = {
   createBooking: { points: 5, duration: 60 },
   readSchedule: { points: 30, duration: 60 },
+  readOwnBookings: { points: 60, duration: 60 },
   adminWrite: { points: 20, duration: 60 },
+  deleteBooking: { points: 10, duration: 60 },
+  updateOwnPhone: { points: 5, duration: 60 },
+  registerBarbershop: { points: 3, duration: 3600 },
 } as const
 
 export type RateLimitName = keyof typeof RATE_LIMITS

@@ -1,3 +1,4 @@
+import { requireAdminContext } from "@/app/_lib/tenant/require-admin-context"
 import { requireBarbershopAdmin } from "@/app/_lib/auth"
 import { withDefaults } from "@/app/_lib/opening-hours"
 import { db } from "@/app/_lib/prisma"
@@ -12,9 +13,21 @@ export const metadata: Metadata = {
   description: "Dados da barbearia e horário de funcionamento.",
 }
 
-const Settings = async () => {
-  const admin = await requireBarbershopAdmin()
+const Settings = async ({ params }: { params: Promise<{ slug?: string }> }) => {
+  const { slug } = await params
+  const admin = slug
+    ? await requireAdminContext(slug)
+    : await requireBarbershopAdmin()
   if (!admin) redirect("/")
+
+  if (!slug) {
+    const shop = await db.barbershop.findUnique({
+      where: { id: admin.barbershopId },
+      select: { slug: true },
+    })
+    if (shop) redirect(`/painel/${shop.slug}/settings`)
+    redirect("/")
+  }
 
   const [barbershop, salvos] = await Promise.all([
     db.barbershop.findUnique({

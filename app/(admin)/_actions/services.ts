@@ -1,21 +1,25 @@
 "use server"
 
-import { requireBarbershopAdmin } from "@/app/_lib/auth"
+import { requireAdminContext } from "@/app/_lib/tenant/require-admin-context"
 import { db } from "@/app/_lib/prisma"
 import { Prisma } from "@prisma/client"
 import { revalidatePath } from "next/cache"
 import { serviceSchema } from "../_lib/service-schema"
 import { consumeRateLimit, rateLimitError } from "@/app/_lib/rate-limit"
 
-const revalidateServices = () => {
+const revalidateServices = (slug?: string) => {
   revalidatePath("/services")
   revalidatePath("/dashboard")
   revalidatePath("/barbershops")
   revalidatePath("/")
+  if (slug) {
+    revalidatePath(`/painel/${slug}/services`)
+    revalidatePath(`/painel/${slug}/dashboard`)
+  }
 }
 
-export const upsertService = async (input: unknown) => {
-  const admin = await requireBarbershopAdmin()
+export const upsertService = async (input: unknown, slug: string) => {
+  const admin = await requireAdminContext(slug, "manageServices")
   if (!admin) {
     return { ok: false as const, error: "Acesso negado." }
   }
@@ -51,7 +55,7 @@ export const upsertService = async (input: unknown) => {
     })
   }
 
-  revalidateServices()
+  revalidateServices(slug)
 
   return { ok: true as const }
 }
@@ -59,8 +63,9 @@ export const upsertService = async (input: unknown) => {
 export const setServiceActive = async (
   serviceId: string,
   isActive: boolean,
+  slug: string,
 ) => {
-  const admin = await requireBarbershopAdmin()
+  const admin = await requireAdminContext(slug, "manageServices")
   if (!admin) {
     return { ok: false as const, error: "Acesso negado." }
   }
@@ -79,13 +84,13 @@ export const setServiceActive = async (
     return { ok: false as const, error: "Serviço não encontrado." }
   }
 
-  revalidateServices()
+  revalidateServices(slug)
 
   return { ok: true as const }
 }
 
-export const deleteService = async (serviceId: string) => {
-  const admin = await requireBarbershopAdmin()
+export const deleteService = async (serviceId: string, slug: string) => {
+  const admin = await requireAdminContext(slug, "manageServices")
   if (!admin) {
     return { ok: false as const, error: "Acesso negado." }
   }
@@ -112,9 +117,14 @@ export const deleteService = async (serviceId: string) => {
     }
   }
 
-  await db.barbershopService.delete({ where: { id: serviceId } })
+  const deleted = await db.barbershopService.deleteMany({
+    where: { id: serviceId, barbershopId: admin.barbershopId },
+  })
+  if (deleted.count === 0) {
+    return { ok: false as const, error: "Serviço não encontrado." }
+  }
 
-  revalidateServices()
+  revalidateServices(slug)
 
   return { ok: true as const }
 }
