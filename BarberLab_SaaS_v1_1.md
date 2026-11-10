@@ -1086,17 +1086,17 @@ As fases abaixo estão em ordem de dependência técnica. As tasks são numerada
 
 | Ordem | ID | Prioridade | Task | Critério de aceite |
 |---:|---|---|---|---|
-| 1 | BL-080 | P0 | Implementar página pública `/{slug}` | Exibe somente dados públicos do tenant resolvido |
-| 2 | BL-081 | P0 | Implementar fluxo de agendamento sob `/{slug}/agendar` | Todo o fluxo preserva o tenant resolvido |
+| 1 | BL-080 | P0 | Implementar página pública `/{slug}` | Exibe somente dados públicos do tenant resolvido — ✅ Concluído |
+| 2 | BL-081 | P0 | Implementar fluxo de agendamento sob `/{slug}/agendar` | Todo o fluxo preserva o tenant resolvido — ⏳ Pendente |
 | 3 | BL-082 | P0 | Criar/consultar Customer por tenant | Cliente possui ficha local independente |
 | 4 | BL-083 | P0 | Implementar área `/{slug}/minha-conta` | Cliente vê somente seus dados e bookings daquele tenant |
-| 5 | BL-084 | P0 | Remover busca/listagem pública de barbearias | Não há rota ou componente público para descobrir outros estabelecimentos |
-| 6 | BL-085 | P1 | Remover links, cards, filtros e conteúdo de marketplace | Navegação não sugere concorrentes nem redireciona para catálogo |
+| 5 | BL-084 | P0 | Remover busca/listagem pública de barbearias | Não há rota ou componente público para descobrir outros estabelecimentos — ⏳ Pendente |
+| 6 | BL-085 | P1 | Remover links, cards, filtros e conteúdo de marketplace | Navegação não sugere concorrentes nem redireciona para catálogo — ⏳ Pendente |
 | 7 | BL-086 | P1 | Implementar gestão de perfil público no painel | Proprietário altera dados, fotos, horários e slug conforme regras |
-| 8 | BL-087 | P1 | Implementar metadados/SEO por barbearia | Cada slug tem title, description e canonical adequados |
+| 8 | BL-087 | P1 | Implementar metadados/SEO por barbearia | Cada slug tem title, description e canonical adequados — ✅ Concluído |
 | 9 | BL-088 | P1 | Revisar responsividade e acessibilidade do fluxo | Agendamento funciona em dispositivos móveis e desktop |
 
-**Saída da fase:** cada barbearia tem seu próprio endereço público, sem marketplace.
+**Andamento:** BL-080 e BL-087 concluídos. BL-081 e a remoção do marketplace (BL-084/085) continuam pendentes; portanto, a saída da fase ainda não foi atingida.
 
 ### Fase 7 — Planos, assinaturas e administração da plataforma
 

@@ -28,11 +28,22 @@ import {
 } from "@/app/_components/ui/card"
 import type { Barbershop, BarbershopService } from "@prisma/client"
 
+type PublicBarbershop = Pick<
+  Barbershop,
+  "name" | "address" | "phones" | "description" | "imageUrl" | "timezone"
+> & {
+  services: Pick<
+    BarbershopService,
+    "id" | "name" | "description" | "imageUrl" | "price" | "durationMinutes"
+  >[]
+}
+
 interface BarbershopDetailProps {
-  barbershop: Barbershop & { services: BarbershopService[] }
+  barbershop: PublicBarbershop
   openingHours: OpeningHourSlot[]
   showHeroNav?: boolean
   singleTenant?: boolean
+  publicProfile?: boolean
   sidebarSlot?: React.ReactNode
 }
 
@@ -41,6 +52,7 @@ const BarbershopDetail = ({
   openingHours,
   showHeroNav = true,
   singleTenant = false,
+  publicProfile = false,
   sidebarSlot,
 }: BarbershopDetailProps) => {
   return (
@@ -88,20 +100,25 @@ const BarbershopDetail = ({
         <div className="absolute right-0 bottom-0 left-0 p-5 lg:p-8">
           <div className="mx-auto max-w-7xl">
             <div className="text-white">
-              <div className="mb-2 flex items-center gap-2">
-                <Badge className="bg-primary/90 backdrop-blur-sm">
-                  <StarIcon size={12} className="mr-1 fill-white text-white" />
-                  {/* {barbershop.rating} */}
-                  {4.9}
-                </Badge>
-                <Badge
-                  variant="secondary"
-                  className="border-white/30 bg-white/20 text-white backdrop-blur-sm"
-                >
-                  {/* {barbershop.reviewCount} avaliações */}
-                  {70} avaliações
-                </Badge>
-              </div>
+              {!publicProfile && (
+                <div className="mb-2 flex items-center gap-2">
+                  <Badge className="bg-primary/90 backdrop-blur-sm">
+                    <StarIcon
+                      size={12}
+                      className="mr-1 fill-white text-white"
+                    />
+                    {/* {barbershop.rating} */}
+                    {4.9}
+                  </Badge>
+                  <Badge
+                    variant="secondary"
+                    className="border-white/30 bg-white/20 text-white backdrop-blur-sm"
+                  >
+                    {/* {barbershop.reviewCount} avaliações */}
+                    {70} avaliações
+                  </Badge>
+                </div>
+              )}
               <h1 className="mb-2 text-2xl font-bold lg:mb-4 lg:text-4xl">
                 {barbershop.name}
               </h1>
@@ -122,39 +139,45 @@ const BarbershopDetail = ({
             {/* Coluna Esquerda - Conteúdo Principal */}
             <div className="space-y-8 lg:col-span-8">
               {/* Estatísticas rápidas - Mobile */}
-              <div className="grid grid-cols-3 gap-3 lg:hidden">
-                <Card className="bg-card/50 border-0 backdrop-blur-sm">
-                  <CardContent className="p-4 text-center">
-                    <div className="flex flex-col items-center gap-1">
-                      <StarIcon className="h-5 w-5 text-yellow-500" />
-                      <p className="text-lg font-bold">
-                        {/* barbershop.rating */} 4.9
-                      </p>
-                      <p className="text-muted-foreground text-xs">Avaliação</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="bg-card/50 border-0 backdrop-blur-sm">
-                  <CardContent className="p-4 text-center">
-                    <div className="flex flex-col items-center gap-1">
-                      <UsersIcon className="h-5 w-5 text-blue-500" />
-                      <p className="text-lg font-bold">
-                        {/* barbershop.reviewCount */} 70
-                      </p>
-                      <p className="text-muted-foreground text-xs">Clientes</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="bg-card/50 border-0 backdrop-blur-sm">
-                  <CardContent className="p-4 text-center">
-                    <div className="flex flex-col items-center gap-1">
-                      <AwardIcon className="h-5 w-5 text-green-500" />
-                      <p className="text-lg font-bold">5+</p>
-                      <p className="text-muted-foreground text-xs">Anos</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+              {!publicProfile && (
+                <div className="grid grid-cols-3 gap-3 lg:hidden">
+                  <Card className="bg-card/50 border-0 backdrop-blur-sm">
+                    <CardContent className="p-4 text-center">
+                      <div className="flex flex-col items-center gap-1">
+                        <StarIcon className="h-5 w-5 text-yellow-500" />
+                        <p className="text-lg font-bold">
+                          {/* barbershop.rating */} 4.9
+                        </p>
+                        <p className="text-muted-foreground text-xs">
+                          Avaliação
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-card/50 border-0 backdrop-blur-sm">
+                    <CardContent className="p-4 text-center">
+                      <div className="flex flex-col items-center gap-1">
+                        <UsersIcon className="h-5 w-5 text-blue-500" />
+                        <p className="text-lg font-bold">
+                          {/* barbershop.reviewCount */} 70
+                        </p>
+                        <p className="text-muted-foreground text-xs">
+                          Clientes
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-card/50 border-0 backdrop-blur-sm">
+                    <CardContent className="p-4 text-center">
+                      <div className="flex flex-col items-center gap-1">
+                        <AwardIcon className="h-5 w-5 text-green-500" />
+                        <p className="text-lg font-bold">5+</p>
+                        <p className="text-muted-foreground text-xs">Anos</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
 
               {/* Seção Sobre */}
               <Card className="bg-card/30 border-0 backdrop-blur-sm">
@@ -170,32 +193,34 @@ const BarbershopDetail = ({
                   </p>
 
                   {/* Características */}
-                  <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
-                    <div className="flex items-center gap-2 text-sm">
-                      <CheckCircleIcon className="h-4 w-4 text-green-500" />
-                      <span>Wi-Fi Gratuito</span>
+                  {!publicProfile && (
+                    <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        <CheckCircleIcon className="h-4 w-4 text-green-500" />
+                        <span>Wi-Fi Gratuito</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <CheckCircleIcon className="h-4 w-4 text-green-500" />
+                        <span>Estacionamento</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <CheckCircleIcon className="h-4 w-4 text-green-500" />
+                        <span>Cartão de Crédito</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <CheckCircleIcon className="h-4 w-4 text-green-500" />
+                        <span>Produtos Premium</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <CheckCircleIcon className="h-4 w-4 text-green-500" />
+                        <span>Ambiente Climatizado</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <CheckCircleIcon className="h-4 w-4 text-green-500" />
+                        <span>Profissionais Qualificados</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <CheckCircleIcon className="h-4 w-4 text-green-500" />
-                      <span>Estacionamento</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <CheckCircleIcon className="h-4 w-4 text-green-500" />
-                      <span>Cartão de Crédito</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <CheckCircleIcon className="h-4 w-4 text-green-500" />
-                      <span>Produtos Premium</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <CheckCircleIcon className="h-4 w-4 text-green-500" />
-                      <span>Ambiente Climatizado</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <CheckCircleIcon className="h-4 w-4 text-green-500" />
-                      <span>Profissionais Qualificados</span>
-                    </div>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -220,8 +245,13 @@ const BarbershopDetail = ({
                     {barbershop.services.map((service) => (
                       <ServiceItem
                         key={service.id}
-                        barbershop={JSON.parse(JSON.stringify(barbershop))}
+                        barbershop={{
+                          name: barbershop.name,
+                          phones: barbershop.phones,
+                          timezone: barbershop.timezone,
+                        }}
                         service={JSON.parse(JSON.stringify(service))}
+                        bookingEnabled={!publicProfile}
                       />
                     ))}
                   </div>
@@ -234,38 +264,40 @@ const BarbershopDetail = ({
               {sidebarSlot}
 
               {/* Estatísticas rápidas - Desktop */}
-              <div className="hidden lg:grid lg:grid-cols-2 lg:gap-4">
-                <Card className="border-yellow-500/20 bg-linear-to-br from-yellow-500/10 to-yellow-500/5 backdrop-blur-sm">
-                  <CardContent className="p-6 text-center">
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="rounded-xl bg-yellow-500/20 p-3">
-                        <StarIcon className="h-6 w-6 text-yellow-500" />
+              {!publicProfile && (
+                <div className="hidden lg:grid lg:grid-cols-2 lg:gap-4">
+                  <Card className="border-yellow-500/20 bg-linear-to-br from-yellow-500/10 to-yellow-500/5 backdrop-blur-sm">
+                    <CardContent className="p-6 text-center">
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="rounded-xl bg-yellow-500/20 p-3">
+                          <StarIcon className="h-6 w-6 text-yellow-500" />
+                        </div>
+                        <p className="text-2xl font-bold text-yellow-500">
+                          {/* barbershop.rating */} 4.9
+                        </p>
+                        <p className="text-muted-foreground text-sm">
+                          Avaliação Média
+                        </p>
                       </div>
-                      <p className="text-2xl font-bold text-yellow-500">
-                        {/* barbershop.rating */} 4.9
-                      </p>
-                      <p className="text-muted-foreground text-sm">
-                        Avaliação Média
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="border-blue-500/20 bg-linear-to-br from-blue-500/10 to-blue-500/5 backdrop-blur-sm">
-                  <CardContent className="p-6 text-center">
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="rounded-xl bg-blue-500/20 p-3">
-                        <UsersIcon className="h-6 w-6 text-blue-500" />
+                    </CardContent>
+                  </Card>
+                  <Card className="border-blue-500/20 bg-linear-to-br from-blue-500/10 to-blue-500/5 backdrop-blur-sm">
+                    <CardContent className="p-6 text-center">
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="rounded-xl bg-blue-500/20 p-3">
+                          <UsersIcon className="h-6 w-6 text-blue-500" />
+                        </div>
+                        <p className="text-2xl font-bold text-blue-500">
+                          {/* barbershop.reviewCount */} +70
+                        </p>
+                        <p className="text-muted-foreground text-sm">
+                          Clientes Atendidos
+                        </p>
                       </div>
-                      <p className="text-2xl font-bold text-blue-500">
-                        {/* barbershop.reviewCount */} +70
-                      </p>
-                      <p className="text-muted-foreground text-sm">
-                        Clientes Atendidos
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
 
               {/* Horário de Funcionamento */}
               <Card className="bg-card/30 border-0 backdrop-blur-sm">
@@ -316,17 +348,19 @@ const BarbershopDetail = ({
               </Card>
 
               {/* Botão de CTA */}
-              <Card className="from-primary/10 to-primary/5 border-primary/20 bg-linear-to-br backdrop-blur-sm">
-                <CardContent className="p-6 text-center">
-                  <h3 className="mb-2 flex items-center justify-center gap-2 text-lg font-semibold">
-                    <CalendarIcon aria-hidden="true" />
-                    Pronto para agendar?
-                  </h3>
-                  <p className="text-muted-foreground mb-4 text-sm">
-                    Escolha um dos nossos serviços e agende seu horário
-                  </p>
-                </CardContent>
-              </Card>
+              {!publicProfile && (
+                <Card className="from-primary/10 to-primary/5 border-primary/20 bg-linear-to-br backdrop-blur-sm">
+                  <CardContent className="p-6 text-center">
+                    <h3 className="mb-2 flex items-center justify-center gap-2 text-lg font-semibold">
+                      <CalendarIcon aria-hidden="true" />
+                      Pronto para agendar?
+                    </h3>
+                    <p className="text-muted-foreground mb-4 text-sm">
+                      Escolha um dos nossos serviços e agende seu horário
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </div>
