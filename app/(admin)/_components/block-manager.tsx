@@ -14,6 +14,7 @@ import {
 } from "@/app/_components/ui/dialog"
 import { Input } from "@/app/_components/ui/input"
 import { Label } from "@/app/_components/ui/label"
+import { Select } from "@/app/_components/ui/select"
 import { format } from "date-fns"
 import { LockIcon, PlusIcon, Trash2Icon } from "lucide-react"
 import { useState, useTransition } from "react"
@@ -29,6 +30,7 @@ import { useAdminSlug } from "./use-admin-slug"
 interface BlockManagerProps {
   date: Date
   blocks: AgendaBlock[]
+  professionals: { id: string; name: string }[]
 }
 
 const PRESETS = [
@@ -41,12 +43,13 @@ const PRESETS = [
   },
 ]
 
-const BlockManager = ({ date, blocks }: BlockManagerProps) => {
+const BlockManager = ({ date, blocks, professionals }: BlockManagerProps) => {
   const slug = useAdminSlug()
   const [isOpen, setIsOpen] = useState(false)
   const [startTime, setStartTime] = useState("12:00")
   const [endTime, setEndTime] = useState("13:00")
   const [reason, setReason] = useState("")
+  const [professionalId, setProfessionalId] = useState("")
   const [isPending, startTransition] = useTransition()
 
   const applyPreset = (preset: (typeof PRESETS)[number]) => {
@@ -63,6 +66,7 @@ const BlockManager = ({ date, blocks }: BlockManagerProps) => {
           startTime,
           endTime,
           reason: reason.trim() || undefined,
+          professionalId: professionalId || null,
         },
         slug,
       )
@@ -71,6 +75,7 @@ const BlockManager = ({ date, blocks }: BlockManagerProps) => {
         toast.success("Horário bloqueado.")
         setIsOpen(false)
         setReason("")
+        setProfessionalId("")
       } else {
         toast.error(result.error)
       }
@@ -150,6 +155,22 @@ const BlockManager = ({ date, blocks }: BlockManagerProps) => {
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="block-scope">Escopo</Label>
+                  <Select
+                    id="block-scope"
+                    value={professionalId}
+                    onChange={(event) => setProfessionalId(event.target.value)}
+                  >
+                    <option value="">Todos os profissionais</option>
+                    {professionals.map((professional) => (
+                      <option key={professional.id} value={professional.id}>
+                        {professional.name}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="block-reason">Motivo (opcional)</Label>
                   <Input
                     id="block-reason"
@@ -196,7 +217,8 @@ const BlockManager = ({ date, blocks }: BlockManagerProps) => {
                     {format(block.endsAt, "HH:mm")}
                   </p>
                   <p className="text-muted-foreground truncate text-xs">
-                    {block.reason ?? "Horário bloqueado"}
+                    {block.reason ?? "Horário bloqueado"} ·{" "}
+                    {block.professional?.name ?? "Todos os profissionais"}
                   </p>
                 </div>
                 <Button

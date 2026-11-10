@@ -4,22 +4,8 @@ import { requireAdminContext } from "@/app/_lib/tenant/require-admin-context"
 import { db } from "@/app/_lib/prisma"
 import { BookingStatus } from "@prisma/client"
 import { revalidatePath } from "next/cache"
-import { z } from "zod"
 import { consumeRateLimit, rateLimitError } from "@/app/_lib/rate-limit"
-
-const timeSchema = z.string().regex(/^\d{2}:\d{2}$/, "Horário inválido.")
-
-const createSchema = z
-  .object({
-    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida."),
-    startTime: timeSchema,
-    endTime: timeSchema,
-    reason: z.string().trim().max(120).optional(),
-  })
-  .refine((data) => data.endTime > data.startTime, {
-    message: "O fim do bloqueio precisa ser depois do início.",
-    path: ["endTime"],
-  })
+import { scheduleBlockSchema } from "@/app/_lib/schedule-block-schema"
 
 const buildDate = (date: string, time: string) => {
   const [year, month, day] = date.split("-").map(Number)
@@ -38,7 +24,7 @@ export const createScheduleBlock = async (input: unknown, slug: string) => {
     return rateLimitError(limit.retryAfterSeconds)
   }
 
-  const parsed = createSchema.safeParse(input)
+  const parsed = scheduleBlockSchema.safeParse(input)
   if (!parsed.success) {
     return {
       ok: false as const,
@@ -46,17 +32,38 @@ export const createScheduleBlock = async (input: unknown, slug: string) => {
     }
   }
 
-  const { date, startTime, endTime, reason } = parsed.data
+  const { date, startTime, endTime, reason, professionalId } = parsed.data
+  if (
+    professionalId &&
+    !(await db.professional.findFirst({
+      where: { id: professionalId, barbershopId: admin.barbershopId },
+      select: { id: true },
+    }))
+  ) {
+    return { ok: false as const, error: "Profissional não encontrado." }
+  }
   const startsAt = buildDate(date, startTime)
   const endsAt = buildDate(date, endTime)
 
-  const conflicting = await db.booking.count({
+  const bookings = await db.booking.findMany({
     where: {
       status: { not: BookingStatus.CANCELED },
-      date: { gte: startsAt, lt: endsAt },
+      date: { gte: new Date(startsAt.getTime() - 480 * 60 * 1000), lt: endsAt },
       service: { barbershopId: admin.barbershopId },
+      ...(professionalId ? { professionalId } : {}),
+    },
+    select: {
+      date: true,
+      professionalId: true,
+      service: { select: { durationMinutes: true } },
     },
   })
+  const conflicting = bookings.filter(
+    (booking) =>
+      booking.date < endsAt &&
+      booking.date.getTime() + booking.service.durationMinutes * 60 * 1000 >
+        startsAt.getTime(),
+  ).length
 
   if (conflicting > 0) {
     return {
@@ -71,6 +78,7 @@ export const createScheduleBlock = async (input: unknown, slug: string) => {
       startsAt,
       endsAt,
       reason: reason || null,
+      professionalId: professionalId || null,
     },
   })
 

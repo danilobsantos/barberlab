@@ -67,7 +67,14 @@ const Schedule = async ({ searchParams, params }: ScheduleProps) => {
 
   const { date: dateParam } = await searchParams
   const date = parseDateParam(dateParam)
-  const { bookings, blocks } = await getDayAgenda(admin.barbershopId, date)
+  const [{ bookings, blocks }, professionals] = await Promise.all([
+    getDayAgenda(admin.barbershopId, date),
+    db.professional.findMany({
+      where: { barbershopId: admin.barbershopId, status: "ACTIVE" },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, displayName: true },
+    }),
+  ])
 
   const timeline: TimelineEntry[] = [
     ...bookings.map<TimelineEntry>((booking) => ({
@@ -85,7 +92,7 @@ const Schedule = async ({ searchParams, params }: ScheduleProps) => {
       startsAt: block.startsAt,
       endsAt: block.endsAt,
       title: block.reason ?? "Horário bloqueado",
-      subtitle: "Bloqueio manual",
+      subtitle: `${block.professional?.name ?? "Todos os profissionais"} · Bloqueio manual`,
     })),
   ].sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime())
 
@@ -107,7 +114,14 @@ const Schedule = async ({ searchParams, params }: ScheduleProps) => {
             </CardContent>
           </Card>
 
-          <BlockManager date={date} blocks={blocks} />
+          <BlockManager
+            date={date}
+            blocks={blocks}
+            professionals={professionals.map((professional) => ({
+              id: professional.id,
+              name: professional.displayName ?? professional.name,
+            }))}
+          />
         </div>
 
         {/* Linha do tempo do dia */}

@@ -26,6 +26,7 @@ export interface AgendaBlock {
   startsAt: Date
   endsAt: Date
   reason: string | null
+  professional: { id: string; name: string } | null
 }
 
 export const getDayAgenda = async (barbershopId: string, date: Date) => {
@@ -69,7 +70,13 @@ export const getDayAgenda = async (barbershopId: string, date: Date) => {
         endsAt: { gte: from },
       },
       orderBy: { startsAt: "asc" },
-      select: { id: true, startsAt: true, endsAt: true, reason: true },
+      select: {
+        id: true,
+        startsAt: true,
+        endsAt: true,
+        reason: true,
+        professional: { select: { id: true, name: true, displayName: true } },
+      },
     }),
   ])
 
@@ -92,7 +99,18 @@ export const getDayAgenda = async (barbershopId: string, date: Date) => {
     },
   }))
 
-  return { bookings: agendaBookings, blocks: blocks as AgendaBlock[] }
+  return {
+    bookings: agendaBookings,
+    blocks: blocks.map((block) => ({
+      ...block,
+      professional: block.professional
+        ? {
+            id: block.professional.id,
+            name: block.professional.displayName ?? block.professional.name,
+          }
+        : null,
+    })),
+  }
 }
 
 export const summarizeAgenda = (bookings: AgendaBooking[]) => {
