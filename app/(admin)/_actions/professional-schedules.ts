@@ -9,6 +9,7 @@ import {
   lockAndGetTenantEntitlements,
 } from "@/app/_lib/platform/entitlements"
 import { revalidatePath } from "next/cache"
+import { withTenantContext } from "@/app/_lib/database-context"
 
 export const saveProfessionalSchedule = async (
   professionalId: string,
@@ -36,35 +37,40 @@ export const saveProfessionalSchedule = async (
     }
   }
 
-  const result = await db.$transaction(async (tx) => {
-    const entitlements = await lockAndGetTenantEntitlements(
-      tx,
-      admin.barbershopId,
-    )
-    if (!canUseFeature(entitlements, "professional_schedule")) {
-      return "feature" as const
-    }
+  const result = await withTenantContext(
+    admin.barbershopId,
+    () =>
+      db.$transaction(async (tx) => {
+        const entitlements = await lockAndGetTenantEntitlements(
+          tx,
+          admin.barbershopId,
+        )
+        if (!canUseFeature(entitlements, "professional_schedule")) {
+          return "feature" as const
+        }
 
-    const professional = await tx.professional.findFirst({
-      where: { id: professionalId, barbershopId: admin.barbershopId },
-      select: { id: true },
-    })
-    if (!professional) return "missing" as const
+        const professional = await tx.professional.findFirst({
+          where: { id: professionalId, barbershopId: admin.barbershopId },
+          select: { id: true },
+        })
+        if (!professional) return "missing" as const
 
-    await tx.professionalSchedule.deleteMany({
-      where: { professionalId, barbershopId: admin.barbershopId },
-    })
-    if (parsed.data.length) {
-      await tx.professionalSchedule.createMany({
-        data: parsed.data.map((interval) => ({
-          ...interval,
-          professionalId,
-          barbershopId: admin.barbershopId,
-        })),
-      })
-    }
-    return "saved" as const
-  })
+        await tx.professionalSchedule.deleteMany({
+          where: { professionalId, barbershopId: admin.barbershopId },
+        })
+        if (parsed.data.length) {
+          await tx.professionalSchedule.createMany({
+            data: parsed.data.map((interval) => ({
+              ...interval,
+              professionalId,
+              barbershopId: admin.barbershopId,
+            })),
+          })
+        }
+        return "saved" as const
+      }),
+    admin.userId,
+  )
 
   if (result === "missing") {
     return { ok: false as const, error: "Profissional não encontrado." }

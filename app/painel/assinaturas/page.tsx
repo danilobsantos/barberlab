@@ -9,10 +9,10 @@ import {
 import { Input } from "@/app/_components/ui/input"
 import { requirePlatformAdmin } from "@/app/_lib/platform/require-platform-admin"
 import { subscriptionTrialDays } from "@/app/_lib/platform/subscription-lifecycle"
-import { db } from "@/app/_lib/prisma"
 import { SubscriptionStatus } from "@prisma/client"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { withPlatformContext } from "@/app/_lib/database-context"
 
 export const metadata = {
   title: "Assinaturas | Barber Lab",
@@ -39,20 +39,22 @@ export default async function PlatformSubscriptionsPage({
   const admin = await requirePlatformAdmin()
   if (!admin) notFound()
   const params = await searchParams
-  const [barbershops, plans] = await Promise.all([
-    db.barbershop.findMany({
-      orderBy: { name: "asc" },
-      include: {
-        subscriptions: {
-          where: { status: { not: "CANCELED" } },
-          orderBy: { createdAt: "desc" },
-          take: 1,
-          include: { plan: true },
+  const [barbershops, plans] = await withPlatformContext(admin.userId, (tx) =>
+    Promise.all([
+      tx.barbershop.findMany({
+        orderBy: { name: "asc" },
+        include: {
+          subscriptions: {
+            where: { status: { not: "CANCELED" } },
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            include: { plan: true },
+          },
         },
-      },
-    }),
-    db.plan.findMany({ where: { isActive: true }, orderBy: { name: "asc" } }),
-  ])
+      }),
+      tx.plan.findMany({ where: { isActive: true }, orderBy: { name: "asc" } }),
+    ]),
+  )
 
   return (
     <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-6 px-5 py-12">

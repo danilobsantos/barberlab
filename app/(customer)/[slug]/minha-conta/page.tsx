@@ -2,9 +2,9 @@ import { saveTenantCustomer } from "@/app/_actions/save-tenant-customer"
 import { Button } from "@/app/_components/ui/button"
 import { Input } from "@/app/_components/ui/input"
 import { auth } from "@/app/_lib/auth"
-import { db } from "@/app/_lib/prisma"
 import { getPublicBarbershop } from "@/app/_data/get-public-barbershop"
 import { formatBookingDateTime } from "@/app/_lib/booking-date-format"
+import { withTenantContext } from "@/app/_lib/database-context"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 
@@ -28,24 +28,34 @@ export default async function TenantCustomerAccount({
   const barbershop = await getPublicBarbershop(slug)
   if (!barbershop) notFound()
 
-  const customer = await db.customer.findFirst({
-    where: { barbershopId: barbershop.id, userId: session.user.id },
-    select: { name: true, phone: true, email: true, notes: true, id: true },
-  })
+  const customer = await withTenantContext(
+    barbershop.id,
+    (tx) =>
+      tx.customer.findFirst({
+        where: { barbershopId: barbershop.id, userId: session.user.id },
+        select: { name: true, phone: true, email: true, notes: true, id: true },
+      }),
+    session.user.id,
+  )
   const bookings = customer
-    ? await db.booking.findMany({
-        where: {
-          barbershopId: barbershop.id,
-          customerId: customer.id,
-          userId: session.user.id,
-        },
-        orderBy: { date: "desc" },
-        select: {
-          date: true,
-          status: true,
-          tenantService: { select: { name: true } },
-        },
-      })
+    ? await withTenantContext(
+        barbershop.id,
+        (tx) =>
+          tx.booking.findMany({
+            where: {
+              barbershopId: barbershop.id,
+              customerId: customer.id,
+              userId: session.user.id,
+            },
+            orderBy: { date: "desc" },
+            select: {
+              date: true,
+              status: true,
+              tenantService: { select: { name: true } },
+            },
+          }),
+        session.user.id,
+      )
     : []
 
   return (

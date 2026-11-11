@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import { auth } from "@/app/_lib/auth"
 import { db } from "@/app/_lib/prisma"
+import { withInvitationToken } from "@/app/_lib/database-context"
 import {
   hashInvitationToken,
   invitationTokenSchema,
@@ -28,26 +29,32 @@ export default async function MembershipInvitationPage({
   const { token } = await params
   if (!invitationTokenSchema.safeParse(token).success) notFound()
 
-  const invitation = await db.professionalInvitation.findUnique({
-    where: { tokenHash: hashInvitationToken(token) },
-    select: {
-      email: true,
-      expiresAt: true,
-      acceptedAt: true,
-      canceledAt: true,
-      professional: {
+  const session = await auth()
+  const tokenHash = hashInvitationToken(token)
+  const invitation = await withInvitationToken(
+    tokenHash,
+    session?.user?.id,
+    (tx) =>
+      tx.professionalInvitation.findUnique({
+        where: { tokenHash },
         select: {
-          name: true,
           email: true,
-          status: true,
-          barbershop: { select: { name: true, status: true } },
+          expiresAt: true,
+          acceptedAt: true,
+          canceledAt: true,
+          professional: {
+            select: {
+              name: true,
+              email: true,
+              status: true,
+              barbershop: { select: { name: true, status: true } },
+            },
+          },
         },
-      },
-    },
-  })
+      }),
+  )
   if (!invitation) notFound()
 
-  const session = await auth()
   const user = session?.user?.id
     ? await db.user.findUnique({
         where: { id: session.user.id },

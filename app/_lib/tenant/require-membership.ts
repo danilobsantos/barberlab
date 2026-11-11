@@ -1,7 +1,7 @@
 import "server-only"
 
 import { auth } from "../auth"
-import { db } from "../prisma"
+import { withTenantSlug } from "../database-context"
 import { findMembershipForTenant } from "./find-membership"
 
 export async function requireMembership(slug: string) {
@@ -10,5 +10,7 @@ export async function requireMembership(slug: string) {
 
   if (!userId) return null
 
-  return findMembershipForTenant(db, userId, slug)
+  return withTenantSlug(slug, userId, (tx) =>
+    findMembershipForTenant(tx, userId, slug),
+  )
 }

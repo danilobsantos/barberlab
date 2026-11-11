@@ -1,11 +1,11 @@
 "use server"
 
 import { requireAdminContext } from "@/app/_lib/tenant/require-admin-context"
-import { db } from "@/app/_lib/prisma"
 import { Prisma } from "@prisma/client"
 import { revalidatePath } from "next/cache"
 import { serviceSchema } from "../_lib/service-schema"
 import { consumeRateLimit, rateLimitError } from "@/app/_lib/rate-limit"
+import { withTenantContext } from "@/app/_lib/database-context"
 
 const revalidateServices = (slug?: string) => {
   revalidatePath("/services")
@@ -41,18 +41,28 @@ export const upsertService = async (input: unknown, slug: string) => {
   const data = { ...rest, price: new Prisma.Decimal(price.toFixed(2)) }
 
   if (id) {
-    const result = await db.barbershopService.updateMany({
-      where: { id, barbershopId: admin.barbershopId },
-      data,
-    })
+    const result = await withTenantContext(
+      admin.barbershopId,
+      (tx) =>
+        tx.barbershopService.updateMany({
+          where: { id, barbershopId: admin.barbershopId },
+          data,
+        }),
+      admin.userId,
+    )
 
     if (result.count === 0) {
       return { ok: false as const, error: "Serviço não encontrado." }
     }
   } else {
-    await db.barbershopService.create({
-      data: { ...data, barbershopId: admin.barbershopId },
-    })
+    await withTenantContext(
+      admin.barbershopId,
+      (tx) =>
+        tx.barbershopService.create({
+          data: { ...data, barbershopId: admin.barbershopId },
+        }),
+      admin.userId,
+    )
   }
 
   revalidateServices(slug)
@@ -75,10 +85,15 @@ export const setServiceActive = async (
     return rateLimitError(limit.retryAfterSeconds)
   }
 
-  const result = await db.barbershopService.updateMany({
-    where: { id: serviceId, barbershopId: admin.barbershopId },
-    data: { isActive },
-  })
+  const result = await withTenantContext(
+    admin.barbershopId,
+    (tx) =>
+      tx.barbershopService.updateMany({
+        where: { id: serviceId, barbershopId: admin.barbershopId },
+        data: { isActive },
+      }),
+    admin.userId,
+  )
 
   if (result.count === 0) {
     return { ok: false as const, error: "Serviço não encontrado." }
@@ -100,10 +115,15 @@ export const deleteService = async (serviceId: string, slug: string) => {
     return rateLimitError(limit.retryAfterSeconds)
   }
 
-  const service = await db.barbershopService.findFirst({
-    where: { id: serviceId, barbershopId: admin.barbershopId },
-    select: { _count: { select: { bookings: true } } },
-  })
+  const service = await withTenantContext(
+    admin.barbershopId,
+    (tx) =>
+      tx.barbershopService.findFirst({
+        where: { id: serviceId, barbershopId: admin.barbershopId },
+        select: { _count: { select: { bookings: true } } },
+      }),
+    admin.userId,
+  )
 
   if (!service) {
     return { ok: false as const, error: "Serviço não encontrado." }
@@ -117,9 +137,14 @@ export const deleteService = async (serviceId: string, slug: string) => {
     }
   }
 
-  const deleted = await db.barbershopService.deleteMany({
-    where: { id: serviceId, barbershopId: admin.barbershopId },
-  })
+  const deleted = await withTenantContext(
+    admin.barbershopId,
+    (tx) =>
+      tx.barbershopService.deleteMany({
+        where: { id: serviceId, barbershopId: admin.barbershopId },
+      }),
+    admin.userId,
+  )
   if (deleted.count === 0) {
     return { ok: false as const, error: "Serviço não encontrado." }
   }

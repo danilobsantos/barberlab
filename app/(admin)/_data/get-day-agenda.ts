@@ -1,6 +1,6 @@
-import { db } from "@/app/_lib/prisma"
 import { BookingStatus } from "@prisma/client"
 import { endOfDay, startOfDay } from "date-fns"
+import { withTenantContext } from "@/app/_lib/database-context"
 
 export interface AgendaBooking {
   id: string
@@ -38,54 +38,58 @@ export const getDayAgenda = async (
   const to = endOfDay(date)
 
   const [bookings, blocks] = await Promise.all([
-    db.booking.findMany({
-      where: {
-        date: { gte: from, lte: to },
-        service: { barbershopId },
-        ...(professionalId ? { professionalId } : {}),
-      },
-      orderBy: { date: "asc" },
-      select: {
-        id: true,
-        date: true,
-        status: true,
-        service: {
-          select: {
-            id: true,
-            name: true,
-            price: true,
-            durationMinutes: true,
+    withTenantContext(barbershopId, (tx) =>
+      tx.booking.findMany({
+        where: {
+          date: { gte: from, lte: to },
+          service: { barbershopId },
+          ...(professionalId ? { professionalId } : {}),
+        },
+        orderBy: { date: "asc" },
+        select: {
+          id: true,
+          date: true,
+          status: true,
+          service: {
+            select: {
+              id: true,
+              name: true,
+              price: true,
+              durationMinutes: true,
+            },
+          },
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true,
+              phone: true,
+            },
           },
         },
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-            phone: true,
-          },
+      }),
+    ),
+    withTenantContext(barbershopId, (tx) =>
+      tx.scheduleBlock.findMany({
+        where: {
+          barbershopId,
+          ...(professionalId
+            ? { OR: [{ professionalId }, { professionalId: null }] }
+            : {}),
+          startsAt: { lte: to },
+          endsAt: { gte: from },
         },
-      },
-    }),
-    db.scheduleBlock.findMany({
-      where: {
-        barbershopId,
-        ...(professionalId
-          ? { OR: [{ professionalId }, { professionalId: null }] }
-          : {}),
-        startsAt: { lte: to },
-        endsAt: { gte: from },
-      },
-      orderBy: { startsAt: "asc" },
-      select: {
-        id: true,
-        startsAt: true,
-        endsAt: true,
-        reason: true,
-        professional: { select: { id: true, name: true, displayName: true } },
-      },
-    }),
+        orderBy: { startsAt: "asc" },
+        select: {
+          id: true,
+          startsAt: true,
+          endsAt: true,
+          reason: true,
+          professional: { select: { id: true, name: true, displayName: true } },
+        },
+      }),
+    ),
   ])
 
   const agendaBookings: AgendaBooking[] = bookings.map((booking) => ({

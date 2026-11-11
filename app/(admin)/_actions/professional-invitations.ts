@@ -4,6 +4,7 @@ import nodemailer from "nodemailer"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import { db } from "@/app/_lib/prisma"
+import { withTenantContext } from "@/app/_lib/database-context"
 import { requireAdminContext } from "@/app/_lib/tenant/require-admin-context"
 import { consumeRateLimit, rateLimitError } from "@/app/_lib/rate-limit"
 import {
@@ -76,18 +77,23 @@ export async function sendProfessionalInvitation(
     return { ok: false as const, error: "Profissional não encontrado." }
   }
 
-  const professional = await db.professional.findFirst({
-    where: { id: parsedId.data, barbershopId: admin.barbershopId },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      status: true,
-      userId: true,
-      barbershop: { select: { name: true } },
-      invitation: { select: { acceptedAt: true } },
-    },
-  })
+  const professional = await withTenantContext(
+    admin.barbershopId,
+    (tx) =>
+      tx.professional.findFirst({
+        where: { id: parsedId.data, barbershopId: admin.barbershopId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          status: true,
+          userId: true,
+          barbershop: { select: { name: true } },
+          invitation: { select: { acceptedAt: true } },
+        },
+      }),
+    admin.userId,
+  )
   if (!professional || professional.status !== "ACTIVE") {
     return { ok: false as const, error: "Profissional ativo não encontrado." }
   }
@@ -114,34 +120,40 @@ export async function sendProfessionalInvitation(
   const url = inviteUrl(token)
 
   try {
-    await db.$transaction(async (tx) => {
-      const current = await tx.professionalInvitation.findUnique({
-        where: { professionalId: professional.id },
-        select: { id: true, acceptedAt: true },
-      })
-      if (current?.acceptedAt) throw new Error("INVITATION_ALREADY_ACCEPTED")
+    await withTenantContext(
+      admin.barbershopId,
+      () =>
+        db.$transaction(async (tx) => {
+          const current = await tx.professionalInvitation.findUnique({
+            where: { professionalId: professional.id },
+            select: { id: true, acceptedAt: true },
+          })
+          if (current?.acceptedAt)
+            throw new Error("INVITATION_ALREADY_ACCEPTED")
 
-      await tx.professionalInvitation.upsert({
-        where: { professionalId: professional.id },
-        create: {
-          professionalId: professional.id,
-          email,
-          tokenHash: hashInvitationToken(token),
-          expiresAt,
-        },
-        update: {
-          email,
-          tokenHash: hashInvitationToken(token),
-          expiresAt,
-          canceledAt: null,
-        },
-      })
-      const saved = await tx.professionalInvitation.findUnique({
-        where: { professionalId: professional.id },
-        select: { acceptedAt: true },
-      })
-      if (saved?.acceptedAt) throw new Error("INVITATION_ALREADY_ACCEPTED")
-    })
+          await tx.professionalInvitation.upsert({
+            where: { professionalId: professional.id },
+            create: {
+              professionalId: professional.id,
+              email,
+              tokenHash: hashInvitationToken(token),
+              expiresAt,
+            },
+            update: {
+              email,
+              tokenHash: hashInvitationToken(token),
+              expiresAt,
+              canceledAt: null,
+            },
+          })
+          const saved = await tx.professionalInvitation.findUnique({
+            where: { professionalId: professional.id },
+            select: { acceptedAt: true },
+          })
+          if (saved?.acceptedAt) throw new Error("INVITATION_ALREADY_ACCEPTED")
+        }),
+      admin.userId,
+    )
   } catch (error) {
     if (
       error instanceof Error &&
@@ -182,15 +194,20 @@ export async function cancelProfessionalInvitation(
     return { ok: false as const, error: "Convite não encontrado." }
   }
 
-  const canceled = await db.professionalInvitation.updateMany({
-    where: {
-      professionalId: parsedId.data,
-      acceptedAt: null,
-      canceledAt: null,
-      professional: { barbershopId: admin.barbershopId },
-    },
-    data: { canceledAt: new Date() },
-  })
+  const canceled = await withTenantContext(
+    admin.barbershopId,
+    (tx) =>
+      tx.professionalInvitation.updateMany({
+        where: {
+          professionalId: parsedId.data,
+          acceptedAt: null,
+          canceledAt: null,
+          professional: { barbershopId: admin.barbershopId },
+        },
+        data: { canceledAt: new Date() },
+      }),
+    admin.userId,
+  )
   if (!canceled.count) {
     return { ok: false as const, error: "Convite pendente não encontrado." }
   }

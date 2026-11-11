@@ -2,6 +2,10 @@
 
 import { MembershipRole, MembershipStatus } from "@prisma/client"
 import { db } from "@/app/_lib/prisma"
+import {
+  setDatabaseContext,
+  withInvitationToken,
+} from "@/app/_lib/database-context"
 import { auth } from "@/app/_lib/auth"
 import { consumeRateLimit } from "@/app/_lib/rate-limit"
 import {
@@ -46,7 +50,7 @@ export async function acceptMembershipInvitation(input: unknown) {
 
   const tokenHash = hashInvitationToken(parsedToken.data)
   const now = new Date()
-  const result = await db.$transaction(async (tx) => {
+  const result = await withInvitationToken(tokenHash, user.id, async (tx) => {
     const invitation = await tx.professionalInvitation.findUnique({
       where: { tokenHash },
       include: {
@@ -75,6 +79,10 @@ export async function acceptMembershipInvitation(input: unknown) {
         error: "Este convite expirou, foi cancelado ou não está mais válido.",
       }
     }
+    await setDatabaseContext(tx, {
+      tenantId: invitation.professional.barbershopId,
+      userId: user.id,
+    })
     if (
       invitation.professional.userId &&
       invitation.professional.userId !== user.id

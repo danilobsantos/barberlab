@@ -1,10 +1,10 @@
 import type { Metadata } from "next"
-import { db } from "@/app/_lib/prisma"
 import { requireAdminContext } from "@/app/_lib/tenant/require-admin-context"
 import { redirect } from "next/navigation"
 import PageHeader from "../_components/page-header"
 import TeamManager from "../_components/team-manager"
 import { isInvitationOwner } from "@/app/_lib/membership-invitation"
+import { withTenantContext } from "@/app/_lib/database-context"
 
 export const metadata: Metadata = {
   title: "Equipe | Barber Lab",
@@ -17,51 +17,61 @@ const TeamPage = async ({ params }: { params: Promise<{ slug: string }> }) => {
   if (!admin) redirect("/?erro=acesso-negado")
 
   const [professionals, services] = await Promise.all([
-    db.professional.findMany({
-      where: { barbershopId: admin.barbershopId },
-      orderBy: [{ status: "asc" }, { name: "asc" }],
-      include: {
-        invitation: {
-          select: {
-            email: true,
-            expiresAt: true,
-            acceptedAt: true,
-            canceledAt: true,
-          },
-        },
-        services: {
+    withTenantContext(
+      admin.barbershopId,
+      (tx) =>
+        tx.professional.findMany({
           where: { barbershopId: admin.barbershopId },
-          select: { service: { select: { id: true, name: true } } },
-        },
-        schedules: {
-          where: { barbershopId: admin.barbershopId },
-          orderBy: [{ weekday: "asc" }, { startsAtLocal: "asc" }],
-          select: {
-            weekday: true,
-            startsAtLocal: true,
-            endsAtLocal: true,
+          orderBy: [{ status: "asc" }, { name: "asc" }],
+          include: {
+            invitation: {
+              select: {
+                email: true,
+                expiresAt: true,
+                acceptedAt: true,
+                canceledAt: true,
+              },
+            },
+            services: {
+              where: { barbershopId: admin.barbershopId },
+              select: { service: { select: { id: true, name: true } } },
+            },
+            schedules: {
+              where: { barbershopId: admin.barbershopId },
+              orderBy: [{ weekday: "asc" }, { startsAtLocal: "asc" }],
+              select: {
+                weekday: true,
+                startsAtLocal: true,
+                endsAtLocal: true,
+              },
+            },
+            exceptions: {
+              where: { barbershopId: admin.barbershopId },
+              orderBy: [{ date: "desc" }, { type: "asc" }],
+              take: 100,
+              select: {
+                id: true,
+                date: true,
+                type: true,
+                startsAtLocal: true,
+                endsAtLocal: true,
+                reason: true,
+              },
+            },
           },
-        },
-        exceptions: {
+        }),
+      admin.userId,
+    ),
+    withTenantContext(
+      admin.barbershopId,
+      (tx) =>
+        tx.barbershopService.findMany({
           where: { barbershopId: admin.barbershopId },
-          orderBy: [{ date: "desc" }, { type: "asc" }],
-          take: 100,
-          select: {
-            id: true,
-            date: true,
-            type: true,
-            startsAtLocal: true,
-            endsAtLocal: true,
-            reason: true,
-          },
-        },
-      },
-    }),
-    db.barbershopService.findMany({
-      where: { barbershopId: admin.barbershopId },
-      orderBy: { name: "asc" },
-      select: { id: true, name: true, isActive: true },
-    }),
+          orderBy: { name: "asc" },
+          select: { id: true, name: true, isActive: true },
+        }),
+      admin.userId,
+    ),
   ])
 
   return (

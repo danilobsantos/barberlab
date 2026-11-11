@@ -10,6 +10,7 @@ import {
 } from "@/app/_lib/platform/entitlements"
 import { revalidatePath } from "next/cache"
 import { professionalSchema } from "../_lib/professional-schema"
+import { withTenantContext } from "@/app/_lib/database-context"
 
 const revalidateTeam = (slug: string) => {
   revalidatePath(`/painel/${slug}/team`)
@@ -32,10 +33,15 @@ export const upsertProfessional = async (input: unknown, slug: string) => {
   }
 
   const { id, serviceIds, ...data } = parsed.data
-  const services = await db.barbershopService.findMany({
-    where: { id: { in: serviceIds }, barbershopId: admin.barbershopId },
-    select: { id: true },
-  })
+  const services = await withTenantContext(
+    admin.barbershopId,
+    (tx) =>
+      tx.barbershopService.findMany({
+        where: { id: { in: serviceIds }, barbershopId: admin.barbershopId },
+        select: { id: true },
+      }),
+    admin.userId,
+  )
   if (services.length !== serviceIds.length) {
     return {
       ok: false as const,
@@ -43,63 +49,68 @@ export const upsertProfessional = async (input: unknown, slug: string) => {
     }
   }
 
-  const result = await db.$transaction(async (tx) => {
-    const entitlements = await lockAndGetTenantEntitlements(
-      tx,
-      admin.barbershopId,
-    )
-    let professionalId = id
+  const result = await withTenantContext(
+    admin.barbershopId,
+    () =>
+      db.$transaction(async (tx) => {
+        const entitlements = await lockAndGetTenantEntitlements(
+          tx,
+          admin.barbershopId,
+        )
+        let professionalId = id
 
-    if (id) {
-      const current = await tx.professional.findFirst({
-        where: { id, barbershopId: admin.barbershopId },
-        select: { id: true },
-      })
-      if (!current) return "missing" as const
+        if (id) {
+          const current = await tx.professional.findFirst({
+            where: { id, barbershopId: admin.barbershopId },
+            select: { id: true },
+          })
+          if (!current) return "missing" as const
 
-      const removed = await tx.professionalService.findMany({
-        where: {
-          professionalId: id,
-          barbershopId: admin.barbershopId,
-          serviceId: { notIn: serviceIds },
-          bookings: { some: {} },
-        },
-        select: { serviceId: true },
-      })
-      if (removed.length) return "booked" as const
+          const removed = await tx.professionalService.findMany({
+            where: {
+              professionalId: id,
+              barbershopId: admin.barbershopId,
+              serviceId: { notIn: serviceIds },
+              bookings: { some: {} },
+            },
+            select: { serviceId: true },
+          })
+          if (removed.length) return "booked" as const
 
-      await tx.professional.updateMany({
-        where: { id, barbershopId: admin.barbershopId },
-        data,
-      })
-      await tx.professionalService.deleteMany({
-        where: {
-          professionalId: id,
-          barbershopId: admin.barbershopId,
-          serviceId: { notIn: serviceIds },
-        },
-      })
-    } else {
-      if (!isWithinProfessionalLimit(entitlements)) return "limit" as const
-      const professional = await tx.professional.create({
-        data: { ...data, barbershopId: admin.barbershopId },
-        select: { id: true },
-      })
-      professionalId = professional.id
-    }
+          await tx.professional.updateMany({
+            where: { id, barbershopId: admin.barbershopId },
+            data,
+          })
+          await tx.professionalService.deleteMany({
+            where: {
+              professionalId: id,
+              barbershopId: admin.barbershopId,
+              serviceId: { notIn: serviceIds },
+            },
+          })
+        } else {
+          if (!isWithinProfessionalLimit(entitlements)) return "limit" as const
+          const professional = await tx.professional.create({
+            data: { ...data, barbershopId: admin.barbershopId },
+            select: { id: true },
+          })
+          professionalId = professional.id
+        }
 
-    if (serviceIds.length) {
-      await tx.professionalService.createMany({
-        data: serviceIds.map((serviceId) => ({
-          barbershopId: admin.barbershopId,
-          professionalId: professionalId!,
-          serviceId,
-        })),
-        skipDuplicates: true,
-      })
-    }
-    return "saved" as const
-  })
+        if (serviceIds.length) {
+          await tx.professionalService.createMany({
+            data: serviceIds.map((serviceId) => ({
+              barbershopId: admin.barbershopId,
+              professionalId: professionalId!,
+              serviceId,
+            })),
+            skipDuplicates: true,
+          })
+        }
+        return "saved" as const
+      }),
+    admin.userId,
+  )
 
   if (result === "missing") {
     return { ok: false as const, error: "Profissional não encontrado." }
@@ -139,34 +150,39 @@ export const setProfessionalActive = async (
     return { ok: false as const, error: "Dados inválidos." }
   }
 
-  const result = await db.$transaction(async (tx) => {
-    const entitlements = await lockAndGetTenantEntitlements(
-      tx,
-      admin.barbershopId,
-    )
-    const current = await tx.professional.findFirst({
-      where: { id: professionalId, barbershopId: admin.barbershopId },
-      select: { status: true },
-    })
-    if (!current) return "missing" as const
-    if (
-      isActive &&
-      current.status !== ProfessionalStatus.ACTIVE &&
-      !isWithinProfessionalLimit(entitlements)
-    ) {
-      return "limit" as const
-    }
+  const result = await withTenantContext(
+    admin.barbershopId,
+    () =>
+      db.$transaction(async (tx) => {
+        const entitlements = await lockAndGetTenantEntitlements(
+          tx,
+          admin.barbershopId,
+        )
+        const current = await tx.professional.findFirst({
+          where: { id: professionalId, barbershopId: admin.barbershopId },
+          select: { status: true },
+        })
+        if (!current) return "missing" as const
+        if (
+          isActive &&
+          current.status !== ProfessionalStatus.ACTIVE &&
+          !isWithinProfessionalLimit(entitlements)
+        ) {
+          return "limit" as const
+        }
 
-    await tx.professional.updateMany({
-      where: { id: professionalId, barbershopId: admin.barbershopId },
-      data: {
-        status: isActive
-          ? ProfessionalStatus.ACTIVE
-          : ProfessionalStatus.INACTIVE,
-      },
-    })
-    return "updated" as const
-  })
+        await tx.professional.updateMany({
+          where: { id: professionalId, barbershopId: admin.barbershopId },
+          data: {
+            status: isActive
+              ? ProfessionalStatus.ACTIVE
+              : ProfessionalStatus.INACTIVE,
+          },
+        })
+        return "updated" as const
+      }),
+    admin.userId,
+  )
   if (result === "missing") {
     return { ok: false as const, error: "Profissional não encontrado." }
   }

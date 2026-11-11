@@ -1,10 +1,10 @@
 "use server"
 
 import { requireAdminContext } from "@/app/_lib/tenant/require-admin-context"
-import { db } from "@/app/_lib/prisma"
 import { revalidatePath } from "next/cache"
 import { barbershopProfileSchema } from "../_lib/barbershop-schema"
 import { consumeRateLimit, rateLimitError } from "@/app/_lib/rate-limit"
+import { withTenantContext } from "@/app/_lib/database-context"
 
 export const saveBarbershopProfile = async (input: unknown, slug: string) => {
   const admin = await requireAdminContext(slug, "manageSettings")
@@ -27,10 +27,15 @@ export const saveBarbershopProfile = async (input: unknown, slug: string) => {
 
   const { phones, ...rest } = parsed.data
 
-  await db.barbershop.update({
-    where: { id: admin.barbershopId },
-    data: { ...rest, phones: phones.map((p) => p.trim()).filter(Boolean) },
-  })
+  await withTenantContext(
+    admin.barbershopId,
+    (tx) =>
+      tx.barbershop.update({
+        where: { id: admin.barbershopId },
+        data: { ...rest, phones: phones.map((p) => p.trim()).filter(Boolean) },
+      }),
+    admin.userId,
+  )
 
   revalidatePath("/settings")
   if (slug) revalidatePath(`/painel/${slug}/settings`)

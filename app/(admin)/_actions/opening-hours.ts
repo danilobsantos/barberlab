@@ -5,6 +5,7 @@ import { db } from "@/app/_lib/prisma"
 import { revalidatePath } from "next/cache"
 import { openingHoursSchema } from "../_lib/opening-hours-schema"
 import { consumeRateLimit, rateLimitError } from "@/app/_lib/rate-limit"
+import { withTenantContext } from "@/app/_lib/database-context"
 
 export const saveOpeningHours = async (input: unknown, slug: string) => {
   const admin = await requireAdminContext(slug, "manageSettings")
@@ -25,23 +26,28 @@ export const saveOpeningHours = async (input: unknown, slug: string) => {
     }
   }
 
-  await db.$transaction(
-    parsed.data.map((hour) =>
-      db.openingHour.upsert({
-        where: {
-          barbershopId_weekday: {
-            barbershopId: admin.barbershopId,
-            weekday: hour.weekday,
-          },
-        },
-        create: { ...hour, barbershopId: admin.barbershopId },
-        update: {
-          opensAt: hour.opensAt,
-          closesAt: hour.closesAt,
-          isClosed: hour.isClosed,
-        },
-      }),
-    ),
+  await withTenantContext(
+    admin.barbershopId,
+    () =>
+      db.$transaction(
+        parsed.data.map((hour) =>
+          db.openingHour.upsert({
+            where: {
+              barbershopId_weekday: {
+                barbershopId: admin.barbershopId,
+                weekday: hour.weekday,
+              },
+            },
+            create: { ...hour, barbershopId: admin.barbershopId },
+            update: {
+              opensAt: hour.opensAt,
+              closesAt: hour.closesAt,
+              isClosed: hour.isClosed,
+            },
+          }),
+        ),
+      ),
+    admin.userId,
   )
 
   revalidatePath("/settings")

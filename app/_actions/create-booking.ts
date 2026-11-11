@@ -15,6 +15,11 @@ import { localDateTimeToInstant } from "../_lib/booking-availability"
 import { SINGLE_BARBERSHOP_ID } from "../_lib/deployment"
 import { getUnavailableIntervals } from "./get-bookings"
 import { isBookingConflictError } from "../_lib/booking-conflict"
+import {
+  withDatabaseContext,
+  withTenantContext,
+} from "../_lib/database-context"
+import { resolveTenantBySlug } from "../_lib/tenant/resolve-tenant"
 
 const MAXIMO_DE_RESERVAS_EM_ABERTO = 3
 const SLOT_CONFLICT = "Esse horário acabou de ser ocupado. Escolha outro."
@@ -32,29 +37,39 @@ export const createBooking = async (input: unknown) => {
   if (!tenantFilter) {
     return { ok: false as const, error: "Barbearia inválida para agendamento." }
   }
+  const tenant = SINGLE_BARBERSHOP_ID
+    ? { id: SINGLE_BARBERSHOP_ID }
+    : slug
+      ? await resolveTenantBySlug(slug)
+      : null
+  if (!tenant) {
+    return { ok: false as const, error: "Barbearia inválida para agendamento." }
+  }
   const limit = await consumeRateLimit(
     "createBooking",
     `${slug ?? SINGLE_BARBERSHOP_ID}:${session.user.id}`,
   )
   if (!limit.allowed) return rateLimitError(limit.retryAfterSeconds)
 
-  const service = await db.barbershopService.findFirst({
-    where: {
-      id: serviceId,
-      isActive: true,
-      barbershop: { status: "ACTIVE", ...tenantFilter },
-      professionals: {
-        some: { professionalId, professional: { status: "ACTIVE" } },
+  const service = await withTenantContext(tenant.id, (tx) =>
+    tx.barbershopService.findFirst({
+      where: {
+        id: serviceId,
+        isActive: true,
+        barbershop: { status: "ACTIVE", ...tenantFilter },
+        professionals: {
+          some: { professionalId, professional: { status: "ACTIVE" } },
+        },
       },
-    },
-    select: {
-      id: true,
-      barbershopId: true,
-      durationMinutes: true,
-      price: true,
-      barbershop: { select: { timezone: true } },
-    },
-  })
+      select: {
+        id: true,
+        barbershopId: true,
+        durationMinutes: true,
+        price: true,
+        barbershop: { select: { timezone: true } },
+      },
+    }),
+  )
   if (!service)
     return {
       ok: false as const,
@@ -92,13 +107,17 @@ export const createBooking = async (input: unknown) => {
   })
   if (!slots.includes(time)) return { ok: false as const, error: SLOT_CONFLICT }
 
-  const emAberto = await db.booking.count({
-    where: {
-      userId: session.user.id,
-      status: BookingStatus.CONFIRMED,
-      date: { gte: new Date() },
-    },
-  })
+  const emAberto = await withDatabaseContext(
+    { userId: session.user.id },
+    (tx) =>
+      tx.booking.count({
+        where: {
+          userId: session.user.id,
+          status: BookingStatus.CONFIRMED,
+          date: { gte: new Date() },
+        },
+      }),
+  )
   if (emAberto >= MAXIMO_DE_RESERVAS_EM_ABERTO) {
     return {
       ok: false as const,
@@ -112,15 +131,17 @@ export const createBooking = async (input: unknown) => {
       where: { id: session.user.id },
       select: { name: true, email: true, phone: true },
     }),
-    db.customer.findUnique({
-      where: {
-        barbershopId_userId: {
-          barbershopId: service.barbershopId,
-          userId: session.user.id,
+    withTenantContext(service.barbershopId, (tx) =>
+      tx.customer.findUnique({
+        where: {
+          barbershopId_userId: {
+            barbershopId: service.barbershopId,
+            userId: session.user.id,
+          },
         },
-      },
-      select: { id: true },
-    }),
+        select: { id: true },
+      }),
+    ),
   ])
   if (!user) return { ok: false as const, error: "Conta não encontrada." }
   if (!customer && !user.phone?.trim()) {
@@ -131,40 +152,45 @@ export const createBooking = async (input: unknown) => {
   }
 
   try {
-    await db.$transaction(async (tx) => {
-      const tenantCustomer = await tx.customer.upsert({
-        where: {
-          barbershopId_userId: {
-            barbershopId: service.barbershopId,
-            userId: session.user.id,
-          },
-        },
-        update: {},
-        create: {
-          barbershopId: service.barbershopId,
-          userId: session.user.id,
-          name: user.name?.trim() || user.email.split("@")[0] || "Cliente",
-          email: user.email,
-          phone: user.phone!.trim(),
-        },
-        select: { id: true },
-      })
+    await withTenantContext(
+      service.barbershopId,
+      () =>
+        db.$transaction(async (tx) => {
+          const tenantCustomer = await tx.customer.upsert({
+            where: {
+              barbershopId_userId: {
+                barbershopId: service.barbershopId,
+                userId: session.user.id,
+              },
+            },
+            update: {},
+            create: {
+              barbershopId: service.barbershopId,
+              userId: session.user.id,
+              name: user.name?.trim() || user.email.split("@")[0] || "Cliente",
+              email: user.email,
+              phone: user.phone!.trim(),
+            },
+            select: { id: true },
+          })
 
-      await tx.booking.create({
-        data: {
-          serviceId,
-          userId: session.user.id,
-          barbershopId: service.barbershopId,
-          customerId: tenantCustomer.id,
-          professionalId,
-          date: startsAt,
-          startsAt,
-          endsAt,
-          priceSnapshot: service.price,
-          durationMinutesSnapshot: service.durationMinutes,
-        },
-      })
-    })
+          await tx.booking.create({
+            data: {
+              serviceId,
+              userId: session.user.id,
+              barbershopId: service.barbershopId,
+              customerId: tenantCustomer.id,
+              professionalId,
+              date: startsAt,
+              startsAt,
+              endsAt,
+              priceSnapshot: service.price,
+              durationMinutesSnapshot: service.durationMinutes,
+            },
+          })
+        }),
+      session.user.id,
+    )
   } catch (error) {
     if (isBookingConflictError(error)) {
       return { ok: false as const, error: SLOT_CONFLICT }

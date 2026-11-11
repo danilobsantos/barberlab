@@ -8,6 +8,7 @@ import { Prisma } from "@prisma/client"
 import { consumeRateLimit } from "@/app/_lib/rate-limit"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
+import { withPlatformContext } from "@/app/_lib/database-context"
 
 export async function savePlatformSubscription(formData: FormData) {
   const admin = await requirePlatformAdmin()
@@ -23,97 +24,100 @@ export async function savePlatformSubscription(formData: FormData) {
   const periodEnd = new Date(`${input.currentPeriodEnd}T00:00:00.000Z`)
 
   try {
-    await db.$transaction(
-      async (tx) => {
-        const entitlements = await lockAndGetTenantEntitlements(
-          tx,
-          input.barbershopId,
-        )
-        const [barbershop, plan, current] = await Promise.all([
-          tx.barbershop.findUnique({
-            where: { id: input.barbershopId },
-            select: { id: true },
-          }),
-          tx.plan.findUnique({
-            where: { id: input.planId },
-            select: {
-              id: true,
-              priceMonthly: true,
-              maxProfessionals: true,
-              isActive: true,
-            },
-          }),
-          tx.subscription.findFirst({
-            where: {
+    await withPlatformContext(
+      admin.userId,
+      () =>
+        db.$transaction(async (tx) => {
+          const entitlements = await lockAndGetTenantEntitlements(
+            tx,
+            input.barbershopId,
+          )
+          const [barbershop, plan, current] = await Promise.all([
+            tx.barbershop.findUnique({
+              where: { id: input.barbershopId },
+              select: { id: true },
+            }),
+            tx.plan.findUnique({
+              where: { id: input.planId },
+              select: {
+                id: true,
+                priceMonthly: true,
+                maxProfessionals: true,
+                isActive: true,
+              },
+            }),
+            tx.subscription.findFirst({
+              where: {
+                barbershopId: input.barbershopId,
+                status: { not: "CANCELED" },
+              },
+              orderBy: { createdAt: "desc" },
+            }),
+          ])
+
+          if (
+            !barbershop ||
+            !plan ||
+            (!plan.isActive && current?.planId !== plan.id)
+          ) {
+            throw new Error("INVALID_SUBSCRIPTION_TARGET")
+          }
+          if (
+            plan.maxProfessionals !== null &&
+            entitlements.activeProfessionals > plan.maxProfessionals
+          ) {
+            throw new Error("PLAN_LIMIT_BELOW_CURRENT_USAGE")
+          }
+
+          const changingPlan = !!current && current.planId !== plan.id
+          if (changingPlan) {
+            await tx.subscription.update({
+              where: { id: current.id },
+              data: { status: "CANCELED", canceledAt: new Date() },
+            })
+          }
+
+          const subscription =
+            current && !changingPlan
+              ? await tx.subscription.update({
+                  where: { id: current.id },
+                  data: {
+                    status: input.status,
+                    currentPeriodStart: periodStart,
+                    currentPeriodEnd: periodEnd,
+                    canceledAt: input.status === "CANCELED" ? new Date() : null,
+                  },
+                })
+              : await tx.subscription.create({
+                  data: {
+                    barbershopId: input.barbershopId,
+                    planId: plan.id,
+                    status: input.status,
+                    priceAtSubscription: plan.priceMonthly,
+                    currentPeriodStart: periodStart,
+                    currentPeriodEnd: periodEnd,
+                    canceledAt: input.status === "CANCELED" ? new Date() : null,
+                  },
+                })
+
+          await tx.auditLog.create({
+            data: {
               barbershopId: input.barbershopId,
-              status: { not: "CANCELED" },
+              actorUserId: admin.userId,
+              action: current ? "SUBSCRIPTION_UPDATED" : "SUBSCRIPTION_CREATED",
+              entityType: "Subscription",
+              entityId: subscription.id,
+              metadata: {
+                previousPlanId: current?.planId ?? null,
+                previousStatus: current?.status ?? null,
+                planId: plan.id,
+                status: subscription.status,
+                priceAtSubscription:
+                  subscription.priceAtSubscription.toString(),
+              },
             },
-            orderBy: { createdAt: "desc" },
-          }),
-        ])
-
-        if (
-          !barbershop ||
-          !plan ||
-          (!plan.isActive && current?.planId !== plan.id)
-        ) {
-          throw new Error("INVALID_SUBSCRIPTION_TARGET")
-        }
-        if (
-          plan.maxProfessionals !== null &&
-          entitlements.activeProfessionals > plan.maxProfessionals
-        ) {
-          throw new Error("PLAN_LIMIT_BELOW_CURRENT_USAGE")
-        }
-
-        const changingPlan = !!current && current.planId !== plan.id
-        if (changingPlan) {
-          await tx.subscription.update({
-            where: { id: current.id },
-            data: { status: "CANCELED", canceledAt: new Date() },
           })
-        }
-
-        const subscription =
-          current && !changingPlan
-            ? await tx.subscription.update({
-                where: { id: current.id },
-                data: {
-                  status: input.status,
-                  currentPeriodStart: periodStart,
-                  currentPeriodEnd: periodEnd,
-                  canceledAt: input.status === "CANCELED" ? new Date() : null,
-                },
-              })
-            : await tx.subscription.create({
-                data: {
-                  barbershopId: input.barbershopId,
-                  planId: plan.id,
-                  status: input.status,
-                  priceAtSubscription: plan.priceMonthly,
-                  currentPeriodStart: periodStart,
-                  currentPeriodEnd: periodEnd,
-                  canceledAt: input.status === "CANCELED" ? new Date() : null,
-                },
-              })
-
-        await tx.auditLog.create({
-          data: {
-            barbershopId: input.barbershopId,
-            actorUserId: admin.userId,
-            action: current ? "SUBSCRIPTION_UPDATED" : "SUBSCRIPTION_CREATED",
-            entityType: "Subscription",
-            entityId: subscription.id,
-            metadata: {
-              previousPlanId: current?.planId ?? null,
-              previousStatus: current?.status ?? null,
-              planId: plan.id,
-              status: subscription.status,
-              priceAtSubscription: subscription.priceAtSubscription.toString(),
-            },
-          },
-        })
-      },
+        }),
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     )
   } catch (error) {

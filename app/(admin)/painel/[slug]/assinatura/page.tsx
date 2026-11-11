@@ -5,12 +5,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/app/_components/ui/card"
-import { db } from "@/app/_lib/prisma"
 import { refreshSubscriptionLifecycle } from "@/app/_lib/platform/subscription-lifecycle"
 import { requireAdminContext } from "@/app/_lib/tenant/require-admin-context"
 import { ArrowLeftIcon } from "lucide-react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { withTenantContext } from "@/app/_lib/database-context"
 
 export const metadata = {
   title: "Assinatura | Barber Lab",
@@ -35,11 +35,19 @@ export default async function TenantSubscriptionPage({
   if (!admin || admin.role !== "OWNER") notFound()
 
   await refreshSubscriptionLifecycle(admin.barbershopId)
-  const subscription = await db.subscription.findFirst({
-    where: { barbershopId: admin.barbershopId, status: { not: "CANCELED" } },
-    orderBy: { createdAt: "desc" },
-    include: { plan: true },
-  })
+  const subscription = await withTenantContext(
+    admin.barbershopId,
+    (tx) =>
+      tx.subscription.findFirst({
+        where: {
+          barbershopId: admin.barbershopId,
+          status: { not: "CANCELED" },
+        },
+        orderBy: { createdAt: "desc" },
+        include: { plan: true },
+      }),
+    admin.userId,
+  )
 
   return (
     <main className="mx-auto max-w-3xl space-y-6 p-5 lg:px-8 lg:py-10">

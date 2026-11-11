@@ -10,6 +10,7 @@ import {
   lockAndGetTenantEntitlements,
 } from "@/app/_lib/platform/entitlements"
 import { revalidatePath } from "next/cache"
+import { withTenantContext } from "@/app/_lib/database-context"
 
 const isUuid = (value: unknown): value is string =>
   typeof value === "string" && /^[0-9a-f-]{36}$/i.test(value)
@@ -37,58 +38,68 @@ export const saveProfessionalScheduleException = async (
     }
   }
 
-  const result = await db.$transaction(async (tx) => {
-    const entitlements = await lockAndGetTenantEntitlements(
-      tx,
-      admin.barbershopId,
-    )
-    if (!canUseFeature(entitlements, "professional_schedule")) {
-      return "feature" as const
-    }
+  const result = await withTenantContext(
+    admin.barbershopId,
+    () =>
+      db.$transaction(async (tx) => {
+        const entitlements = await lockAndGetTenantEntitlements(
+          tx,
+          admin.barbershopId,
+        )
+        if (!canUseFeature(entitlements, "professional_schedule")) {
+          return "feature" as const
+        }
 
-    const professional = await tx.professional.findFirst({
-      where: { id: professionalId, barbershopId: admin.barbershopId },
-      select: { id: true },
-    })
-    if (!professional) return "missing" as const
+        const professional = await tx.professional.findFirst({
+          where: { id: professionalId, barbershopId: admin.barbershopId },
+          select: { id: true },
+        })
+        if (!professional) return "missing" as const
 
-    const date = new Date(`${parsed.data.date}T00:00:00.000Z`)
-    const where = {
-      barbershopId: admin.barbershopId,
-      professionalId,
-      date,
-      type: parsed.data.type,
-    }
-    const [matching, count] = await Promise.all([
-      tx.professionalScheduleException.findMany({
-        where,
-        select: { id: true },
+        const date = new Date(`${parsed.data.date}T00:00:00.000Z`)
+        const where = {
+          barbershopId: admin.barbershopId,
+          professionalId,
+          date,
+          type: parsed.data.type,
+        }
+        const [matching, count] = await Promise.all([
+          tx.professionalScheduleException.findMany({
+            where,
+            select: { id: true },
+          }),
+          tx.professionalScheduleException.count({
+            where: { barbershopId: admin.barbershopId, professionalId },
+          }),
+        ])
+        if (
+          count - matching.length + 1 >
+          MAX_PROFESSIONAL_SCHEDULE_EXCEPTIONS
+        ) {
+          return "limit" as const
+        }
+
+        await tx.professionalScheduleException.deleteMany({ where })
+        await tx.professionalScheduleException.create({
+          data: {
+            ...parsed.data,
+            date,
+            professionalId,
+            barbershopId: admin.barbershopId,
+            startsAtLocal:
+              parsed.data.type === "CUSTOM_HOURS"
+                ? parsed.data.startsAtLocal
+                : null,
+            endsAtLocal:
+              parsed.data.type === "CUSTOM_HOURS"
+                ? parsed.data.endsAtLocal
+                : null,
+          },
+        })
+        return "saved" as const
       }),
-      tx.professionalScheduleException.count({
-        where: { barbershopId: admin.barbershopId, professionalId },
-      }),
-    ])
-    if (count - matching.length + 1 > MAX_PROFESSIONAL_SCHEDULE_EXCEPTIONS) {
-      return "limit" as const
-    }
-
-    await tx.professionalScheduleException.deleteMany({ where })
-    await tx.professionalScheduleException.create({
-      data: {
-        ...parsed.data,
-        date,
-        professionalId,
-        barbershopId: admin.barbershopId,
-        startsAtLocal:
-          parsed.data.type === "CUSTOM_HOURS"
-            ? parsed.data.startsAtLocal
-            : null,
-        endsAtLocal:
-          parsed.data.type === "CUSTOM_HOURS" ? parsed.data.endsAtLocal : null,
-      },
-    })
-    return "saved" as const
-  })
+    admin.userId,
+  )
 
   if (result === "missing") {
     return { ok: false as const, error: "Profissional não encontrado." }
@@ -125,22 +136,28 @@ export const deleteProfessionalScheduleException = async (
     return { ok: false as const, error: "Exceção não encontrada." }
   }
 
-  const result = await db.$transaction(async (tx) => {
-    const entitlements = await lockAndGetTenantEntitlements(
-      tx,
-      admin.barbershopId,
-    )
-    if (!canUseFeature(entitlements, "professional_schedule")) return "feature"
+  const result = await withTenantContext(
+    admin.barbershopId,
+    () =>
+      db.$transaction(async (tx) => {
+        const entitlements = await lockAndGetTenantEntitlements(
+          tx,
+          admin.barbershopId,
+        )
+        if (!canUseFeature(entitlements, "professional_schedule"))
+          return "feature"
 
-    const deleted = await tx.professionalScheduleException.deleteMany({
-      where: {
-        id: exceptionId,
-        professionalId,
-        barbershopId: admin.barbershopId,
-      },
-    })
-    return deleted.count ? "deleted" : "missing"
-  })
+        const deleted = await tx.professionalScheduleException.deleteMany({
+          where: {
+            id: exceptionId,
+            professionalId,
+            barbershopId: admin.barbershopId,
+          },
+        })
+        return deleted.count ? "deleted" : "missing"
+      }),
+    admin.userId,
+  )
   if (result === "feature") {
     return {
       ok: false as const,

@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
 import { requireAdminContext } from "@/app/_lib/tenant/require-admin-context"
 import { requireBarbershopAdmin } from "@/app/_lib/auth"
-import { db } from "@/app/_lib/prisma"
 import { Card, CardContent } from "@/app/_components/ui/card"
 import { addMinutes, format } from "date-fns"
 import { BookingStatus } from "@prisma/client"
@@ -19,6 +18,7 @@ import {
   parseDateParam,
 } from "../_lib/format"
 import { cn } from "@/app/_lib/utils"
+import { withTenantContext } from "@/app/_lib/database-context"
 
 interface ScheduleProps {
   searchParams: Promise<{ date?: string }>
@@ -61,10 +61,12 @@ const Schedule = async ({ searchParams, params }: ScheduleProps) => {
       : null
 
   if (!slug) {
-    const shop = await db.barbershop.findUnique({
-      where: { id: admin.barbershopId },
-      select: { slug: true },
-    })
+    const shop = await withTenantContext(admin.barbershopId, (tx) =>
+      tx.barbershop.findUnique({
+        where: { id: admin.barbershopId },
+        select: { slug: true },
+      }),
+    )
     if (shop) redirect(`/painel/${shop.slug}/schedule`)
     redirect("/")
   }
@@ -73,11 +75,16 @@ const Schedule = async ({ searchParams, params }: ScheduleProps) => {
   const date = parseDateParam(dateParam)
   const [{ bookings, blocks }, professionals] = await Promise.all([
     getDayAgenda(admin.barbershopId, date, professionalId),
-    db.professional.findMany({
-      where: { barbershopId: admin.barbershopId, status: "ACTIVE" },
-      orderBy: { name: "asc" },
-      select: { id: true, name: true, displayName: true },
-    }),
+    withTenantContext(
+      admin.barbershopId,
+      (tx) =>
+        tx.professional.findMany({
+          where: { barbershopId: admin.barbershopId, status: "ACTIVE" },
+          orderBy: { name: "asc" },
+          select: { id: true, name: true, displayName: true },
+        }),
+      admin.userId,
+    ),
   ])
 
   const timeline: TimelineEntry[] = [

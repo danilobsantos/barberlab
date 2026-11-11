@@ -1,4 +1,3 @@
-import { db } from "@/app/_lib/prisma"
 import { isAuthorizedCronRequest } from "@/app/_lib/platform/cron-auth"
 import {
   refreshSubscriptionLifecycle,
@@ -6,6 +5,7 @@ import {
 } from "@/app/_lib/platform/subscription-lifecycle"
 import { SubscriptionStatus } from "@prisma/client"
 import { NextResponse } from "next/server"
+import { withDatabaseContext } from "@/app/_lib/database-context"
 
 export async function POST(request: Request) {
   const secret = process.env.SUBSCRIPTION_CRON_SECRET
@@ -23,25 +23,27 @@ export async function POST(request: Request) {
   const graceCutoff = new Date(
     now.getTime() - subscriptionGraceDays * 24 * 60 * 60 * 1000,
   )
-  const due = await db.subscription.findMany({
-    where: {
-      OR: [
-        {
-          status: {
-            in: [SubscriptionStatus.TRIALING, SubscriptionStatus.ACTIVE],
+  const due = await withDatabaseContext({ platformAdmin: true }, (tx) =>
+    tx.subscription.findMany({
+      where: {
+        OR: [
+          {
+            status: {
+              in: [SubscriptionStatus.TRIALING, SubscriptionStatus.ACTIVE],
+            },
+            currentPeriodEnd: { lte: now },
           },
-          currentPeriodEnd: { lte: now },
-        },
-        {
-          status: SubscriptionStatus.PAST_DUE,
-          currentPeriodEnd: { lt: graceCutoff },
-        },
-      ],
-    },
-    orderBy: { currentPeriodEnd: "asc" },
-    take: 100,
-    select: { id: true, barbershopId: true, status: true },
-  })
+          {
+            status: SubscriptionStatus.PAST_DUE,
+            currentPeriodEnd: { lt: graceCutoff },
+          },
+        ],
+      },
+      orderBy: { currentPeriodEnd: "asc" },
+      take: 100,
+      select: { id: true, barbershopId: true, status: true },
+    }),
+  )
 
   const shops = [
     ...new Map(

@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
 import { requireAdminContext } from "@/app/_lib/tenant/require-admin-context"
 import { requireBarbershopAdmin } from "@/app/_lib/auth"
-import { db } from "@/app/_lib/prisma"
 import { format, isToday } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import {
@@ -20,6 +19,7 @@ import PageHeader from "../_components/page-header"
 import StatCard from "../_components/stat-card"
 import { getDayAgenda, summarizeAgenda } from "../_data/get-day-agenda"
 import { formatCurrency, formatDuration, parseDateParam } from "../_lib/format"
+import { withTenantContext } from "@/app/_lib/database-context"
 
 interface DashboardProps {
   searchParams: Promise<{ date?: string }>
@@ -43,10 +43,12 @@ const Dashboard = async ({ searchParams, params }: DashboardProps) => {
       : null
 
   if (!slug) {
-    const shop = await db.barbershop.findUnique({
-      where: { id: admin.barbershopId },
-      select: { slug: true },
-    })
+    const shop = await withTenantContext(admin.barbershopId, (tx) =>
+      tx.barbershop.findUnique({
+        where: { id: admin.barbershopId },
+        select: { slug: true },
+      }),
+    )
     if (shop) redirect(`/painel/${shop.slug}/dashboard`)
     redirect("/")
   }
@@ -56,10 +58,15 @@ const Dashboard = async ({ searchParams, params }: DashboardProps) => {
 
   const [{ bookings, blocks }, barbershop] = await Promise.all([
     getDayAgenda(admin.barbershopId, date, professionalId),
-    db.barbershop.findUnique({
-      where: { id: admin.barbershopId },
-      select: { name: true, address: true },
-    }),
+    withTenantContext(
+      admin.barbershopId,
+      (tx) =>
+        tx.barbershop.findUnique({
+          where: { id: admin.barbershopId },
+          select: { name: true, address: true },
+        }),
+      admin.userId,
+    ),
   ])
   const summary = summarizeAgenda(bookings)
   const firstName = admin.name?.split(" ")[0] ?? "barbeiro"

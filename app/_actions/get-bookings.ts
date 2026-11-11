@@ -3,7 +3,6 @@
 import { ProfessionalScheduleExceptionType } from "@prisma/client"
 import { addMinutes } from "date-fns"
 import { auth } from "../_lib/auth"
-import { db } from "../_lib/prisma"
 import { canTenantAcceptBookings } from "../_lib/platform/subscription-lifecycle"
 import { withDefaults } from "../_lib/opening-hours"
 import { consumeRateLimit, getClientIp } from "../_lib/rate-limit"
@@ -13,6 +12,8 @@ import {
   unavailableIntervalsSchema,
 } from "../_lib/booking-action-schema"
 import { SINGLE_BARBERSHOP_ID } from "../_lib/deployment"
+import { withTenantContext } from "../_lib/database-context"
+import { resolveTenantBySlug } from "../_lib/tenant/resolve-tenant"
 import {
   calculateAvailableSlots,
   effectiveScheduleException,
@@ -30,24 +31,32 @@ export const getServiceProfessionals = async (input: unknown) => {
   const slug = typeof parsed.data === "string" ? undefined : parsed.data.slug
   const tenantFilter = publicBookingTenantFilter(slug, SINGLE_BARBERSHOP_ID)
   if (!tenantFilter) return []
+  const tenant = SINGLE_BARBERSHOP_ID
+    ? { id: SINGLE_BARBERSHOP_ID }
+    : slug
+      ? await resolveTenantBySlug(slug)
+      : null
+  if (!tenant) return []
   const limit = await consumeRateLimit(
     "readSchedule",
     `${slug ?? SINGLE_BARBERSHOP_ID}:${await getClientIp()}`,
   )
   if (!limit.allowed) return []
 
-  const service = await db.barbershopService.findFirst({
-    where: {
-      id: serviceId,
-      isActive: true,
-      barbershop: { status: "ACTIVE", ...tenantFilter },
-    },
-    select: { barbershopId: true },
-  })
+  const service = await withTenantContext(tenant.id, (tx) =>
+    tx.barbershopService.findFirst({
+      where: {
+        id: serviceId,
+        isActive: true,
+        barbershop: { status: "ACTIVE", ...tenantFilter },
+      },
+      select: { barbershopId: true },
+    }),
+  )
   if (!service) return []
   if (!(await canTenantAcceptBookings(service.barbershopId))) return []
-  return db.professional
-    .findMany({
+  return withTenantContext(tenant.id, (tx) =>
+    tx.professional.findMany({
       where: {
         barbershopId: service.barbershopId,
         status: "ACTIVE",
@@ -57,13 +66,13 @@ export const getServiceProfessionals = async (input: unknown) => {
       },
       select: { id: true, displayName: true, name: true },
       orderBy: { name: "asc" },
-    })
-    .then((professionals) =>
-      professionals.map(({ id, name, displayName }) => ({
-        id,
-        name: displayName || name,
-      })),
-    )
+    }),
+  ).then((professionals) =>
+    professionals.map(({ id, name, displayName }) => ({
+      id,
+      name: displayName || name,
+    })),
+  )
 }
 
 export const getUnavailableIntervals = async (
@@ -76,6 +85,12 @@ export const getUnavailableIntervals = async (
   const { serviceId, professionalId, date, slug } = parsed.data
   const tenantFilter = publicBookingTenantFilter(slug, SINGLE_BARBERSHOP_ID)
   if (!tenantFilter) return []
+  const tenant = SINGLE_BARBERSHOP_ID
+    ? { id: SINGLE_BARBERSHOP_ID }
+    : slug
+      ? await resolveTenantBySlug(slug)
+      : null
+  if (!tenant) return []
 
   const limit = await consumeRateLimit(
     "readSchedule",
@@ -83,22 +98,24 @@ export const getUnavailableIntervals = async (
   )
   if (!limit.allowed) return []
 
-  const service = await db.barbershopService.findFirst({
-    where: {
-      id: serviceId,
-      isActive: true,
-      barbershop: { status: "ACTIVE", ...tenantFilter },
-      professionals: {
-        some: { professionalId, professional: { status: "ACTIVE" } },
+  const service = await withTenantContext(tenant.id, (tx) =>
+    tx.barbershopService.findFirst({
+      where: {
+        id: serviceId,
+        isActive: true,
+        barbershop: { status: "ACTIVE", ...tenantFilter },
+        professionals: {
+          some: { professionalId, professional: { status: "ACTIVE" } },
+        },
       },
-    },
-    select: {
-      id: true,
-      barbershopId: true,
-      durationMinutes: true,
-      barbershop: { select: { timezone: true } },
-    },
-  })
+      select: {
+        id: true,
+        barbershopId: true,
+        durationMinutes: true,
+        barbershop: { select: { timezone: true } },
+      },
+    }),
+  )
   if (!service) return []
   if (!(await canTenantAcceptBookings(service.barbershopId))) return []
 
@@ -109,71 +126,89 @@ export const getUnavailableIntervals = async (
   )
   const [professional, tenantHours, staffHours, exception, bookings, blocks] =
     await Promise.all([
-      db.professional.findFirst({
-        where: {
-          id: professionalId,
-          barbershopId: service.barbershopId,
-          status: "ACTIVE",
-          services: { some: { serviceId, barbershopId: service.barbershopId } },
-        },
-        select: { id: true },
-      }),
-      db.openingHour.findMany({
-        where: { barbershopId: service.barbershopId },
-        select: {
-          weekday: true,
-          opensAt: true,
-          closesAt: true,
-          isClosed: true,
-        },
-      }),
-      db.professionalSchedule.findMany({
-        where: { barbershopId: service.barbershopId, professionalId, weekday },
-        select: { startsAtLocal: true, endsAtLocal: true },
-      }),
-      db.professionalScheduleException.findMany({
-        where: {
-          barbershopId: service.barbershopId,
-          professionalId,
-          date: new Date(`${date}T00:00:00.000Z`),
-        },
-        select: { type: true, startsAtLocal: true, endsAtLocal: true },
-      }),
-      db.booking.findMany({
-        where: {
-          status: { in: [...OCCUPYING_BOOKING_STATUSES] },
-          service: { barbershopId: service.barbershopId },
-          AND: [
-            {
-              OR: [
-                { startsAt: { lt: dayEnd }, endsAt: { gt: dayStart } },
-                {
-                  OR: [{ startsAt: null }, { endsAt: null }],
-                  date: { gte: dayStart, lt: dayEnd },
-                },
-              ],
+      withTenantContext(service.barbershopId, (tx) =>
+        tx.professional.findFirst({
+          where: {
+            id: professionalId,
+            barbershopId: service.barbershopId,
+            status: "ACTIVE",
+            services: {
+              some: { serviceId, barbershopId: service.barbershopId },
             },
-            { OR: [{ professionalId: null }, { professionalId }] },
-          ],
-        },
-        select: {
-          professionalId: true,
-          date: true,
-          startsAt: true,
-          endsAt: true,
-          durationMinutesSnapshot: true,
-          service: { select: { durationMinutes: true } },
-        },
-      }),
-      db.scheduleBlock.findMany({
-        where: {
-          barbershopId: service.barbershopId,
-          OR: [{ professionalId: null }, { professionalId }],
-          startsAt: { lt: dayEnd },
-          endsAt: { gt: dayStart },
-        },
-        select: { startsAt: true, endsAt: true },
-      }),
+          },
+          select: { id: true },
+        }),
+      ),
+      withTenantContext(service.barbershopId, (tx) =>
+        tx.openingHour.findMany({
+          where: { barbershopId: service.barbershopId },
+          select: {
+            weekday: true,
+            opensAt: true,
+            closesAt: true,
+            isClosed: true,
+          },
+        }),
+      ),
+      withTenantContext(service.barbershopId, (tx) =>
+        tx.professionalSchedule.findMany({
+          where: {
+            barbershopId: service.barbershopId,
+            professionalId,
+            weekday,
+          },
+          select: { startsAtLocal: true, endsAtLocal: true },
+        }),
+      ),
+      withTenantContext(service.barbershopId, (tx) =>
+        tx.professionalScheduleException.findMany({
+          where: {
+            barbershopId: service.barbershopId,
+            professionalId,
+            date: new Date(`${date}T00:00:00.000Z`),
+          },
+          select: { type: true, startsAtLocal: true, endsAtLocal: true },
+        }),
+      ),
+      withTenantContext(service.barbershopId, (tx) =>
+        tx.booking.findMany({
+          where: {
+            status: { in: [...OCCUPYING_BOOKING_STATUSES] },
+            service: { barbershopId: service.barbershopId },
+            AND: [
+              {
+                OR: [
+                  { startsAt: { lt: dayEnd }, endsAt: { gt: dayStart } },
+                  {
+                    OR: [{ startsAt: null }, { endsAt: null }],
+                    date: { gte: dayStart, lt: dayEnd },
+                  },
+                ],
+              },
+              { OR: [{ professionalId: null }, { professionalId }] },
+            ],
+          },
+          select: {
+            professionalId: true,
+            date: true,
+            startsAt: true,
+            endsAt: true,
+            durationMinutesSnapshot: true,
+            service: { select: { durationMinutes: true } },
+          },
+        }),
+      ),
+      withTenantContext(service.barbershopId, (tx) =>
+        tx.scheduleBlock.findMany({
+          where: {
+            barbershopId: service.barbershopId,
+            OR: [{ professionalId: null }, { professionalId }],
+            startsAt: { lt: dayEnd },
+            endsAt: { gt: dayStart },
+          },
+          select: { startsAt: true, endsAt: true },
+        }),
+      ),
     ])
   if (!professional) return []
   const effectiveException = effectiveScheduleException(exception)

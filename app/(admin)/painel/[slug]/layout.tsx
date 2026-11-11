@@ -6,6 +6,7 @@ import AdminSidebar from "../../_components/admin-sidebar"
 import AdminTabBar from "../../_components/admin-tabbar"
 import AdminTopbar from "../../_components/admin-topbar"
 import OnboardingTour from "../../_components/onboarding-tour"
+import { withTenantContext } from "@/app/_lib/database-context"
 
 export default async function TenantAdminLayout({
   children,
@@ -23,10 +24,15 @@ export default async function TenantAdminLayout({
   }
 
   const [barbershop, user] = await Promise.all([
-    db.barbershop.findUnique({
-      where: { id: admin.barbershopId },
-      select: { name: true, imageUrl: true, slug: true },
-    }),
+    withTenantContext(
+      admin.barbershopId,
+      (tx) =>
+        tx.barbershop.findUnique({
+          where: { id: admin.barbershopId },
+          select: { name: true, imageUrl: true, slug: true },
+        }),
+      admin.userId,
+    ),
     db.user.findUnique({
       where: { id: admin.userId },
       select: { onboardingDoneAt: true },

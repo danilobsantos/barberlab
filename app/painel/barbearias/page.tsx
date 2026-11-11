@@ -7,9 +7,9 @@ import {
   CardTitle,
 } from "@/app/_components/ui/card"
 import { requirePlatformAdmin } from "@/app/_lib/platform/require-platform-admin"
-import { db } from "@/app/_lib/prisma"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { withPlatformContext } from "@/app/_lib/database-context"
 
 export const metadata = {
   title: "Barbearias | Barber Lab",
@@ -24,12 +24,14 @@ export default async function PlatformBarbershopsPage({
   const admin = await requirePlatformAdmin()
   if (!admin) notFound()
   const params = await searchParams
-  const barbershops = await db.barbershop.findMany({
-    orderBy: { createdAt: "desc" },
-    include: {
-      _count: { select: { memberships: true, professionals: true } },
-    },
-  })
+  const barbershops = await withPlatformContext(admin.userId, (tx) =>
+    tx.barbershop.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        _count: { select: { memberships: true, professionals: true } },
+      },
+    }),
+  )
 
   return (
     <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-6 px-5 py-12">

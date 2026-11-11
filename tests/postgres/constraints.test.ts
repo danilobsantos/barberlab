@@ -53,6 +53,7 @@ async function testTenantRls() {
   await pool.query(
     `GRANT SELECT, INSERT, UPDATE, DELETE ON "BarbershopService" TO "${role}"`,
   )
+  await pool.query(`GRANT SELECT ON "Booking" TO "${role}"`)
   try {
     await connection.query("BEGIN")
     await connection.query(`SET LOCAL ROLE "${role}"`)
@@ -61,6 +62,11 @@ async function testTenantRls() {
       [[ids.service, ids.otherService]],
     )
     assert.deepEqual(noContext.rows, [])
+    const noContextBookings = await connection.query(
+      `SELECT "id" FROM "Booking" WHERE "id" = ANY($1::text[])`,
+      [ids.bookings],
+    )
+    assert.deepEqual(noContextBookings.rows, [])
     await connection.query("COMMIT")
 
     await connection.query("BEGIN")
@@ -76,6 +82,11 @@ async function testTenantRls() {
       tenantRows.rows.map((row) => row.id),
       [ids.service],
     )
+    const tenantBookings = await connection.query(
+      `SELECT "id" FROM "Booking" WHERE "id" = ANY($1::text[])`,
+      [ids.bookings],
+    )
+    assert.ok(tenantBookings.rows.length > 0)
     const changed = await connection.query(
       `UPDATE "BarbershopService" SET "name" = 'cross-tenant-write' WHERE "id" = $1`,
       [ids.otherService],
@@ -97,6 +108,18 @@ async function testTenantRls() {
 
     await connection.query("BEGIN")
     await connection.query(`SET LOCAL ROLE "${role}"`)
+    await connection.query(`SELECT set_config('app.user_id', $1, true)`, [
+      ids.user,
+    ])
+    const ownBookings = await connection.query(
+      `SELECT "id" FROM "Booking" WHERE "id" = ANY($1::text[])`,
+      [ids.bookings],
+    )
+    assert.ok(ownBookings.rows.length > 0)
+    await connection.query("ROLLBACK")
+
+    await connection.query("BEGIN")
+    await connection.query(`SET LOCAL ROLE "${role}"`)
     const afterCommit = await connection.query(
       `SELECT "id" FROM "BarbershopService" WHERE "id" = ANY($1::text[])`,
       [[ids.service, ids.otherService]],
@@ -104,6 +127,7 @@ async function testTenantRls() {
     assert.deepEqual(afterCommit.rows, [])
     await connection.query("ROLLBACK")
   } finally {
+    await connection.query("ROLLBACK")
     connection.release()
     await pool.query(`DROP OWNED BY "${role}"`)
     await pool.query(`DROP ROLE "${role}"`)
@@ -201,7 +225,6 @@ test("PostgreSQL enforces booking, subscription, tenant invitation, and membersh
        VALUES ($1, 'Other tenant service', '', '', 10, $2, NOW())`,
       [ids.otherService, ids.otherShop],
     )
-    await testTenantRls()
     for (const [index, professionalId] of ids.professionals.entries()) {
       await pool.query(
         `INSERT INTO "Professional" ("id", "barbershopId", "name", "updatedAt") VALUES ($1, $2, $3, NOW())`,
@@ -385,6 +408,7 @@ test("PostgreSQL enforces booking, subscription, tenant invitation, and membersh
       endsAt,
       "CANCELED",
     )
+    await testTenantRls()
 
     const additions = await Promise.all([
       prisma.$transaction(async (tx) => {

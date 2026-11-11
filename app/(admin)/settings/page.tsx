@@ -1,7 +1,6 @@
 import { requireAdminContext } from "@/app/_lib/tenant/require-admin-context"
 import { requireBarbershopAdmin } from "@/app/_lib/auth"
 import { withDefaults } from "@/app/_lib/opening-hours"
-import { db } from "@/app/_lib/prisma"
 import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
@@ -9,6 +8,7 @@ import { Button } from "@/app/_components/ui/button"
 import BarbershopProfileForm from "../_components/barbershop-profile-form"
 import OpeningHoursForm from "../_components/opening-hours-form"
 import PageHeader from "../_components/page-header"
+import { withTenantContext } from "@/app/_lib/database-context"
 
 export const metadata: Metadata = {
   title: "Configurações | Barber Lab",
@@ -24,30 +24,47 @@ const Settings = async ({ params }: { params: Promise<{ slug?: string }> }) => {
   if (!admin) redirect("/")
 
   if (!slug) {
-    const shop = await db.barbershop.findUnique({
-      where: { id: admin.barbershopId },
-      select: { slug: true },
-    })
+    const shop = await withTenantContext(admin.barbershopId, (tx) =>
+      tx.barbershop.findUnique({
+        where: { id: admin.barbershopId },
+        select: { slug: true },
+      }),
+    )
     if (shop) redirect(`/painel/${shop.slug}/settings`)
     redirect("/")
   }
 
   const [barbershop, salvos] = await Promise.all([
-    db.barbershop.findUnique({
-      where: { id: admin.barbershopId },
-      select: {
-        name: true,
-        address: true,
-        description: true,
-        imageUrl: true,
-        phones: true,
-      },
-    }),
-    db.openingHour.findMany({
-      where: { barbershopId: admin.barbershopId },
-      orderBy: { weekday: "asc" },
-      select: { weekday: true, opensAt: true, closesAt: true, isClosed: true },
-    }),
+    withTenantContext(
+      admin.barbershopId,
+      (tx) =>
+        tx.barbershop.findUnique({
+          where: { id: admin.barbershopId },
+          select: {
+            name: true,
+            address: true,
+            description: true,
+            imageUrl: true,
+            phones: true,
+          },
+        }),
+      admin.userId,
+    ),
+    withTenantContext(
+      admin.barbershopId,
+      (tx) =>
+        tx.openingHour.findMany({
+          where: { barbershopId: admin.barbershopId },
+          orderBy: { weekday: "asc" },
+          select: {
+            weekday: true,
+            opensAt: true,
+            closesAt: true,
+            isClosed: true,
+          },
+        }),
+      admin.userId,
+    ),
   ])
 
   if (!barbershop) notFound()

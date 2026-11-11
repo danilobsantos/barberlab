@@ -7,6 +7,8 @@ import { consumeRateLimit, rateLimitError } from "@/app/_lib/rate-limit"
 import { db } from "@/app/_lib/prisma"
 import { Prisma, Role } from "@prisma/client"
 import { redirect } from "next/navigation"
+import { randomUUID } from "node:crypto"
+import { withTenantContext } from "@/app/_lib/database-context"
 
 export interface RegistrationState {
   error?: string
@@ -43,61 +45,69 @@ export const registerBarbershop = async (
   }
 
   try {
-    await db.$transaction(async (tx) => {
-      const account = await tx.user.findUnique({
-        where: { id: session.user.id },
-        select: { accountType: true },
-      })
-      if (!account) throw new Error("Registration account not found")
-      if (account.accountType === "CUSTOMER") {
-        const [customerProfile, booking] = await Promise.all([
-          tx.customer.findFirst({
-            where: { userId: session.user.id },
-            select: { id: true },
-          }),
-          tx.booking.findFirst({
-            where: { userId: session.user.id },
-            select: { id: true },
-          }),
-        ])
-        if (customerProfile || booking) throw new ExistingCustomerAccountError()
-      }
+    const barbershopId = randomUUID()
+    await withTenantContext(
+      barbershopId,
+      () =>
+        db.$transaction(async (tx) => {
+          const account = await tx.user.findUnique({
+            where: { id: session.user.id },
+            select: { accountType: true },
+          })
+          if (!account) throw new Error("Registration account not found")
+          if (account.accountType === "CUSTOMER") {
+            const [customerProfile, booking] = await Promise.all([
+              tx.customer.findFirst({
+                where: { userId: session.user.id },
+                select: { id: true },
+              }),
+              tx.booking.findFirst({
+                where: { userId: session.user.id },
+                select: { id: true },
+              }),
+            ])
+            if (customerProfile || booking)
+              throw new ExistingCustomerAccountError()
+          }
 
-      const shop = await tx.barbershop.create({
-        data: {
-          name: parsed.data.name,
-          slug: parsed.data.slug,
-          address: parsed.data.address,
-          phones: [parsed.data.phone],
-          description: "",
-          imageUrl: "",
-          status: "PENDING_SETUP",
-        },
-      })
-      await tx.membership.create({
-        data: {
-          userId: session.user.id,
-          barbershopId: shop.id,
-          role: "OWNER",
-          status: "ACTIVE",
-          acceptedAt: new Date(),
-        },
-      })
-      await tx.openingHour.createMany({
-        data: DEFAULT_OPENING_HOURS.map((hour) => ({
-          ...hour,
-          barbershopId: shop.id,
-        })),
-      })
-      await tx.user.update({
-        where: { id: session.user.id },
-        data: {
-          accountType: "BARBERSHOP",
-          role: Role.BARBER_ADMIN,
-          barbershopId: shop.id,
-        },
-      })
-    })
+          const shop = await tx.barbershop.create({
+            data: {
+              id: barbershopId,
+              name: parsed.data.name,
+              slug: parsed.data.slug,
+              address: parsed.data.address,
+              phones: [parsed.data.phone],
+              description: "",
+              imageUrl: "",
+              status: "PENDING_SETUP",
+            },
+          })
+          await tx.membership.create({
+            data: {
+              userId: session.user.id,
+              barbershopId: shop.id,
+              role: "OWNER",
+              status: "ACTIVE",
+              acceptedAt: new Date(),
+            },
+          })
+          await tx.openingHour.createMany({
+            data: DEFAULT_OPENING_HOURS.map((hour) => ({
+              ...hour,
+              barbershopId: shop.id,
+            })),
+          })
+          await tx.user.update({
+            where: { id: session.user.id },
+            data: {
+              accountType: "BARBERSHOP",
+              role: Role.BARBER_ADMIN,
+              barbershopId: shop.id,
+            },
+          })
+        }),
+      session.user.id,
+    )
   } catch (error) {
     if (error instanceof ExistingCustomerAccountError) {
       return {

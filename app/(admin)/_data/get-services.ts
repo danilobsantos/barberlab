@@ -1,4 +1,4 @@
-import { db } from "@/app/_lib/prisma"
+import { withTenantContext } from "@/app/_lib/database-context"
 
 export interface AdminService {
   id: string
@@ -14,20 +14,22 @@ export interface AdminService {
 export const getAdminServices = async (
   barbershopId: string,
 ): Promise<AdminService[]> => {
-  const services = await db.barbershopService.findMany({
-    where: { barbershopId },
-    orderBy: [{ isActive: "desc" }, { name: "asc" }],
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      imageUrl: true,
-      price: true,
-      durationMinutes: true,
-      isActive: true,
-      _count: { select: { bookings: true } },
-    },
-  })
+  const services = await withTenantContext(barbershopId, (tx) =>
+    tx.barbershopService.findMany({
+      where: { barbershopId },
+      orderBy: [{ isActive: "desc" }, { name: "asc" }],
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        imageUrl: true,
+        price: true,
+        durationMinutes: true,
+        isActive: true,
+        _count: { select: { bookings: true } },
+      },
+    }),
+  )
 
   return services.map((service) => ({
     id: service.id,

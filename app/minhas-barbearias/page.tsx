@@ -1,10 +1,10 @@
 import { auth } from "@/app/_lib/auth"
-import { db } from "@/app/_lib/prisma"
 import { ArrowRightIcon, StoreIcon } from "lucide-react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { Button } from "@/app/_components/ui/button"
 import { Card, CardContent } from "@/app/_components/ui/card"
+import { withDatabaseContext } from "@/app/_lib/database-context"
 
 const MEMBERSHIP_ROLE_LABEL = {
   OWNER: "Proprietário",
@@ -16,18 +16,22 @@ export default async function MyBarbershopsPage() {
   const session = await auth()
   if (!session?.user?.id) redirect("/")
 
-  const memberships = await db.membership.findMany({
-    where: {
-      userId: session.user.id,
-      status: "ACTIVE",
-      barbershop: { status: { in: ["ACTIVE", "PENDING_SETUP"] } },
-    },
-    orderBy: { createdAt: "asc" },
-    select: {
-      role: true,
-      barbershop: { select: { name: true, slug: true, address: true } },
-    },
-  })
+  const memberships = await withDatabaseContext(
+    { userId: session.user.id },
+    (tx) =>
+      tx.membership.findMany({
+        where: {
+          userId: session.user.id,
+          status: "ACTIVE",
+          barbershop: { status: { in: ["ACTIVE", "PENDING_SETUP"] } },
+        },
+        orderBy: { createdAt: "asc" },
+        select: {
+          role: true,
+          barbershop: { select: { name: true, slug: true, address: true } },
+        },
+      }),
+  )
 
   return (
     <main className="mx-auto min-h-screen max-w-3xl space-y-8 px-5 py-12">

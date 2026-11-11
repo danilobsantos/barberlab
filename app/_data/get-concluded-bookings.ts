@@ -1,46 +1,50 @@
 "use server"
 
 import { getServerSession } from "next-auth"
-import { db } from "../_lib/prisma"
 import { authOptions } from "../_lib/auth"
 import { consumeRateLimit } from "../_lib/rate-limit"
+import { withDatabaseContext } from "../_lib/database-context"
 
 export const getConcludedBookings = async () => {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id || session.user.accountType !== "CUSTOMER") return []
   const limit = await consumeRateLimit("readOwnBookings", session.user.id)
   if (!limit.allowed) return []
-  const bookings = await db.booking.findMany({
-    where: {
-      userId: session.user.id,
-      date: {
-        lt: new Date(),
-      },
-    },
-    select: {
-      id: true,
-      date: true,
-      status: true,
-      service: {
+  const bookings = await withDatabaseContext(
+    { userId: session.user.id },
+    (tx) =>
+      tx.booking.findMany({
+        where: {
+          userId: session.user.id,
+          date: {
+            lt: new Date(),
+          },
+        },
         select: {
-          name: true,
-          price: true,
-          barbershop: {
+          id: true,
+          date: true,
+          status: true,
+          service: {
             select: {
               name: true,
-              address: true,
-              imageUrl: true,
-              phones: true,
-              timezone: true,
+              price: true,
+              barbershop: {
+                select: {
+                  name: true,
+                  address: true,
+                  imageUrl: true,
+                  phones: true,
+                  timezone: true,
+                },
+              },
             },
           },
         },
-      },
-    },
-    orderBy: {
-      date: "asc",
-    },
-  })
+        orderBy: {
+          date: "asc",
+        },
+      }),
+  )
 
   return bookings.map(toBookingItem)
 }

@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
 import { requireAdminContext } from "@/app/_lib/tenant/require-admin-context"
 import { requireBarbershopAdmin } from "@/app/_lib/auth"
-import { db } from "@/app/_lib/prisma"
 import { BanknoteIcon, ClockIcon, ScissorsIcon } from "lucide-react"
 import { redirect } from "next/navigation"
 import PageHeader from "../_components/page-header"
@@ -9,6 +8,7 @@ import ServicesManager from "../_components/services-manager"
 import StatCard from "../_components/stat-card"
 import { getAdminServices } from "../_data/get-services"
 import { formatCurrency, formatDuration } from "../_lib/format"
+import { withTenantContext } from "@/app/_lib/database-context"
 
 export const metadata: Metadata = {
   title: "Serviços | Barber Lab",
@@ -23,10 +23,12 @@ const Services = async ({ params }: { params: Promise<{ slug?: string }> }) => {
   if (!admin) redirect("/")
 
   if (!slug) {
-    const shop = await db.barbershop.findUnique({
-      where: { id: admin.barbershopId },
-      select: { slug: true },
-    })
+    const shop = await withTenantContext(admin.barbershopId, (tx) =>
+      tx.barbershop.findUnique({
+        where: { id: admin.barbershopId },
+        select: { slug: true },
+      }),
+    )
     if (shop) redirect(`/painel/${shop.slug}/services`)
     redirect("/")
   }

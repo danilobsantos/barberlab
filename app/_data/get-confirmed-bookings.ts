@@ -2,9 +2,9 @@
 
 import { getServerSession } from "next-auth"
 import { authOptions } from "../_lib/auth"
-import { db } from "../_lib/prisma"
 import { consumeRateLimit } from "../_lib/rate-limit"
 import { BookingStatus } from "@prisma/client"
+import { withDatabaseContext } from "../_lib/database-context"
 
 export const getConfirmedBookings = async () => {
   const session = await getServerSession(authOptions)
@@ -13,38 +13,42 @@ export const getConfirmedBookings = async () => {
   }
   const limit = await consumeRateLimit("readOwnBookings", session.user.id)
   if (!limit.allowed) return []
-  const bookings = await db.booking.findMany({
-    where: {
-      userId: session.user.id,
-      status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
-      date: {
-        gte: new Date(),
-      },
-    },
-    select: {
-      id: true,
-      date: true,
-      status: true,
-      service: {
+  const bookings = await withDatabaseContext(
+    { userId: session.user.id },
+    (tx) =>
+      tx.booking.findMany({
+        where: {
+          userId: session.user.id,
+          status: { in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
+          date: {
+            gte: new Date(),
+          },
+        },
         select: {
-          name: true,
-          price: true,
-          barbershop: {
+          id: true,
+          date: true,
+          status: true,
+          service: {
             select: {
               name: true,
-              address: true,
-              imageUrl: true,
-              phones: true,
-              timezone: true,
+              price: true,
+              barbershop: {
+                select: {
+                  name: true,
+                  address: true,
+                  imageUrl: true,
+                  phones: true,
+                  timezone: true,
+                },
+              },
             },
           },
         },
-      },
-    },
-    orderBy: {
-      date: "asc",
-    },
-  })
+        orderBy: {
+          date: "asc",
+        },
+      }),
+  )
 
   return bookings.map(toBookingItem)
 }
