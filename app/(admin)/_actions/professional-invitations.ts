@@ -135,6 +135,7 @@ export async function sendProfessionalInvitation(
             where: { professionalId: professional.id },
             create: {
               professionalId: professional.id,
+              barbershopId: admin.barbershopId,
               email,
               tokenHash: hashInvitationToken(token),
               expiresAt,

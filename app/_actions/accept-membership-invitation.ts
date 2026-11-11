@@ -51,6 +51,20 @@ export async function acceptMembershipInvitation(input: unknown) {
   const tokenHash = hashInvitationToken(parsedToken.data)
   const now = new Date()
   const result = await withInvitationToken(tokenHash, user.id, async (tx) => {
+    const tokenInvitation = await tx.professionalInvitation.findUnique({
+      where: { tokenHash },
+      select: { barbershopId: true },
+    })
+    if (!tokenInvitation) {
+      return {
+        error: "Este convite expirou, foi cancelado ou não está mais válido.",
+      }
+    }
+    await setDatabaseContext(tx, {
+      tenantId: tokenInvitation.barbershopId,
+      userId: user.id,
+      invitationTokenHash: tokenHash,
+    })
     const invitation = await tx.professionalInvitation.findUnique({
       where: { tokenHash },
       include: {
@@ -79,10 +93,6 @@ export async function acceptMembershipInvitation(input: unknown) {
         error: "Este convite expirou, foi cancelado ou não está mais válido.",
       }
     }
-    await setDatabaseContext(tx, {
-      tenantId: invitation.professional.barbershopId,
-      userId: user.id,
-    })
     if (
       invitation.professional.userId &&
       invitation.professional.userId !== user.id

@@ -50,13 +50,37 @@ async function testTenantRls() {
   const role = `rls_test_${randomUUID().replaceAll("-", "")}`
   const connection = await pool.connect()
   await pool.query(`CREATE ROLE "${role}" NOLOGIN`)
+  const tenantTables = [
+    "Barbershop",
+    "Membership",
+    "OpeningHour",
+    "BarbershopService",
+    "Professional",
+    "ProfessionalInvitation",
+    "Customer",
+    "ProfessionalService",
+    "ProfessionalSchedule",
+    "ProfessionalScheduleException",
+    "Booking",
+    "Subscription",
+    "SubscriptionEvent",
+    "AuditLog",
+    "ScheduleBlock",
+  ]
   await pool.query(
-    `GRANT SELECT, INSERT, UPDATE, DELETE ON "BarbershopService" TO "${role}"`,
+    `GRANT SELECT, INSERT, UPDATE, DELETE ON ${tenantTables.map((table) => `"${table}"`).join(", ")} TO "${role}"`,
   )
-  await pool.query(`GRANT SELECT ON "Booking" TO "${role}"`)
   try {
     await connection.query("BEGIN")
     await connection.query(`SET LOCAL ROLE "${role}"`)
+    for (const table of tenantTables) {
+      const hidden = await connection.query(`SELECT 1 FROM "${table}" LIMIT 1`)
+      assert.deepEqual(
+        hidden.rows,
+        [],
+        `${table} must fail closed without context`,
+      )
+    }
     const noContext = await connection.query(
       `SELECT "id" FROM "BarbershopService" WHERE "id" = ANY($1::text[])`,
       [[ids.service, ids.otherService]],
@@ -240,6 +264,7 @@ test("PostgreSQL enforces booking, subscription, tenant invitation, and membersh
     await prisma.professionalInvitation.create({
       data: {
         professionalId: ids.professionals[0],
+        barbershopId: ids.shop,
         email: "staff@example.test",
         tokenHash: hashInvitationToken(invitationToken),
         expiresAt: invitationExpiry,

@@ -41,6 +41,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec prisma migrate deploy
       - run: pnpm test:postgres
+      - run: pnpm test:actions
       - run: pnpm lint
       - run: pnpm exec tsc --noEmit
       - run: pnpm test

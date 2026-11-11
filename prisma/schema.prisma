@@ -175,6 +175,7 @@ model Barbershop {
   subscriptions Subscription[]
   auditLogs AuditLog[]
   subscriptionEvents SubscriptionEvent[]
+  professionalInvitations ProfessionalInvitation[]
 }
 
 model Membership {
@@ -249,6 +250,7 @@ model Professional {
 model ProfessionalInvitation {
   id             String       @id @default(uuid())
   professionalId String       @unique
+  barbershopId   String
   email          String
   tokenHash      String       @unique
   expiresAt      DateTime     @db.Timestamptz(6)
@@ -257,7 +259,9 @@ model ProfessionalInvitation {
   createdAt      DateTime     @default(now()) @db.Timestamptz(6)
   updatedAt      DateTime     @updatedAt @db.Timestamptz(6)
   professional   Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  barbershop     Barbershop   @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
 
+  @@index([barbershopId])
   @@index([expiresAt])
 }
 

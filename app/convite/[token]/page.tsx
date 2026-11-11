@@ -1,7 +1,10 @@
 import { notFound } from "next/navigation"
 import { auth } from "@/app/_lib/auth"
 import { db } from "@/app/_lib/prisma"
-import { withInvitationToken } from "@/app/_lib/database-context"
+import {
+  setDatabaseContext,
+  withInvitationToken,
+} from "@/app/_lib/database-context"
 import {
   hashInvitationToken,
   invitationTokenSchema,
@@ -34,8 +37,18 @@ export default async function MembershipInvitationPage({
   const invitation = await withInvitationToken(
     tokenHash,
     session?.user?.id,
-    (tx) =>
-      tx.professionalInvitation.findUnique({
+    async (tx) => {
+      const tokenInvitation = await tx.professionalInvitation.findUnique({
+        where: { tokenHash },
+        select: { barbershopId: true },
+      })
+      if (!tokenInvitation) return null
+      await setDatabaseContext(tx, {
+        tenantId: tokenInvitation.barbershopId,
+        userId: session?.user?.id,
+        invitationTokenHash: tokenHash,
+      })
+      return tx.professionalInvitation.findUnique({
         where: { tokenHash },
         select: {
           email: true,
@@ -51,7 +64,8 @@ export default async function MembershipInvitationPage({
             },
           },
         },
-      }),
+      })
+    },
   )
   if (!invitation) notFound()
 
