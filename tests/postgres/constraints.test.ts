@@ -44,6 +44,7 @@ const ids = {
   plan: randomUUID(),
   subscriptions: [randomUUID(), randomUUID(), randomUUID()],
   bookings: Array.from({ length: 5 }, () => randomUUID()),
+  invitationTokenHash: "",
 }
 
 async function testTenantRls() {
@@ -140,6 +141,27 @@ async function testTenantRls() {
       [ids.bookings],
     )
     assert.ok(ownBookings.rows.length > 0)
+    await connection.query("ROLLBACK")
+
+    await connection.query("BEGIN")
+    await connection.query(`SET LOCAL ROLE "${role}"`)
+    await connection.query(
+      `SELECT set_config('app.invitation_token_hash', $1, true)`,
+      [ids.invitationTokenHash],
+    )
+    const tokenLookup = await connection.query(
+      `SELECT "professionalId", "barbershopId" FROM "ProfessionalInvitation" WHERE "tokenHash" = $1`,
+      [ids.invitationTokenHash],
+    )
+    assert.equal(tokenLookup.rows.length, 1)
+    await connection.query(`SELECT set_config('app.tenant_id', $1, true)`, [
+      tokenLookup.rows[0].barbershopId,
+    ])
+    const invitationTenant = await connection.query(
+      `SELECT p."barbershopId" FROM "ProfessionalInvitation" i JOIN "Professional" p ON p."id" = i."professionalId" WHERE i."tokenHash" = $1`,
+      [ids.invitationTokenHash],
+    )
+    assert.deepEqual(invitationTenant.rows, [{ barbershopId: ids.shop }])
     await connection.query("ROLLBACK")
 
     await connection.query("BEGIN")
@@ -275,6 +297,18 @@ test("PostgreSQL enforces booking, subscription, tenant invitation, and membersh
       include: { professional: { select: { barbershopId: true } } },
     })
     assert.equal(invitation.professional.barbershopId, ids.shop)
+
+    const lookupToken = createInvitationToken()
+    ids.invitationTokenHash = hashInvitationToken(lookupToken)
+    await prisma.professionalInvitation.create({
+      data: {
+        professionalId: ids.professionals[1],
+        barbershopId: ids.shop,
+        email: "staff-lookup@example.test",
+        tokenHash: ids.invitationTokenHash,
+        expiresAt: membershipInvitationExpiresAt(new Date()),
+      },
+    })
 
     const resentToken = createInvitationToken()
     await prisma.professionalInvitation.update({
