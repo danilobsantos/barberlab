@@ -1,0 +1,1550 @@
+{
+  ".eslintrc.json": {
+    "mtime": 1794246892.8247855,
+    "seen": 1794270289.537514,
+    "ast_hash": "86cb6f2fe7a893a8c86d0db1b48b0977",
+    "semantic_hash": ""
+  },
+  ".husky/commit-msg": {
+    "mtime": 1794246892.824972,
+    "seen": 1794270289.537515,
+    "ast_hash": "bb4248cb89681101ae6daef694396edc",
+    "semantic_hash": ""
+  },
+  ".lintstagedrc.json": {
+    "mtime": 1794246892.8252985,
+    "seen": 1794270289.537516,
+    "ast_hash": "59e613102962253d298bb4d871427427",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_actions/barbershop.ts": {
+    "mtime": 1794358466.7855165,
+    "seen": 1794359097.262871,
+    "ast_hash": "58d4cfc34a7f1bd701895cef069e4b94",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_actions/onboarding.ts": {
+    "mtime": 1794340106.6786559,
+    "seen": 1794342591.659909,
+    "ast_hash": "0a74f69a8b376c4645ba6705fd82969e",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_actions/opening-hours.ts": {
+    "mtime": 1794354016.2394838,
+    "seen": 1794354986.650111,
+    "ast_hash": "6b0ab596cd8e591c958719a4fdec014f",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_actions/schedule-blocks.ts": {
+    "mtime": 1794358466.8545883,
+    "seen": 1794359097.262924,
+    "ast_hash": "2e22def68de9b52681a97b8bc54c7254",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_actions/services.ts": {
+    "mtime": 1794358466.861695,
+    "seen": 1794359097.262924,
+    "ast_hash": "4091faaae13d43c3d754df3983b4118c",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_actions/update-booking-status.ts": {
+    "mtime": 1794358466.867357,
+    "seen": 1794359097.2629251,
+    "ast_hash": "fa857ec666e21722e7ca42da5e6d6ae8",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_components/admin-nav.ts": {
+    "mtime": 1794277932.1411216,
+    "seen": 1794279124.787006,
+    "ast_hash": "2bf22f3c2035a7eeb1b780f2cb6cf2ce",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_components/admin-sidebar.tsx": {
+    "mtime": 1794274203.6799614,
+    "seen": 1794274306.162317,
+    "ast_hash": "f1f5ffa94f7d53593d3f48ba0119aa39",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_components/admin-tabbar.tsx": {
+    "mtime": 1794277932.141352,
+    "seen": 1794279124.787026,
+    "ast_hash": "d2a40d87f8a3bf6d4ad572a5819357f6",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_components/admin-topbar.tsx": {
+    "mtime": 1794246892.8266597,
+    "seen": 1794270289.5375202,
+    "ast_hash": "194e443934fe7b8b465d69c23c05fec3",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_components/barbershop-profile-form.tsx": {
+    "mtime": 1794274170.592819,
+    "seen": 1794274306.162349,
+    "ast_hash": "80c846091aa91980ac0705d6a5f41b62",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_components/block-manager.tsx": {
+    "mtime": 1794279005.578893,
+    "seen": 1794279124.7870631,
+    "ast_hash": "bf35dfed7eb5d13aee891ed69e6c6bef",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_components/booking-row.tsx": {
+    "mtime": 1794339737.2754815,
+    "seen": 1794342591.660207,
+    "ast_hash": "84a2006ac5cb5ba0dfa8fe951fe9d80a",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_components/day-navigator.tsx": {
+    "mtime": 1794246892.8269668,
+    "seen": 1794270289.537521,
+    "ast_hash": "43e8da4aeeb6780f40d3e7fd2ab79869",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_components/empty-state.tsx": {
+    "mtime": 1794246892.8270283,
+    "seen": 1794270289.5375218,
+    "ast_hash": "c3232de7c1bff86c76f3f1a1c5bb04e3",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_components/onboarding-tour.tsx": {
+    "mtime": 1794274273.8854523,
+    "seen": 1794274306.1623979,
+    "ast_hash": "a3f974a53251e4651dc086a856968ebc",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_components/opening-hours-form.tsx": {
+    "mtime": 1794274170.5929425,
+    "seen": 1794274306.162399,
+    "ast_hash": "15a03eacd67c1b6437c2e1eec1c5e789",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_components/page-header.tsx": {
+    "mtime": 1794246892.8272264,
+    "seen": 1794270289.537523,
+    "ast_hash": "66cfb69dc9a77696ea9793bf3a95cb00",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_components/schedule-calendar.tsx": {
+    "mtime": 1794246892.8272913,
+    "seen": 1794270289.537523,
+    "ast_hash": "1a23563cd91151ad47b89f4761bf7dc1",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_components/service-form-dialog.tsx": {
+    "mtime": 1794274170.5925412,
+    "seen": 1794274306.1624472,
+    "ast_hash": "f1971a0150740d495b53780a22b8bcb7",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_components/services-manager.tsx": {
+    "mtime": 1794274170.5926974,
+    "seen": 1794274306.1624472,
+    "ast_hash": "d28d69aabdf7103d0c9a716427553d8e",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_components/stat-card.tsx": {
+    "mtime": 1794246892.8275282,
+    "seen": 1794270289.537524,
+    "ast_hash": "937e066b357dc52efae85a50c8766438",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_data/get-day-agenda.ts": {
+    "mtime": 1794358466.8766046,
+    "seen": 1794359097.26327,
+    "ast_hash": "79f0cc904614a314f1887f0cd48dc815",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_data/get-services.ts": {
+    "mtime": 1794358466.8801188,
+    "seen": 1794359097.2632709,
+    "ast_hash": "d85574854ed4797b964ed03a3b261157",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_lib/barbershop-schema.ts": {
+    "mtime": 1794246892.8279333,
+    "seen": 1794270289.537525,
+    "ast_hash": "2e46c7fc5211bfc0c4a11dc3a16c1918",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_lib/format.ts": {
+    "mtime": 1794269789.7610128,
+    "seen": 1794270289.537525,
+    "ast_hash": "e4df5f0997addb4f30c856cc9b69d9bb",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_lib/opening-hours-schema.ts": {
+    "mtime": 1794246892.8281682,
+    "seen": 1794270289.5375261,
+    "ast_hash": "e09a420271458dab6d4ff290aeee11c1",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_lib/service-schema.ts": {
+    "mtime": 1794246892.8282356,
+    "seen": 1794270289.5375261,
+    "ast_hash": "b7fb5178a473b2ab9f4c2922f17a21bf",
+    "semantic_hash": ""
+  },
+  "app/(admin)/dashboard/page.tsx": {
+    "mtime": 1794358466.8959618,
+    "seen": 1794359097.2633731,
+    "ast_hash": "aace64ac3284a5e24497b6343dc56d5b",
+    "semantic_hash": ""
+  },
+  "app/(admin)/error.tsx": {
+    "mtime": 1794246892.8284254,
+    "seen": 1794270289.537527,
+    "ast_hash": "c156707b559c4e745c3ca1d9b89ca182",
+    "semantic_hash": ""
+  },
+  "app/(admin)/layout.tsx": {
+    "mtime": 1794276627.8402474,
+    "seen": 1794276699.1958458,
+    "ast_hash": "90388c79a2ed7a1393444078e2c38986",
+    "semantic_hash": ""
+  },
+  "app/(admin)/loading.tsx": {
+    "mtime": 1794246892.8285556,
+    "seen": 1794270289.537527,
+    "ast_hash": "e7ac8aaaf62c196b5557f66d46398342",
+    "semantic_hash": ""
+  },
+  "app/(admin)/schedule/page.tsx": {
+    "mtime": 1794358466.9260402,
+    "seen": 1794359097.2635908,
+    "ast_hash": "01534be27bc328ce55b686297e833e31",
+    "semantic_hash": ""
+  },
+  "app/(admin)/services/page.tsx": {
+    "mtime": 1794358466.934185,
+    "seen": 1794359097.263592,
+    "ast_hash": "875c39f2c4026aa19f09e7aaeaa4f70d",
+    "semantic_hash": ""
+  },
+  "app/(admin)/settings/page.tsx": {
+    "mtime": 1794358466.9405196,
+    "seen": 1794359097.263592,
+    "ast_hash": "ffd7507fb0d49eb3fda7d9781df6234b",
+    "semantic_hash": ""
+  },
+  "app/(customer)/_components/access-notice.tsx": {
+    "mtime": 1794246892.8290818,
+    "seen": 1794270289.537529,
+    "ast_hash": "195cbafaab70b226b060d5cc24cd68fe",
+    "semantic_hash": ""
+  },
+  "app/(customer)/_components/barbershop-detail.tsx": {
+    "mtime": 1794336344.161242,
+    "seen": 1794342591.661092,
+    "ast_hash": "2f107dcd14c521836af801c70ace973d",
+    "semantic_hash": ""
+  },
+  "app/(customer)/_components/booking-history.tsx": {
+    "mtime": 1794246892.8293138,
+    "seen": 1794270289.537529,
+    "ast_hash": "d7761e56a6eba188e49d32ef9bfddbfc",
+    "semantic_hash": ""
+  },
+  "app/(customer)/_components/institutional-page.tsx": {
+    "mtime": 1794246892.8295076,
+    "seen": 1794270289.5375302,
+    "ast_hash": "aa2c1102a9d96e54e172fed6e0e252b0",
+    "semantic_hash": ""
+  },
+  "app/(customer)/barbershops/[id]/page.tsx": {
+    "mtime": 1794336225.5074263,
+    "seen": 1794336317.7202182,
+    "ast_hash": "be4b350afa3562f89cefd977354aefa2",
+    "semantic_hash": ""
+  },
+  "app/(customer)/barbershops/page.tsx": {
+    "mtime": 1794336209.472875,
+    "seen": 1794336317.720219,
+    "ast_hash": "00ddd841526f0705084fe925f144a63f",
+    "semantic_hash": ""
+  },
+  "app/(customer)/bookings/page.tsx": {
+    "mtime": 1794336267.3986242,
+    "seen": 1794336317.7202199,
+    "ast_hash": "36f03d8aeb44018fdabecf942e52d8f3",
+    "semantic_hash": ""
+  },
+  "app/(customer)/carreiras/page.tsx": {
+    "mtime": 1794246892.8301265,
+    "seen": 1794270289.5375319,
+    "ast_hash": "59e26bd6b4ab9f5f12753ffad5c502e4",
+    "semantic_hash": ""
+  },
+  "app/(customer)/contato/page.tsx": {
+    "mtime": 1794246892.8302279,
+    "seen": 1794270289.5375319,
+    "ast_hash": "4b9130dd97dbfa27c049ffa0b3ef2c9f",
+    "semantic_hash": ""
+  },
+  "app/(customer)/cookies/page.tsx": {
+    "mtime": 1794246892.8303351,
+    "seen": 1794270289.5375319,
+    "ast_hash": "b01e08f5ad5e058fd4c1ba215505bc83",
+    "semantic_hash": ""
+  },
+  "app/(customer)/layout.tsx": {
+    "mtime": 1794246892.8304,
+    "seen": 1794270289.537533,
+    "ast_hash": "8e4931cf57f00349e866f8f698e1c441",
+    "semantic_hash": ""
+  },
+  "app/(customer)/page.tsx": {
+    "mtime": 1794342521.5354629,
+    "seen": 1794342591.661298,
+    "ast_hash": "c40c1132615fe79ca4a2e4108b623959",
+    "semantic_hash": ""
+  },
+  "app/(customer)/parceiros/page.tsx": {
+    "mtime": 1794246892.8305855,
+    "seen": 1794270289.537533,
+    "ast_hash": "f4cf980b4178b72e63070a2072c1d403",
+    "semantic_hash": ""
+  },
+  "app/(customer)/perfil/_components/phone-form.tsx": {
+    "mtime": 1794246892.8307319,
+    "seen": 1794270289.537534,
+    "ast_hash": "96601b9e9fa7924ca98cd2cb1c8b0e8e",
+    "semantic_hash": ""
+  },
+  "app/(customer)/perfil/page.tsx": {
+    "mtime": 1794324031.1579936,
+    "seen": 1794333936.12755,
+    "ast_hash": "a6948136b5fdcd1b58e1a17925c591a0",
+    "semantic_hash": ""
+  },
+  "app/(customer)/privacidade/page.tsx": {
+    "mtime": 1794246892.8309422,
+    "seen": 1794270289.537534,
+    "ast_hash": "2296189d606739602caf2ef9517ec01c",
+    "semantic_hash": ""
+  },
+  "app/(customer)/sobre/page.tsx": {
+    "mtime": 1794246892.8310769,
+    "seen": 1794270289.537535,
+    "ast_hash": "cb22b49813bb5b7e9873a9723af577d9",
+    "semantic_hash": ""
+  },
+  "app/(customer)/termos/page.tsx": {
+    "mtime": 1794339737.3755214,
+    "seen": 1794342591.6614149,
+    "ast_hash": "04babb8f71d2954b9002a70f77f65111",
+    "semantic_hash": ""
+  },
+  "app/_actions/create-booking.ts": {
+    "mtime": 1794358466.9873397,
+    "seen": 1794359097.264011,
+    "ast_hash": "bcb6292b86469837adbd22ed1fcddaf6",
+    "semantic_hash": ""
+  },
+  "app/_actions/delete-booking.ts": {
+    "mtime": 1794358467.001632,
+    "seen": 1794359097.264012,
+    "ast_hash": "e3bfdc1170080febc0390312f8f30d80",
+    "semantic_hash": ""
+  },
+  "app/_actions/get-bookings.ts": {
+    "mtime": 1794358467.0236373,
+    "seen": 1794359097.264012,
+    "ast_hash": "7a9dcffd8127a80d2e7619d68f3f049f",
+    "semantic_hash": ""
+  },
+  "app/_actions/update-profile.ts": {
+    "mtime": 1794275202.746107,
+    "seen": 1794275258.624807,
+    "ast_hash": "67ff9d689da4be979c99cc5bf149567c",
+    "semantic_hash": ""
+  },
+  "app/_components/admin-panel-link.tsx": {
+    "mtime": 1794274688.5277452,
+    "seen": 1794274755.840715,
+    "ast_hash": "f7a436bc8f7a7cc307ce7a78efd6bb87",
+    "semantic_hash": ""
+  },
+  "app/_components/booking-item.tsx": {
+    "mtime": 1794336267.3988655,
+    "seen": 1794336317.720842,
+    "ast_hash": "f8ed37fd3366b1c6eff9ee5e75195da8",
+    "semantic_hash": ""
+  },
+  "app/_components/booking-summary.tsx": {
+    "mtime": 1794280307.6981766,
+    "seen": 1794281220.105618,
+    "ast_hash": "d1d9ff20cd3482bc65da250f46f644a2",
+    "semantic_hash": ""
+  },
+  "app/_components/demo-banner.tsx": {
+    "mtime": 1794246892.8319046,
+    "seen": 1794270289.537538,
+    "ast_hash": "84bde92df9d05527832c4d95f9edc6fc",
+    "semantic_hash": ""
+  },
+  "app/_components/footer.tsx": {
+    "mtime": 1794339737.4265437,
+    "seen": 1794342591.6616309,
+    "ast_hash": "494e1517e3ed36d921ef1b6a45401e4e",
+    "semantic_hash": ""
+  },
+  "app/_components/header.tsx": {
+    "mtime": 1794336243.3630133,
+    "seen": 1794336317.720905,
+    "ast_hash": "d3305aa3f518354cee267b7a0aa0d999",
+    "semantic_hash": ""
+  },
+  "app/_components/page-skeleton.tsx": {
+    "mtime": 1794246892.8321242,
+    "seen": 1794270289.537539,
+    "ast_hash": "806e3ee36763f147616574007f86cecb",
+    "semantic_hash": ""
+  },
+  "app/_components/phone-item.tsx": {
+    "mtime": 1794246892.8321838,
+    "seen": 1794270289.537539,
+    "ast_hash": "e674d630891838005874a92198dc3eaa",
+    "semantic_hash": ""
+  },
+  "app/_components/progress-bar.tsx": {
+    "mtime": 1794246892.832242,
+    "seen": 1794270289.5375402,
+    "ast_hash": "248b051308e6b0f055a821be107eb741",
+    "semantic_hash": ""
+  },
+  "app/_components/service-item.tsx": {
+    "mtime": 1794281171.466067,
+    "seen": 1794281220.105749,
+    "ast_hash": "11803399e4bb34302463accb17421db4",
+    "semantic_hash": ""
+  },
+  "app/_components/sidebar-button.tsx": {
+    "mtime": 1794246892.8324916,
+    "seen": 1794270289.5375412,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "app/_components/sidebar-sheet.tsx": {
+    "mtime": 1794336243.3625822,
+    "seen": 1794336317.721442,
+    "ast_hash": "a7e0da80c67a6015e4273144d98c782d",
+    "semantic_hash": ""
+  },
+  "app/_components/sign-in-dialog.tsx": {
+    "mtime": 1794323129.0551786,
+    "seen": 1794324010.224566,
+    "ast_hash": "a73d0a018a56a19897869ec45c1e608b",
+    "semantic_hash": ""
+  },
+  "app/_components/status-screen.tsx": {
+    "mtime": 1794246892.8327258,
+    "seen": 1794270289.5375412,
+    "ast_hash": "0deff2601ebeb0c574d799a01a2e550b",
+    "semantic_hash": ""
+  },
+  "app/_components/ui/avatar.tsx": {
+    "mtime": 1794246892.8328285,
+    "seen": 1794270289.5375419,
+    "ast_hash": "9c537f2541d4272e3ba5a5583524e030",
+    "semantic_hash": ""
+  },
+  "app/_components/ui/badge.tsx": {
+    "mtime": 1794246892.832892,
+    "seen": 1794270289.5375419,
+    "ast_hash": "8b5db7e19197025735be2692cdc5e042",
+    "semantic_hash": ""
+  },
+  "app/_components/ui/button.tsx": {
+    "mtime": 1794246892.8330553,
+    "seen": 1794270289.5375419,
+    "ast_hash": "d8821577f8dc50570246c991aa90cd98",
+    "semantic_hash": ""
+  },
+  "app/_components/ui/calendar.tsx": {
+    "mtime": 1794246892.8331404,
+    "seen": 1794270289.5375428,
+    "ast_hash": "fb815a82e5dd83fc09f8436914006262",
+    "semantic_hash": ""
+  },
+  "app/_components/ui/card.tsx": {
+    "mtime": 1794246892.833205,
+    "seen": 1794270289.5375428,
+    "ast_hash": "b0e054199ca26e0d3f96ef2ba6192a1f",
+    "semantic_hash": ""
+  },
+  "app/_components/ui/dialog.tsx": {
+    "mtime": 1794246892.8332837,
+    "seen": 1794270289.537544,
+    "ast_hash": "41fa17b18af5cbf05633704a71f714fc",
+    "semantic_hash": ""
+  },
+  "app/_components/ui/form.tsx": {
+    "mtime": 1794246892.8333538,
+    "seen": 1794270289.537544,
+    "ast_hash": "58d8687a356c24d26ded41cc8e0f7ffb",
+    "semantic_hash": ""
+  },
+  "app/_components/ui/input.tsx": {
+    "mtime": 1794246892.8334174,
+    "seen": 1794270289.537544,
+    "ast_hash": "85a35342879a3c6755ee57e22b1dcdb4",
+    "semantic_hash": ""
+  },
+  "app/_components/ui/label.tsx": {
+    "mtime": 1794246892.8334768,
+    "seen": 1794270289.537545,
+    "ast_hash": "eca749385496a9ffa25848941380ff8d",
+    "semantic_hash": ""
+  },
+  "app/_components/ui/popover.tsx": {
+    "mtime": 1794246892.8335345,
+    "seen": 1794270289.537545,
+    "ast_hash": "3a078dee77eb57b9ecfd1746010a34ea",
+    "semantic_hash": ""
+  },
+  "app/_components/ui/select.tsx": {
+    "mtime": 1794246892.833598,
+    "seen": 1794270289.537546,
+    "ast_hash": "ab30debacee48042a536db798244971d",
+    "semantic_hash": ""
+  },
+  "app/_components/ui/sheet.tsx": {
+    "mtime": 1794246892.8336635,
+    "seen": 1794270289.537546,
+    "ast_hash": "51ba12defccfd54d6290a927937f1107",
+    "semantic_hash": ""
+  },
+  "app/_components/ui/sonner.tsx": {
+    "mtime": 1794246892.8337212,
+    "seen": 1794270289.537546,
+    "ast_hash": "6946201307c83984b9a462e856506891",
+    "semantic_hash": ""
+  },
+  "app/_components/ui/switch.tsx": {
+    "mtime": 1794246892.8337784,
+    "seen": 1794270289.537547,
+    "ast_hash": "34fe094201327db2868babef73845fa9",
+    "semantic_hash": ""
+  },
+  "app/_components/ui/textarea.tsx": {
+    "mtime": 1794246892.8338366,
+    "seen": 1794270289.537547,
+    "ast_hash": "f58c180d18968d96ad214c563cde465c",
+    "semantic_hash": ""
+  },
+  "app/_components/user-info.tsx": {
+    "mtime": 1794246892.8340254,
+    "seen": 1794270289.537547,
+    "ast_hash": "72619ded0c38dbeef233878f1522ca43",
+    "semantic_hash": ""
+  },
+  "app/_components/user-menu.tsx": {
+    "mtime": 1794323651.5504704,
+    "seen": 1794324010.2249,
+    "ast_hash": "227dc0d7c44fe7c57cd00de8b389f1d5",
+    "semantic_hash": ""
+  },
+  "app/_components/whatsapp-button.tsx": {
+    "mtime": 1794246892.8342507,
+    "seen": 1794270289.537548,
+    "ast_hash": "bbbc76faa9b0b9e6fc217a642d8cc346",
+    "semantic_hash": ""
+  },
+  "app/_data/get-barbershop-by-id.ts": {
+    "mtime": 1794358467.0889387,
+    "seen": 1794359097.264726,
+    "ast_hash": "f2631d5b113dcc8934eb1f6aa765746f",
+    "semantic_hash": ""
+  },
+  "app/_data/get-concluded-bookings.ts": {
+    "mtime": 1794358467.0945508,
+    "seen": 1794359097.264726,
+    "ast_hash": "e3e5dd9bcbc919d3ebe2b8c9f18eb2dd",
+    "semantic_hash": ""
+  },
+  "app/_data/get-confirmed-bookings.ts": {
+    "mtime": 1794358467.100887,
+    "seen": 1794359097.264727,
+    "ast_hash": "4f5ba896c47aff341e7e7c7457dd5dd1",
+    "semantic_hash": ""
+  },
+  "app/_data/get-opening-hours.ts": {
+    "mtime": 1794358467.1046345,
+    "seen": 1794359097.264727,
+    "ast_hash": "a09a7c332e11a40e88dbc784491b65fd",
+    "semantic_hash": ""
+  },
+  "app/_lib/auth.ts": {
+    "mtime": 1794328552.055539,
+    "seen": 1794333936.128581,
+    "ast_hash": "0ddfcc89db153f972e97f7c865daa831",
+    "semantic_hash": ""
+  },
+  "app/_lib/deployment.ts": {
+    "mtime": 1794246892.8349853,
+    "seen": 1794270289.5375512,
+    "ast_hash": "fddc37cd0504e92efdd0e0082c76d925",
+    "semantic_hash": ""
+  },
+  "app/_lib/opening-hours.ts": {
+    "mtime": 1794246892.835054,
+    "seen": 1794270289.5375512,
+    "ast_hash": "b5fb7642a147321155c6e6dbbb1acae3",
+    "semantic_hash": ""
+  },
+  "app/_lib/prisma.ts": {
+    "mtime": 1794353908.6442654,
+    "seen": 1794354986.652854,
+    "ast_hash": "93e76c99125bd0e1a0aa313962cff4e2",
+    "semantic_hash": ""
+  },
+  "app/_lib/rate-limit.ts": {
+    "mtime": 1794345637.5939603,
+    "seen": 1794346264.540339,
+    "ast_hash": "9ba4e6b25df9beb793483baee08cda08",
+    "semantic_hash": ""
+  },
+  "app/_lib/utils.ts": {
+    "mtime": 1794246892.8352523,
+    "seen": 1794270289.5375519,
+    "ast_hash": "5a6fd53fdcf2be529e9cc0b718fde352",
+    "semantic_hash": ""
+  },
+  "app/_lib/whatsapp.ts": {
+    "mtime": 1794280110.6580086,
+    "seen": 1794281220.106652,
+    "ast_hash": "5d0fb66b6ba81320dc8eedabf5fbcc78",
+    "semantic_hash": ""
+  },
+  "app/_providers/auth.tsx": {
+    "mtime": 1794246892.8355253,
+    "seen": 1794270289.5375528,
+    "ast_hash": "f86a10cb366533f5f5f43853dbe5bb34",
+    "semantic_hash": ""
+  },
+  "app/api/auth/[...nextauth]/route.ts": {
+    "mtime": 1794246892.8357077,
+    "seen": 1794270289.5375528,
+    "ast_hash": "922b965465da9dc01031ac1d8725aa38",
+    "semantic_hash": ""
+  },
+  "app/apple-icon.tsx": {
+    "mtime": 1794246892.8357706,
+    "seen": 1794270289.5375528,
+    "ast_hash": "efd5af6c14c263bc35c6171c904b2eac",
+    "semantic_hash": ""
+  },
+  "app/error.tsx": {
+    "mtime": 1794246892.8358235,
+    "seen": 1794270289.537554,
+    "ast_hash": "767a58ea45c3eeeebf7c72bb98263e67",
+    "semantic_hash": ""
+  },
+  "app/global-error.tsx": {
+    "mtime": 1794246892.8360054,
+    "seen": 1794270289.537554,
+    "ast_hash": "baf3e3f9da6f136e67c06d6eca144728",
+    "semantic_hash": ""
+  },
+  "app/layout.tsx": {
+    "mtime": 1794336243.363276,
+    "seen": 1794336317.728435,
+    "ast_hash": "6b0fc6062d7f86a439bf6d8e57f86533",
+    "semantic_hash": ""
+  },
+  "app/loading.tsx": {
+    "mtime": 1794246892.8363295,
+    "seen": 1794270289.537555,
+    "ast_hash": "62f87e1f7fc7c36fa16ef2c3d299aee5",
+    "semantic_hash": ""
+  },
+  "app/not-found.tsx": {
+    "mtime": 1794336199.278741,
+    "seen": 1794336317.728568,
+    "ast_hash": "fd0fc4751a7aba897b5d9903d8c97c2e",
+    "semantic_hash": ""
+  },
+  "commitlinterrc.json": {
+    "mtime": 1794246892.836598,
+    "seen": 1794270289.537555,
+    "ast_hash": "f2853970647f94ff48e286452e984500",
+    "semantic_hash": ""
+  },
+  "components.json": {
+    "mtime": 1794246892.8367608,
+    "seen": 1794270289.537556,
+    "ast_hash": "e4a660a0fcbbf9bff61b3e464ff29e67",
+    "semantic_hash": ""
+  },
+  "docker-entrypoint.sh": {
+    "mtime": 1794354571.6623492,
+    "seen": 1794354986.653495,
+    "ast_hash": "3d0a9105eac3191dbe4720daff7e3ceb",
+    "semantic_hash": ""
+  },
+  "eslint.config.mjs": {
+    "mtime": 1794246892.836834,
+    "seen": 1794270289.537556,
+    "ast_hash": "d6b35a04de19213a8d2d7245128a8723",
+    "semantic_hash": ""
+  },
+  "instrumentation.ts": {
+    "mtime": 1794246892.8369174,
+    "seen": 1794270289.537557,
+    "ast_hash": "e5efc4c92288054599e150e1c0d36597",
+    "semantic_hash": ""
+  },
+  "next.config.mjs": {
+    "mtime": 1794246892.836988,
+    "seen": 1794270289.537557,
+    "ast_hash": "6fd4d5de5f533cc9a7236cba32006ac3",
+    "semantic_hash": ""
+  },
+  "package.json": {
+    "mtime": 1794358719.9409668,
+    "seen": 1794359097.266301,
+    "ast_hash": "6652e6b3e0bb61bb3768c6d056b1c418",
+    "semantic_hash": ""
+  },
+  "postcss.config.mjs": {
+    "mtime": 1794246892.8385375,
+    "seen": 1794270289.537558,
+    "ast_hash": "27808b58abfd6d09739e715b81724384",
+    "semantic_hash": ""
+  },
+  "prisma.config.ts": {
+    "mtime": 1794354571.661828,
+    "seen": 1794354986.653574,
+    "ast_hash": "83d26e6df47ad2676e2218c41bc87e16",
+    "semantic_hash": ""
+  },
+  "prisma/seed.ts": {
+    "mtime": 1794280187.5667777,
+    "seen": 1794281220.107001,
+    "ast_hash": "4cf482116eef15c24ee8839f2a6b4f11",
+    "semantic_hash": ""
+  },
+  "proxy.ts": {
+    "mtime": 1794246892.840173,
+    "seen": 1794270289.537559,
+    "ast_hash": "b3a0d166d90e6f217d3eac7a5edf9376",
+    "semantic_hash": ""
+  },
+  "tsconfig.json": {
+    "mtime": 1794246892.853014,
+    "seen": 1794270289.537559,
+    "ast_hash": "951d656958bb62603dfbfb75f5ee1e42",
+    "semantic_hash": ""
+  },
+  "types/next-auth.d.ts": {
+    "mtime": 1794323729.0914037,
+    "seen": 1794324010.226462,
+    "ast_hash": "8a18788f946a606a125156255e694018",
+    "semantic_hash": ""
+  },
+  "AGENTS.md": {
+    "mtime": 1794269166.6364024,
+    "seen": 1794270289.53756,
+    "ast_hash": "a09e4cc1d51983a1be7e9a66f0e17c32",
+    "semantic_hash": ""
+  },
+  "BarberLab_SaaS_v1_1.md": {
+    "mtime": 1794359157.4180088,
+    "seen": 1794359252.2692611,
+    "ast_hash": "106fda24eeac61682199eb02539d8f3e",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1794246892.8257446,
+    "seen": 1794270289.53756,
+    "ast_hash": "c2ed687a7d82a9fe29950de1c2ce08e4",
+    "semantic_hash": ""
+  },
+  "docker-compose.yml": {
+    "mtime": 1794250610.033463,
+    "seen": 1794270289.5375612,
+    "ast_hash": "8b8764a047335d3d3e9d8881abb1e08f",
+    "semantic_hash": ""
+  },
+  "app/icon.svg": {
+    "mtime": 1794246892.8361332,
+    "seen": 1794270289.5375612,
+    "ast_hash": "8c537b0e75e134ea59b26424c675e9d7",
+    "semantic_hash": ""
+  },
+  "public/acabamento.svg": {
+    "mtime": 1794246892.8403597,
+    "seen": 1794270289.5375612,
+    "ast_hash": "a511cc00196b628f7ce6ea498fcb29be",
+    "semantic_hash": ""
+  },
+  "public/banner-01.png": {
+    "mtime": 1794246892.840561,
+    "seen": 1794270289.5375621,
+    "ast_hash": "53305ff49b93182f2038bb2f820da52a",
+    "semantic_hash": ""
+  },
+  "public/barba.svg": {
+    "mtime": 1794246892.8406417,
+    "seen": 1794270289.5375621,
+    "ast_hash": "74e9c0aabdd247dab2b79f2db62af051",
+    "semantic_hash": ""
+  },
+  "public/cabelo.svg": {
+    "mtime": 1794246892.840724,
+    "seen": 1794270289.5375621,
+    "ast_hash": "e2d950a9fa6049bd14c562511979585d",
+    "semantic_hash": ""
+  },
+  "public/default-avatar.png": {
+    "mtime": 1794246892.8408062,
+    "seen": 1794270289.5375628,
+    "ast_hash": "452c6675af891c549b493895764c855d",
+    "semantic_hash": ""
+  },
+  "public/desktop-banner.png": {
+    "mtime": 1794246892.8442364,
+    "seen": 1794270289.5375628,
+    "ast_hash": "c74afa8349a3cfdf987c07cbcc64f26e",
+    "semantic_hash": ""
+  },
+  "public/desktop-banner1.png": {
+    "mtime": 1794246892.8507428,
+    "seen": 1794270289.5375628,
+    "ast_hash": "ff999d036a0fa09c53881d5954add481",
+    "semantic_hash": ""
+  },
+  "public/file.svg": {
+    "mtime": 1794246892.8510706,
+    "seen": 1794270289.5375638,
+    "ast_hash": "d09f95206c3fa0bb9bd9fefabfd0ea71",
+    "semantic_hash": ""
+  },
+  "public/globe.svg": {
+    "mtime": 1794246892.8521006,
+    "seen": 1794270289.5375638,
+    "ast_hash": "2aaafa6a49b6563925fe440891e32717",
+    "semantic_hash": ""
+  },
+  "public/google.svg": {
+    "mtime": 1794246892.8521562,
+    "seen": 1794270289.5375638,
+    "ast_hash": "feaf09e2c178a26dd648a051045ee754",
+    "semantic_hash": ""
+  },
+  "public/hidratacao.svg": {
+    "mtime": 1794246892.8522117,
+    "seen": 1794270289.537565,
+    "ast_hash": "f8eb1ca0b4cc3d524ee6a47bd5195df4",
+    "semantic_hash": ""
+  },
+  "public/logo.png": {
+    "mtime": 1794246892.8523426,
+    "seen": 1794270289.537565,
+    "ast_hash": "2986f2f1d3f818e6d6a8ce6f7dceff63",
+    "semantic_hash": ""
+  },
+  "public/logo2.png": {
+    "mtime": 1794246892.8524017,
+    "seen": 1794270289.537565,
+    "ast_hash": "40415a2757f9612e073d5e14daa0bb3f",
+    "semantic_hash": ""
+  },
+  "public/map.png": {
+    "mtime": 1794246892.8525155,
+    "seen": 1794270289.537566,
+    "ast_hash": "ad7d5b5133b0e150485444dea390d0d0",
+    "semantic_hash": ""
+  },
+  "public/massagem.svg": {
+    "mtime": 1794246892.8525763,
+    "seen": 1794270289.537566,
+    "ast_hash": "393c0e9fd4f3eaf47e87c324b652d77e",
+    "semantic_hash": ""
+  },
+  "public/mobile-banner.png": {
+    "mtime": 1794246892.852694,
+    "seen": 1794270289.537567,
+    "ast_hash": "53ce9f3973c3c9498602c6182d31248c",
+    "semantic_hash": ""
+  },
+  "public/next.svg": {
+    "mtime": 1794246892.8527594,
+    "seen": 1794270289.537567,
+    "ast_hash": "8e061864f388b47f33a1c3780831193e",
+    "semantic_hash": ""
+  },
+  "public/sobrancelha.svg": {
+    "mtime": 1794246892.8528252,
+    "seen": 1794270289.537567,
+    "ast_hash": "07121f7daae1bda178c98df0b0d787ed",
+    "semantic_hash": ""
+  },
+  "public/vercel.svg": {
+    "mtime": 1794246892.8528874,
+    "seen": 1794270289.537568,
+    "ast_hash": "61c6b19abff40ea7acd577be818f3976",
+    "semantic_hash": ""
+  },
+  "public/window.svg": {
+    "mtime": 1794246892.8529506,
+    "seen": 1794270289.537568,
+    "ast_hash": "a2760511c65806022ad20adf74370ff3",
+    "semantic_hash": ""
+  },
+  "app/_lib/tenant/resolve-tenant.ts": {
+    "mtime": 1794353928.7835097,
+    "seen": 1794354986.653125,
+    "ast_hash": "9a4834fd3ccdf21ada5db96390987783",
+    "semantic_hash": ""
+  },
+  "app/_lib/tenant/require-membership.ts": {
+    "mtime": 1794353928.783256,
+    "seen": 1794354986.653125,
+    "ast_hash": "1172261a38931c14f863ef1ecd8a00a5",
+    "semantic_hash": ""
+  },
+  "app/_actions/register-barbershop.ts": {
+    "mtime": 1794358467.0751204,
+    "seen": 1794359097.264035,
+    "ast_hash": "e9a0682c58ecea8aa0459fbc219b0a95",
+    "semantic_hash": ""
+  },
+  "app/_lib/barbershop-registration-schema.test.ts": {
+    "mtime": 1794346036.880157,
+    "seen": 1794346264.538929,
+    "ast_hash": "49f6decf98793d7997b79bef0761b29f",
+    "semantic_hash": ""
+  },
+  "app/_lib/barbershop-registration-schema.ts": {
+    "mtime": 1794346036.8799925,
+    "seen": 1794346264.53893,
+    "ast_hash": "fa3eddeb70ba727f3e448548bf1acbe1",
+    "semantic_hash": ""
+  },
+  "app/cadastro/page.tsx": {
+    "mtime": 1794358467.1745145,
+    "seen": 1794359097.2659972,
+    "ast_hash": "80d1564ac1345da6d90587368132a7d3",
+    "semantic_hash": ""
+  },
+  "app/cadastro/registration-form.tsx": {
+    "mtime": 1794324031.3453622,
+    "seen": 1794333936.129602,
+    "ast_hash": "a6de468d36ee72c5d2b770a431b87874",
+    "semantic_hash": ""
+  },
+  "DESIGN.md": {
+    "mtime": 1794273391.9492838,
+    "seen": 1794273710.0379362,
+    "ast_hash": "f263a851cb1387c493d62816d6b6f591",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_components/use-admin-slug.ts": {
+    "mtime": 1794275916.7380404,
+    "seen": 1794276090.149499,
+    "ast_hash": "35f5223a0eb34edbdaeb919fa3aa39ad",
+    "semantic_hash": ""
+  },
+  "app/(admin)/painel/[slug]/dashboard/page.tsx": {
+    "mtime": 1794274210.8524108,
+    "seen": 1794274306.162669,
+    "ast_hash": "39316460ab2e8d80d358e0bd78ee20e3",
+    "semantic_hash": ""
+  },
+  "app/(admin)/painel/[slug]/page.tsx": {
+    "mtime": 1794274210.851907,
+    "seen": 1794274306.1626701,
+    "ast_hash": "21da315653b9f2b1bba63cb20cfddfe3",
+    "semantic_hash": ""
+  },
+  "app/(admin)/painel/[slug]/schedule/page.tsx": {
+    "mtime": 1794274210.8528643,
+    "seen": 1794274306.162671,
+    "ast_hash": "2cc75e6642b4f9a3caf84fe697f51431",
+    "semantic_hash": ""
+  },
+  "app/(admin)/painel/[slug]/services/page.tsx": {
+    "mtime": 1794274210.853522,
+    "seen": 1794274306.162672,
+    "ast_hash": "820794972a4a5426657b17e3d63163a0",
+    "semantic_hash": ""
+  },
+  "app/(admin)/painel/[slug]/settings/page.tsx": {
+    "mtime": 1794274210.854006,
+    "seen": 1794274306.162673,
+    "ast_hash": "9c603b549fbbcae522cb0dff44b677e4",
+    "semantic_hash": ""
+  },
+  "app/_lib/tenant/require-admin-context.ts": {
+    "mtime": 1794358467.1472144,
+    "seen": 1794359097.265847,
+    "ast_hash": "773519d92e00d117b505d6fc3d916670",
+    "semantic_hash": ""
+  },
+  "app/_lib/tenant/find-membership.test.ts": {
+    "mtime": 1794277035.9369695,
+    "seen": 1794279124.788739,
+    "ast_hash": "e3ad5fda5a215b60d87f549b1e5b70b0",
+    "semantic_hash": ""
+  },
+  "app/_lib/tenant/find-membership.ts": {
+    "mtime": 1794277035.9406471,
+    "seen": 1794279124.7887402,
+    "ast_hash": "c9179a5afd849894e0f767af3e6aa079",
+    "semantic_hash": ""
+  },
+  "app/_lib/platform/find-platform-admin.test.ts": {
+    "mtime": 1794277035.9218545,
+    "seen": 1794279124.788658,
+    "ast_hash": "f0ca948bc06d22f50115faaebe1323fd",
+    "semantic_hash": ""
+  },
+  "app/_lib/platform/find-platform-admin.ts": {
+    "mtime": 1794274706.7590775,
+    "seen": 1794274755.841739,
+    "ast_hash": "8c635fec4d15815c03481250aba67fa3",
+    "semantic_hash": ""
+  },
+  "app/_lib/platform/require-platform-admin.ts": {
+    "mtime": 1794274706.7594821,
+    "seen": 1794274755.841739,
+    "ast_hash": "73b9a21d603f77a1a5124e1b09dbfd71",
+    "semantic_hash": ""
+  },
+  "app/minhas-barbearias/page.tsx": {
+    "mtime": 1794358467.1946537,
+    "seen": 1794359097.266102,
+    "ast_hash": "0a53f830381975882c8244e30cef67c3",
+    "semantic_hash": ""
+  },
+  "app/painel/page.tsx": {
+    "mtime": 1794316401.2789328,
+    "seen": 1794316440.8590012,
+    "ast_hash": "fe2a7f62bd03571c7e8b84e39690be53",
+    "semantic_hash": ""
+  },
+  "app/_lib/tenant/permissions.test.ts": {
+    "mtime": 1794333900.1659014,
+    "seen": 1794333936.1294231,
+    "ast_hash": "e2d38ae880899725fae201c6d58e5c56",
+    "semantic_hash": ""
+  },
+  "app/_lib/tenant/permissions.ts": {
+    "mtime": 1794333885.7518246,
+    "seen": 1794333936.1294231,
+    "ast_hash": "f102efd07ec9fbf52063ac1bd40b16da",
+    "semantic_hash": ""
+  },
+  "app/_lib/booking-action-schema.test.ts": {
+    "mtime": 1794342552.5768404,
+    "seen": 1794342591.662409,
+    "ast_hash": "410eb2ca72a96edc530e8cd85853eac3",
+    "semantic_hash": ""
+  },
+  "app/_lib/booking-action-schema.ts": {
+    "mtime": 1794342491.2890358,
+    "seen": 1794342591.66241,
+    "ast_hash": "64aa0450aab77041e1bbeb3937cbd870",
+    "semantic_hash": ""
+  },
+  "app/(admin)/painel/[slug]/layout.tsx": {
+    "mtime": 1794358466.9129577,
+    "seen": 1794359097.263456,
+    "ast_hash": "7a1d4890d45c34549a9ff35247e2b993",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_actions/professional-schedule-exceptions.ts": {
+    "mtime": 1794358466.8232272,
+    "seen": 1794359097.262922,
+    "ast_hash": "46ed92e8eba3b106654867a6ac732423",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_actions/professional-schedules.ts": {
+    "mtime": 1794358466.831197,
+    "seen": 1794359097.262922,
+    "ast_hash": "118ed6eb469497bb09e2009a90f5e7d5",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_actions/professionals.ts": {
+    "mtime": 1794358466.843214,
+    "seen": 1794359097.262923,
+    "ast_hash": "c9fb84ee3c82e61e0c55f1fac439b2c0",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_components/team-manager.tsx": {
+    "mtime": 1794346052.9431088,
+    "seen": 1794346264.535777,
+    "ast_hash": "4db69981e3c825997041f6b49e6823c8",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_lib/professional-schema.ts": {
+    "mtime": 1794278231.7479136,
+    "seen": 1794279124.787317,
+    "ast_hash": "618745240e570d07389e31c135e2f16c",
+    "semantic_hash": ""
+  },
+  "app/(admin)/painel/[slug]/team/page.tsx": {
+    "mtime": 1794278028.745761,
+    "seen": 1794279124.787529,
+    "ast_hash": "d1ffed1a30291b66c7c5d971013bd11b",
+    "semantic_hash": ""
+  },
+  "app/(admin)/team/page.tsx": {
+    "mtime": 1794358466.94946,
+    "seen": 1794359097.263593,
+    "ast_hash": "c9f2085f22dedbc984e3a26d939125bb",
+    "semantic_hash": ""
+  },
+  "app/_components/email-sign-in.tsx": {
+    "mtime": 1794277820.0096917,
+    "seen": 1794279124.788043,
+    "ast_hash": "42a5fcd1833e6ff234b3fce9f0dda18c",
+    "semantic_hash": ""
+  },
+  "app/_lib/professional-schedule-exception-limit.ts": {
+    "mtime": 1794278631.9861162,
+    "seen": 1794279124.788717,
+    "ast_hash": "cda218f15a191297f901c12847f9f5cd",
+    "semantic_hash": ""
+  },
+  "app/_lib/professional-schedule-exception-schema.test.ts": {
+    "mtime": 1794278858.1765108,
+    "seen": 1794279124.788717,
+    "ast_hash": "d827d798e35dfb8b53abc75b3ccff9be",
+    "semantic_hash": ""
+  },
+  "app/_lib/professional-schedule-exception-schema.ts": {
+    "mtime": 1794278858.180903,
+    "seen": 1794279124.788718,
+    "ast_hash": "3251f9575d5bfa0e06685f9b98d14226",
+    "semantic_hash": ""
+  },
+  "app/_lib/professional-schedule-limit.ts": {
+    "mtime": 1794278458.8717623,
+    "seen": 1794279124.788718,
+    "ast_hash": "da37b8b3eafe23ba0251c493ba7a5257",
+    "semantic_hash": ""
+  },
+  "app/_lib/professional-schedule-schema.test.ts": {
+    "mtime": 1794278516.6703496,
+    "seen": 1794279124.7887192,
+    "ast_hash": "bf0361ccd0027b0bc30924b362c33885",
+    "semantic_hash": ""
+  },
+  "app/_lib/professional-schedule-schema.ts": {
+    "mtime": 1794278458.8721626,
+    "seen": 1794279124.7887192,
+    "ast_hash": "abdf9caf027f37b4d6c66e2fcd2558df",
+    "semantic_hash": ""
+  },
+  "app/_lib/professional-schema.test.ts": {
+    "mtime": 1794277932.1421652,
+    "seen": 1794279124.7887192,
+    "ast_hash": "785e4724a23f1ce19f67008826f825a9",
+    "semantic_hash": ""
+  },
+  "app/_lib/schedule-block-schema.test.ts": {
+    "mtime": 1794279165.0456514,
+    "seen": 1794281220.106507,
+    "ast_hash": "772bb88243b03d7ec873f3163ac75b1d",
+    "semantic_hash": ""
+  },
+  "app/_lib/schedule-block-schema.ts": {
+    "mtime": 1794279165.0533104,
+    "seen": 1794281220.106507,
+    "ast_hash": "d733342741500b4949d0a6a0e7ca5706",
+    "semantic_hash": ""
+  },
+  "app/(customer)/[slug]/agendar/page.tsx": {
+    "mtime": 1794282092.0779269,
+    "seen": 1794282463.558891,
+    "ast_hash": "5ab2cb5d7e227e5db0a90d9da1af7dcd",
+    "semantic_hash": ""
+  },
+  "app/(customer)/[slug]/page.tsx": {
+    "mtime": 1794281104.7534716,
+    "seen": 1794281220.105223,
+    "ast_hash": "e1a99495292fc9dfbc3d371cc2f897c9",
+    "semantic_hash": ""
+  },
+  "app/_data/get-public-barbershop.ts": {
+    "mtime": 1794358467.1117768,
+    "seen": 1794359097.264728,
+    "ast_hash": "d4ddbf607091de79619a9b4d6761b7a8",
+    "semantic_hash": ""
+  },
+  "app/_lib/booking-availability.test.ts": {
+    "mtime": 1794280307.7416122,
+    "seen": 1794281220.106263,
+    "ast_hash": "c22ff7214b5e875db28e0fee27a0c6d4",
+    "semantic_hash": ""
+  },
+  "app/_lib/booking-availability.ts": {
+    "mtime": 1794280307.7520754,
+    "seen": 1794281220.106264,
+    "ast_hash": "c10bc49e2f6eda5f0c2f1d2b276bf3ec",
+    "semantic_hash": ""
+  },
+  "app/_lib/booking-date-format.test.ts": {
+    "mtime": 1794280218.5685506,
+    "seen": 1794281220.106264,
+    "ast_hash": "b03a51ef523eba9dd712524d3babd1aa",
+    "semantic_hash": ""
+  },
+  "app/_lib/booking-date-format.ts": {
+    "mtime": 1794280052.9087694,
+    "seen": 1794281220.106265,
+    "ast_hash": "a46d15affd6d402442fb54b44b1170db",
+    "semantic_hash": ""
+  },
+  "app/_lib/booking-status.test.ts": {
+    "mtime": 1794280421.531962,
+    "seen": 1794281220.106265,
+    "ast_hash": "5a00ec63630877013433004eeee765e5",
+    "semantic_hash": ""
+  },
+  "app/_lib/booking-status.ts": {
+    "mtime": 1794280520.7757657,
+    "seen": 1794281220.106265,
+    "ast_hash": "a52b6f7e044a1551772782eb87789143",
+    "semantic_hash": ""
+  },
+  "app/(customer)/[slug]/minha-conta/page.tsx": {
+    "mtime": 1794358466.9654589,
+    "seen": 1794359097.263618,
+    "ast_hash": "110e87668c99437a61adb9a5d34077ad",
+    "semantic_hash": ""
+  },
+  "app/_actions/save-tenant-customer.ts": {
+    "mtime": 1794358467.0839312,
+    "seen": 1794359097.264035,
+    "ast_hash": "33b4053725fe63b670262562be36200c",
+    "semantic_hash": ""
+  },
+  "app/_lib/customer-account-schema.test.ts": {
+    "mtime": 1794281432.6195652,
+    "seen": 1794282084.21138,
+    "ast_hash": "b1eff47289083f0405e84cf0e6153c7b",
+    "semantic_hash": ""
+  },
+  "app/_lib/customer-account-schema.ts": {
+    "mtime": 1794281404.4486501,
+    "seen": 1794282084.21138,
+    "ast_hash": "144b952e9af5b0334003522df6c8a52d",
+    "semantic_hash": ""
+  },
+  "app/_actions/platform-plans.ts": {
+    "mtime": 1794358467.0416536,
+    "seen": 1794359097.264034,
+    "ast_hash": "240ed88efedd8ecdd9e21bfbcb9e1ca3",
+    "semantic_hash": ""
+  },
+  "app/_lib/platform/plan-schema.test.ts": {
+    "mtime": 1794339985.3884468,
+    "seen": 1794342591.662894,
+    "ast_hash": "0e1cc57cb7e1a069980eb6210cbb45b8",
+    "semantic_hash": ""
+  },
+  "app/_lib/platform/plan-schema.ts": {
+    "mtime": 1794339985.3883183,
+    "seen": 1794342591.6628952,
+    "ast_hash": "12b23180da60cb190420fca720327545",
+    "semantic_hash": ""
+  },
+  "app/painel/planos/page.tsx": {
+    "mtime": 1794282474.5803652,
+    "seen": 1794316127.117874,
+    "ast_hash": "43e56436fbc0dfb0fed0af0a50325868",
+    "semantic_hash": ""
+  },
+  ".github/workflows/ci.yml": {
+    "mtime": 1794358995.5500834,
+    "seen": 1794359097.266439,
+    "ast_hash": "f9b1e17c054da778ab032c2c0be16ff8",
+    "semantic_hash": ""
+  },
+  "app/_actions/platform-subscriptions.ts": {
+    "mtime": 1794358467.0554526,
+    "seen": 1794359097.264034,
+    "ast_hash": "e2c6f2bdca28733865cd9e3373e48929",
+    "semantic_hash": ""
+  },
+  "app/_lib/platform/subscription-schema.test.ts": {
+    "mtime": 1794340048.3578112,
+    "seen": 1794342591.662986,
+    "ast_hash": "c287d710865347017f399553fb31a3e4",
+    "semantic_hash": ""
+  },
+  "app/_lib/platform/subscription-schema.ts": {
+    "mtime": 1794339985.3885696,
+    "seen": 1794342591.662987,
+    "ast_hash": "05caf4259a6a1428751f9de29b676343",
+    "semantic_hash": ""
+  },
+  "app/painel/assinaturas/page.tsx": {
+    "mtime": 1794358467.2153604,
+    "seen": 1794359097.266121,
+    "ast_hash": "eb43c51d085696ae3d4f90f99258c1b9",
+    "semantic_hash": ""
+  },
+  "app/_lib/platform/entitlements.test.ts": {
+    "mtime": 1794316336.39103,
+    "seen": 1794316440.858271,
+    "ast_hash": "ae57d0ad0ae0ea86d95a636874f7d30a",
+    "semantic_hash": ""
+  },
+  "app/_lib/platform/entitlements.ts": {
+    "mtime": 1794316336.3983521,
+    "seen": 1794316440.858272,
+    "ast_hash": "b39cf7e66c6b22a217ee7c16c43150c9",
+    "semantic_hash": ""
+  },
+  "app/_actions/platform-barbershops.ts": {
+    "mtime": 1794358467.0336657,
+    "seen": 1794359097.264033,
+    "ast_hash": "143c601d40dbffea36a5661a7e5c5232",
+    "semantic_hash": ""
+  },
+  "app/_lib/platform/barbershop-status-schema.test.ts": {
+    "mtime": 1794316451.5686677,
+    "seen": 1794316587.598745,
+    "ast_hash": "a2a334ac789976e5243c441302dab9f3",
+    "semantic_hash": ""
+  },
+  "app/_lib/platform/barbershop-status-schema.ts": {
+    "mtime": 1794316401.2775648,
+    "seen": 1794316440.85827,
+    "ast_hash": "0776242c86ab841118c3d0a5d83107c0",
+    "semantic_hash": ""
+  },
+  "app/painel/barbearias/page.tsx": {
+    "mtime": 1794358467.234601,
+    "seen": 1794359097.266121,
+    "ast_hash": "232847cdf60f3d90987deafb1c2d4ac3",
+    "semantic_hash": ""
+  },
+  "app/(admin)/painel/[slug]/assinatura/page.tsx": {
+    "mtime": 1794358466.9075983,
+    "seen": 1794359097.2634292,
+    "ast_hash": "114cf3d68150999015e2673e5aae3103",
+    "semantic_hash": ""
+  },
+  "app/_lib/platform/subscription-lifecycle-policy.ts": {
+    "mtime": 1794317733.7748003,
+    "seen": 1794317924.08396,
+    "ast_hash": "adeb980eeadc77381b1b82a057bb5db1",
+    "semantic_hash": ""
+  },
+  "app/_lib/platform/subscription-lifecycle.test.ts": {
+    "mtime": 1794317652.159123,
+    "seen": 1794317714.766672,
+    "ast_hash": "4cc053d1e2506106bced0ca4ab9ca855",
+    "semantic_hash": ""
+  },
+  "app/_lib/platform/subscription-lifecycle.ts": {
+    "mtime": 1794358467.1304574,
+    "seen": 1794359097.265431,
+    "ast_hash": "c5501058c49349cf8f9043370898c0f2",
+    "semantic_hash": ""
+  },
+  "app/_lib/platform/cron-auth.test.ts": {
+    "mtime": 1794317869.7108932,
+    "seen": 1794317924.083816,
+    "ast_hash": "2a02b393eebd9e53ecadc972d7d57c5d",
+    "semantic_hash": ""
+  },
+  "app/_lib/platform/cron-auth.ts": {
+    "mtime": 1794317869.7104645,
+    "seen": 1794317924.083817,
+    "ast_hash": "842b81869a767d2cdfea05502912b916",
+    "semantic_hash": ""
+  },
+  "app/api/cron/subscriptions/route.ts": {
+    "mtime": 1794358467.1667051,
+    "seen": 1794359097.265962,
+    "ast_hash": "03141b7a03655011a097b3cb414702ea",
+    "semantic_hash": ""
+  },
+  "app/api/health/route.ts": {
+    "mtime": 1794318052.7174926,
+    "seen": 1794318073.6695511,
+    "ast_hash": "035c6567daddf10bf54f3370ba8bf2fa",
+    "semantic_hash": ""
+  },
+  "tests/postgres/constraints.test.ts": {
+    "mtime": 1794359207.0522385,
+    "seen": 1794359252.268574,
+    "ast_hash": "da9421bab4967b005b4210f11ee8c883",
+    "semantic_hash": ""
+  },
+  "app/_actions/password-auth.ts": {
+    "mtime": 1794324031.201762,
+    "seen": 1794333936.127655,
+    "ast_hash": "9c309314edbd56bc2d6562c26fdcb1a0",
+    "semantic_hash": ""
+  },
+  "app/_components/password-auth-form.tsx": {
+    "mtime": 1794346154.7201529,
+    "seen": 1794346264.5379179,
+    "ast_hash": "e15861d6baca736ab0ceeb9a8ea21f2e",
+    "semantic_hash": ""
+  },
+  "app/_components/password-reset-form.tsx": {
+    "mtime": 1794324031.2358894,
+    "seen": 1794333936.127927,
+    "ast_hash": "af4421dc0d7eeb610c0c1a590473ae82",
+    "semantic_hash": ""
+  },
+  "app/_components/password-reset-request-form.tsx": {
+    "mtime": 1794324031.2475743,
+    "seen": 1794333936.127928,
+    "ast_hash": "8c96a63fb40d4e3d49a8fd73a56e9fd8",
+    "semantic_hash": ""
+  },
+  "app/_lib/password-auth-schema.ts": {
+    "mtime": 1794323942.718769,
+    "seen": 1794324010.225279,
+    "ast_hash": "8f2ce2b13e79a0561ed505b3b40b238c",
+    "semantic_hash": ""
+  },
+  "app/_lib/password-crypto.test.ts": {
+    "mtime": 1794324031.312383,
+    "seen": 1794333936.1288629,
+    "ast_hash": "60dbe9ccaa17d78964f07f7e50a45ab2",
+    "semantic_hash": ""
+  },
+  "app/_lib/password-crypto.ts": {
+    "mtime": 1794324031.3189945,
+    "seen": 1794333936.1288629,
+    "ast_hash": "1c482144f5e8ef3fb7219cfa1a55190f",
+    "semantic_hash": ""
+  },
+  "app/recuperar-senha/page.tsx": {
+    "mtime": 1794324031.3485315,
+    "seen": 1794333936.129781,
+    "ast_hash": "50b9e1104f33ea39351c42b787cfa192",
+    "semantic_hash": ""
+  },
+  "app/redefinir-senha/page.tsx": {
+    "mtime": 1794324031.3513608,
+    "seen": 1794333936.129782,
+    "ast_hash": "e91cd6ae4da170279a9fbd7b972ddb81",
+    "semantic_hash": ""
+  },
+  "types/nodemailer.d.ts": {
+    "mtime": 1794323400.0889308,
+    "seen": 1794324010.226462,
+    "ast_hash": "9b1dcabdfd88f9caeb48b1936c53ab47",
+    "semantic_hash": ""
+  },
+  "prisma/create-local-test-fixture.ts": {
+    "mtime": 1794332265.7479336,
+    "seen": 1794333936.12992,
+    "ast_hash": "41a88f5338bb53617ad105d5c104649f",
+    "semantic_hash": ""
+  },
+  "app/_lib/booking-conflict.test.ts": {
+    "mtime": 1794339737.4648876,
+    "seen": 1794342591.662453,
+    "ast_hash": "85b187bcfda51a6a4cc501e203719298",
+    "semantic_hash": ""
+  },
+  "app/_lib/booking-conflict.ts": {
+    "mtime": 1794339737.4707193,
+    "seen": 1794342591.6624541,
+    "ast_hash": "a46e941db4a6df8cd5440a353bd65b9f",
+    "semantic_hash": ""
+  },
+  "app/_lib/booking-status-transitions.test.ts": {
+    "mtime": 1794335753.0560272,
+    "seen": 1794336317.726721,
+    "ast_hash": "d5d744a4772b106b0b0a1595d3163b25",
+    "semantic_hash": ""
+  },
+  "app/_lib/booking-status-transitions.ts": {
+    "mtime": 1794335753.055541,
+    "seen": 1794336317.726722,
+    "ast_hash": "4434bbddd2189189291a498e03194125",
+    "semantic_hash": ""
+  },
+  "app/(admin)/_actions/professional-invitations.ts": {
+    "mtime": 1794358909.0260222,
+    "seen": 1794359097.2629209,
+    "ast_hash": "f9454fd31bb5cc9cefb65bbbbd29d29c",
+    "semantic_hash": ""
+  },
+  "app/_actions/accept-membership-invitation.ts": {
+    "mtime": 1794358941.3015854,
+    "seen": 1794359097.26401,
+    "ast_hash": "ad892ac6c94d27eee8e738405536e09c",
+    "semantic_hash": ""
+  },
+  "app/_lib/membership-invitation.test.ts": {
+    "mtime": 1794346052.9908385,
+    "seen": 1794346264.539391,
+    "ast_hash": "11bfb0d8ba205901346e60d31d479e30",
+    "semantic_hash": ""
+  },
+  "app/_lib/membership-invitation.ts": {
+    "mtime": 1794346052.9842994,
+    "seen": 1794346264.539392,
+    "ast_hash": "a70d9df87692129a46797719b8567ba4",
+    "semantic_hash": ""
+  },
+  "app/convite/[token]/invitation-actions.tsx": {
+    "mtime": 1794346097.3955514,
+    "seen": 1794346264.540899,
+    "ast_hash": "1f94616ba553f3da006bba29fc829f69",
+    "semantic_hash": ""
+  },
+  "app/convite/[token]/page.tsx": {
+    "mtime": 1794358941.3018234,
+    "seen": 1794359097.266036,
+    "ast_hash": "328ff1fdf333541ebf877f1bc565701e",
+    "semantic_hash": ""
+  },
+  "app/_lib/database-context.ts": {
+    "mtime": 1794354637.8168151,
+    "seen": 1794354986.6524138,
+    "ast_hash": "b571246e9bf9cb07a48a6204845032ad",
+    "semantic_hash": ""
+  },
+  "tests/server-actions/next-cache.cjs": {
+    "mtime": 1794358703.985735,
+    "seen": 1794359097.266384,
+    "ast_hash": "fe75c51aaeb141b7e2ceac38d2baa75c",
+    "semantic_hash": ""
+  },
+  "tests/server-actions/preload.cjs": {
+    "mtime": 1794358744.6663132,
+    "seen": 1794359097.2663848,
+    "ast_hash": "98e15a1a5ae98815788ead8177b27f2f",
+    "semantic_hash": ""
+  },
+  "tests/server-actions/rate-limit.cjs": {
+    "mtime": 1794358703.985518,
+    "seen": 1794359097.266386,
+    "ast_hash": "300992698d490ea16858e396f31400ae",
+    "semantic_hash": ""
+  },
+  "tests/server-actions/require-admin-context.cjs": {
+    "mtime": 1794358703.985388,
+    "seen": 1794359097.266386,
+    "ast_hash": "a5ededae78d9862a97bc187b6a539787",
+    "semantic_hash": ""
+  },
+  "tests/server-actions/server-only.cjs": {
+    "mtime": 1794358703.9852276,
+    "seen": 1794359097.266387,
+    "ast_hash": "73c0f77ffd19a4043aca19410be35b8c",
+    "semantic_hash": ""
+  },
+  "tests/server-actions/tenant-actions.test.ts": {
+    "mtime": 1794359048.5652945,
+    "seen": 1794359097.266387,
+    "ast_hash": "d34aff788ab3c015374c87a3da947c95",
+    "semantic_hash": ""
+  }
+}
